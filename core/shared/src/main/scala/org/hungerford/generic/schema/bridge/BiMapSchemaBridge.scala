@@ -13,116 +13,75 @@ import upickle.default._
 import scala.language.higherKinds
 import scala.util.Try
 
-object UjsonSchemaBridge {
+trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
 
+    /**
+     * Construct a schema from the two parts of a bimap.
+     * @param to T => MapVal : writer
+     * @param from MapVal => T : reader
+     * @tparam T type being read/written
+     * @return type class instance for some reader/writer
+     */
+    def schemaFromBimap[ T ]( to : T => MapVal, from : MapVal => T ) : OtherSchema[ T ]
 
-    implicit def primitiveTranslation[ T, Rt ]( implicit rw : ReadWriter[ T ] ) : SchemaBridge[ T, Primitive, ReadWriter ] =
-        ( _ : Primitive[ T ] ) => rw
+    /**
+     * Initial empty value for the type being mapped to and from, that can be built
+     * by adding field values. For instance, if the value type is Map[ String, T ],
+     * initMapVal would be Map.empty[ String, T ]
+     * @return initial value of buildable bimap type
+     */
+    def initMapVal : BuildMapVal
 
-    implicit def additionalFieldsWriter[ AFt ] : AdditionalFieldsWriter[ AFt, Map[ String, Value.Value ], ReadWriter ] = {
-        ( fields : Map[ String, AFt ], to : Map[ String, Value ], using : default.ReadWriter[ AFt ] ) => {
-            val newFields = fields.mapValues( v => upickle.default.writeJs( v )( using ) )
-            to ++ newFields
-        }
-    }
+    /**
+     * Construct the final type to be bimapped to and from
+     * @param buildableValue
+     * @return
+     */
+    def buildMapVal( buildableValue : BuildMapVal ) : MapVal
 
-    implicit def fieldWriter[ T ] : FieldWriter[ T, Value.Value, ReadWriter ] = {
-        ( field : T, to : Value, using : TranslatedFieldDescription[ T, default.ReadWriter ] ) => {
-            val originalFields : Map[String, Value ] = to.obj.toMap
-            val fieldValue : Value = upickle.default.writeJs( field )( using.schema )
-            val newFields : Map[ String, Value ] = originalFields + ((using.fieldName, fieldValue))
-            ujson.Obj.from( newFields )
-        }
-    }
+    /**
+     * Resolves type class instances for primitive schemas
+     */
+    implicit def primitiveTranslation[ T, Rt ]( implicit os : OtherSchema[ T ] ) : SchemaBridge[ T, Primitive, OtherSchema ] =
+        ( _ : Primitive[ T ] ) => os
+
 
     // Need this to be an object, so that mapper can find its cases
-    object RWFieldDescriptionMapper extends FieldDescriptionMapper[ ReadWriter ]
+    object RWFieldDescriptionMapper extends FieldDescriptionMapper[ OtherSchema ]
 
     // For no fields
-    implicit def productTranslation[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFtRt, Intermediate, OtherSchema[ _ ] ](
+    implicit def productTranslation[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFtRt ](
         fm : Mapper[ RWFieldDescriptionMapper.type, Rt ] { type Out = FDL },
-        pfe : Extractor.Aux[ Intermediate, HNil, FDL, RVt ],
-        pfw : Injector.Aux[ RVt, Intermediate, Rt, Intermediate ],
-        afe : SimpleExtractor.Aux[ Intermediate, OtherSchema[ AFt ], Map[ String, AFt ] ],
-        afw : Injector.Aux[ Map[ String, AFt ], Intermediate, OtherSchema[ AFt ], Intermediate ],
-        afTrans : SchemaBridge[ AFt, Schema[ _ ], OtherSchema ],
-    ) : SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, ReadWriter ] =
-        new SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, ReadWriter ] {
+        pfe : Extractor.Aux[ MapVal, HNil, FDL, RVt ],
+        pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],
+        afe : SimpleExtractor.Aux[ MapVal, OtherSchema[ AFt ], Map[ String, AFt ] ],
+        afw : Injector.Aux[ Map[ String, AFt ], BuildMapVal, OtherSchema[ AFt ], BuildMapVal ],
+        afTrans : SchemaBridge[ AFt, ({ type A[X] = Schema.Aux[ X, AFtRt ] })#A, OtherSchema ],
+    ) : SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] =
+        new SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] {
+
         override def translate(
             schema : ProductSchema[ T, Rt,  RVt, AFt, AFtRt ],
-        ) : default.ReadWriter[ T ] = {
-                val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
-                readwriter[ Value.Value ].bimap[ T ](
-                    // generate ujson Value from object value
-                    ( value : T ) => {
-                        val (fields : RVt, additionalFields : Map[ String, AFt ]) = schema.deconstructor( value )
-                        val startingMap : Map[ String, Inte ] = Map.empty
-                        val updatedMap = pfw.inject( fields, startingMap, fieldDescriptions )
-                        val finalMap = afw.write( additionalFields, updatedMap, aftSchema )
-                        ujson.Obj.from( finalMap )
-                    },
-                    ( source : Value.Value ) => {
-                        val fieldValues = pfe.extract( source, HNil, fieldDescriptions )
-                        val additionalFieldValues = afe.extract( source )
-                        schema.constructor( fieldValues, additionalFieldValues )
-                    }
-                )
+        ) : OtherSchema[ T ] = {
+            val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
+            val aftSchema = afTrans.translate( schema.additionalFieldsSchema )
+
+            val writer = { ( value : T ) =>
+                val (fields : RVt, additionalFields : Map[ String, AFt ]) = schema.deconstructor( value )
+                val buildMapWithAdditionalFields = afw.inject( additionalFields, initMapVal, aftSchema )
+                val buildMapWithFields = pfw.inject( fields, buildMapWithAdditionalFields, fieldDescriptions )
+                buildMapVal( buildMapWithFields )
+            }
+
+            val reader = { ( mapVal : MapVal ) =>
+                val additionalFieldValues : Map[ String, AFt ] = afe.extract( mapVal, aftSchema )
+                val fieldValues = pfe.extract( mapVal, HNil, fieldDescriptions )
+                schema.constructor( fieldValues, additionalFieldValues )
+            }
+
+            schemaFromBimap( writer, reader )
         }
+
     }
 
-}
-
-trait AdditionalFieldsExtractor[ AFt, Source ] {
-    def extract( from : Source ) : Map[ String, AFt ]
-}
-
-object AdditionalFieldsExtractor {
-    def apply[ AFt, Source ](
-        implicit afe : AdditionalFieldsExtractor[ AFt, Source ],
-    ) : AdditionalFieldsExtractor[ AFt, Source ] = afe
-}
-
-trait AdditionalFieldsWriter[ AFt, Target, OtherSchema[ _ ] ] {
-    def write( fields : Map[ String, AFt ], to : Target, using : OtherSchema[ AFt ] ) : Target
-}
-
-object AdditionalFieldsWriter {
-    def apply[ AFt, Target, OtherSchema[ _ ] ](
-        implicit afw : AdditionalFieldsWriter[ AFt, Target, OtherSchema ],
-    ) : AdditionalFieldsWriter[ AFt, Target, OtherSchema ] = afw
-}
-
-trait FieldWriter[ T, Target, OtherSchema[ _ ] ] {
-    def write( field : T, to : Target, using : TranslatedFieldDescription[ T, OtherSchema ] ) : Target
-}
-
-object FieldWriter {
-    def apply[ T, Target, OtherSchema[ _ ] ](
-        implicit fw : FieldWriter[ T, Target, OtherSchema ],
-    ) : FieldWriter[ T, Target, OtherSchema ] = fw
-}
-
-trait FieldListWriter[ RVt <: HList, FDL <: HList, Target ] {
-    def write( fields : RVt, to : Target, using : FDL ) : Target
-}
-
-object FieldListWriter {
-    def apply[ RVt <: HList, FDL <: HList, Target ](
-        implicit flw : FieldListWriter[ RVt, FDL, Target ],
-    ) : FieldListWriter[ RVt, FDL, Target ] = flw
-
-    implicit def hnilFLWriter[ Target ] : FieldListWriter[ HNil, HNil, Target ] = {
-        ( _ : HNil, to : Target, _ : HNil ) => to
-    }
-
-    implicit def genericFLWriter[ OtherSchema[ _ ], RVHead, RVTail <: HList, FDHead <: TranslatedFieldDescription[ RVHead, OtherSchema ], FDTail <: HList, Target ](
-        implicit
-        fw : FieldWriter[ RVHead, Target, OtherSchema ],
-        flw : FieldListWriter[ RVTail, FDTail, Target ],
-    ) : FieldListWriter[ RVHead :: RVTail, FDHead :: FDTail, Target ] = {
-        ( fields : RVHead :: RVTail, to : Target, using : FDHead :: FDTail ) => {
-            val newTarget = fw.write( fields.head, to, using.head )
-            flw.write( fields.tail, newTarget, using.tail )
-        }
-    }
 }

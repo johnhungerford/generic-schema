@@ -4,5 +4,5 @@ import org.hungerford.generic.schema.validator.Validator
 
 case class ProductSchemaBuilder[ T ](
     private val desc : Option[ String ] = None,
-    private val vals : Set[ Validator[ T ] ] = Set.empty,
+    private val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
 )

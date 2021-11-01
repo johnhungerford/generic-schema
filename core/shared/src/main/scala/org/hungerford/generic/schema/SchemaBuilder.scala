@@ -4,8 +4,8 @@ import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 
 case class SchemaBuilder[ T ](
-    private val desc : Option[ String ] = None,
-    private val vals : Set[ Validator[ T ] ] = Set.empty,
+    private[ schema ] val desc : Option[ String ] = None,
+    private[ schema ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
 ) {
     def description( description : String ) : SchemaBuilder[ T ] = copy( desc = Some( description ) )
     def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : SchemaBuilder[ T ] =
@@ -18,8 +18,8 @@ case class SchemaBuilder[ T ](
 }
 
 case class PrimitiveSchemaBuilder[ T ](
-    private val desc : Option[ String ] = None,
-    private val vals : Set[ Validator[ T ] ] = Set.empty,
+    private[ schema ] val desc : Option[ String ] = None,
+    private[ schema ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
 ) {
     def description( description : String ) : PrimitiveSchemaBuilder[ T ] = copy( desc = Some( description ) )
     def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : PrimitiveSchemaBuilder[ T ] =

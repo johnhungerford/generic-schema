@@ -19,7 +19,7 @@ case class FieldDescriptionBuilderWithoutSchema[ T ](
     }
 
     def buildSchema[ Rt, S <: Schema[ T ] ]( builder : SchemaBuilder[ T ] => S ) : FieldDescriptionBuilderWithSchema[ T, S ] = {
-        fromSchema( builder( SchemaBuilder.empty[ T ] ) )
+        fromSchema( builder( SchemaBuilder[ T ] ) )
     }
 
     def fieldName( name : String ) : FieldDescriptionBuilderWithoutSchema[ T ] = copy( fn = Some( name ) )

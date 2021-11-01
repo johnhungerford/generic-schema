@@ -39,17 +39,54 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
      */
     def buildMapVal( buildableValue : BuildMapVal ) : MapVal
 
-    /**
-     * Resolves type class instances for primitive schemas
-     */
-    implicit def primitiveTranslation[ T, Rt ]( implicit os : OtherSchema[ T ] ) : SchemaTranslation[ T, Primitive, OtherSchema ] =
-        ( _ : Primitive[ T ] ) => os
+    def extractField[ T ]( from : MapVal, using : TranslatedFieldDescription[ T, OtherSchema ] ) : T
+
+    def extractAdditionalFields[ T ]( from : MapVal, using : OtherSchema[ T ] ) : Map[ String, T ]
+
+    def writeField[ T ]( value : T, to : BuildMapVal, using : TranslatedFieldDescription[ T, OtherSchema ] ) : BuildMapVal
+
+    def writeAdditionalFields[ T ]( from : Map[ String, T ], to : BuildMapVal, using : OtherSchema[ T ] ) : BuildMapVal
 
 
     // Need this to be an object, so that mapper can find its cases
     object RWFieldDescriptionMapper extends FieldDescriptionMapper[ OtherSchema ]
 
     object Implicits {
+
+        implicit def fieldExtractor[ T, Rt ] : SimpleExtractor.Aux[ MapVal, TranslatedFieldDescription[ T, OtherSchema ], T ] = new SimpleExtractor[ MapVal, TranslatedFieldDescription[ T, OtherSchema ] ] {
+            override type Out = T
+
+            override def extract( from : MapVal, using : TranslatedFieldDescription[ T, OtherSchema ] ) : Out = {
+                extractField( from, using )
+            }
+        }
+
+        implicit def fieldInjector[ T ] : Injector.Aux[ T, BuildMapVal, TranslatedFieldDescription[ T, OtherSchema ], BuildMapVal ] =
+            Injector.simpleInjector[ T, BuildMapVal, TranslatedFieldDescription[ T, OtherSchema ] ] {
+                ( value : T, target : BuildMapVal, using : TranslatedFieldDescription[ T, OtherSchema ] ) => {
+                    writeField( value, target, using )
+                }
+            }
+
+        implicit def additionalFieldsExtractor[ T ] : SimpleExtractor.Aux[ MapVal, OtherSchema[ T ], Map[ String, T ] ] = {
+            new SimpleExtractor[ MapVal, OtherSchema[ T ] ] {
+                override type Out = Map[ String, T ]
+
+                override def extract( from : MapVal, using : OtherSchema[T ] ) : Out = extractAdditionalFields( from, using )
+            }
+        }
+
+        implicit def additionalFieldsInjector[ T ] : Injector.Aux[ Map[ String, T ], BuildMapVal, OtherSchema[ T ], BuildMapVal ] =
+            Injector.simpleInjector[ Map[ String, T ], BuildMapVal, OtherSchema[ T ] ] {
+                ( value : Map[ String, T ], target : BuildMapVal, using : OtherSchema[ T ] ) =>
+                    writeAdditionalFields( value, target, using )
+            }
+
+        /**
+         * Resolves type class instances for primitive schemas
+         */
+        implicit def primitiveTranslation[ T, Rt ]( implicit os : OtherSchema[ T ] ) : SchemaTranslation[ T, Primitive, OtherSchema ] =
+            ( _ : Primitive[ T ] ) => os
 
         implicit def productTranslationWithoutAF[ T, Rt <: HList, RVt <: HList, FDL <: HList ](
             implicit
@@ -77,6 +114,7 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
             }
 
         implicit def productTranslationWithAF[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFtRt ](
+            implicit
             fm : Mapper[ RWFieldDescriptionMapper.type, Rt ] { type Out = FDL },
             pfe : Extractor.Aux[ MapVal, HNil, FDL, RVt ],
             pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],

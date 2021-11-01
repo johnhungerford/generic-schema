@@ -1,16 +1,13 @@
 package org.hungerford.generic.schema.bridge
 
-import org.hungerford.generic.schema.{NoSchema, Primitive, Schema}
 import org.hungerford.generic.schema.product.ProductSchema
-import org.hungerford.generic.schema.product.field.FieldDescription.Aux
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase, TranslatedFieldDescription}
-import org.hungerford.generic.schema.types.{Extractor, Injector, SimpleExtractor}
+import org.hungerford.generic.schema.types.{Injector, SimpleExtractor}
+import org.hungerford.generic.schema.{NoSchema, Primitive}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import shapeless._
-import shapeless.ops.hlist.Mapper
 import ujson.Value
-import upickle.core.Types
 import upickle.default
 import upickle.default._
 
@@ -50,7 +47,7 @@ class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
              * @tparam T type being read/written
              * @return type class instance for some reader/writer
              */
-            override def schemaFromBimap[ T ]( to : T => Value, from : Value => T ) : default.ReadWriter[ T ] = {
+            override def schemaFromBimap[ T ]( to : T => Value, from : Value => T ) : ReadWriter[ T ] = {
                 readwriter[ Value.Value ].bimap[ T ]( to, from )
             }
 
@@ -73,25 +70,25 @@ class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
                 val bvSeq : Seq[ (String, Value) ] = buildableValue.toSeq
                 ujson.Obj( bvSeq.head, bvSeq : _* )
             }
-        }
 
-        implicit def fieldExtractor[ T, Rt ] : SimpleExtractor.Aux[ Value.Value, TranslatedFieldDescription[ T, ReadWriter ], T ] = new SimpleExtractor[ Value.Value, TranslatedFieldDescription[ T, ReadWriter ] ] {
-            override type Out = T
-
-            override def extract( from : Value, using : TranslatedFieldDescription[ T, ReadWriter ] ) : Out = {
+            override def extractField[ T ](
+                from : Value,
+                using : TranslatedFieldDescription[ T, default.ReadWriter ],
+            ) : T = {
                 val fieldValue : Value = from.obj( using.fieldName )
-                val rw : default.ReadWriter[ T ] = using.schema
+                val rw : ReadWriter[ T ] = using.schema
                 read[ T ]( fieldValue )( rw )
             }
-        }
 
-        implicit def fieldInjector[ T ] : Injector.Aux[ T, Map[String, Value ], TranslatedFieldDescription[ T, default.ReadWriter ], Map[String, Value ] ] =
-            Injector.simpleInjector[ T, Map[ String, Value.Value ], TranslatedFieldDescription[ T, ReadWriter ] ] {
-                ( value : T, target : Map[ String, Value ], using : TranslatedFieldDescription[ T, ReadWriter ] ) => {
-                    val valueJson : Value.Value = writeJs( value )( using.schema )
-                    target + ((using.fieldName, valueJson ))
-                }
+            override def extractAdditionalFields[ T ]( from : Value, using : default.ReadWriter[ T ] ) : Map[String, T ] = ???
+
+            override def writeField[ T ]( value : T, to : Map[String, Value ], using : TranslatedFieldDescription[ T, default.ReadWriter ] ) : Map[String, Value ] = {
+                val valueJson : Value.Value = writeJs( value )( using.schema )
+                to + ((using.fieldName, valueJson ))
             }
+
+            override def writeAdditionalFields[ T ]( from : Map[String, T ], to : Map[String, Value ], using : default.ReadWriter[ T ] ) : Map[String, Value ] = ???
+        }
 
         import upickleTransl.Implicits._
 

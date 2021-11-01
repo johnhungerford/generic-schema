@@ -9,25 +9,25 @@ import shapeless.ops.hlist._
 import scala.language.higherKinds
 
 trait FieldDescription[ T ] {
-    type R
+    type S <: Schema[ T ]
 
     val fieldName : String
-    val schema : Schema.Aux[ T, R ]
+    val schema : S
     val description : Option[ String ] = None
     val validators : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ]
 }
 
 object FieldDescription {
-    type Aux[ T, Rt ] = FieldDescription[ T ] { type R = Rt }
+    type Aux[ T, St ] = FieldDescription[ T ] { type S = St }
 }
 
-case class FieldDescriptionCase[ T, Rt ](
+case class FieldDescriptionCase[ T, St <: Schema[ T ] ](
     override val fieldName : String,
-    override val schema : Schema.Aux[ T, Rt ],
+    override val schema : St,
     override val description : Option[ String ] = None,
     override val validators : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
 ) extends FieldDescription[ T ] {
-    type R = Rt
+    type S = St
 }
 
 case class TranslatedFieldDescription[ T, OtherSchema[ _ ] ](

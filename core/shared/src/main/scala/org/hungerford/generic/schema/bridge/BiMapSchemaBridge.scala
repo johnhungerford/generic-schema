@@ -49,38 +49,65 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
     // Need this to be an object, so that mapper can find its cases
     object RWFieldDescriptionMapper extends FieldDescriptionMapper[ OtherSchema ]
 
-    // For no fields
-    implicit def productTranslation[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFtRt ](
-        fm : Mapper[ RWFieldDescriptionMapper.type, Rt ] { type Out = FDL },
-        pfe : Extractor.Aux[ MapVal, HNil, FDL, RVt ],
-        pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],
-        afe : SimpleExtractor.Aux[ MapVal, OtherSchema[ AFt ], Map[ String, AFt ] ],
-        afw : Injector.Aux[ Map[ String, AFt ], BuildMapVal, OtherSchema[ AFt ], BuildMapVal ],
-        afTrans : SchemaBridge[ AFt, ({ type A[X] = Schema.Aux[ X, AFtRt ] })#A, OtherSchema ],
-    ) : SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] =
-        new SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] {
+    object Implicits {
 
-        override def translate(
-            schema : ProductSchema[ T, Rt,  RVt, AFt, AFtRt ],
-        ) : OtherSchema[ T ] = {
-            val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
-            val aftSchema = afTrans.translate( schema.additionalFieldsSchema )
+        implicit def productTranslationWithoutAF[ T, Rt <: HList, RVt <: HList, FDL <: HList ](
+            fm : Mapper[ RWFieldDescriptionMapper.type, Rt ] { type Out = FDL },
+            pfe : Extractor.Aux[ MapVal, HNil, FDL, RVt ],
+            pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],
+        ) : SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, Nothing, Nothing ] })#A, OtherSchema ] =
+            new SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, Nothing, Nothing ] })#A, OtherSchema ] {
+                override def translate( schema : ProductSchema[ T, Rt, RVt, Nothing, Nothing ] ) : OtherSchema[ T ] = {
+                    val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
 
-            val writer = { ( value : T ) =>
-                val (fields : RVt, additionalFields : Map[ String, AFt ]) = schema.deconstructor( value )
-                val buildMapWithAdditionalFields = afw.inject( additionalFields, initMapVal, aftSchema )
-                val buildMapWithFields = pfw.inject( fields, buildMapWithAdditionalFields, fieldDescriptions )
-                buildMapVal( buildMapWithFields )
+                    val writer : T => MapVal = { ( value : T ) =>
+                        val (fields : RVt, additionalFields : Map[ String, Nothing ]) = schema.deconstructor( value )
+                        val buildMapWithFields = pfw.inject( fields, initMapVal, fieldDescriptions )
+                        buildMapVal( buildMapWithFields )
+                    }
+
+                    val reader : MapVal => T = { ( mapVal : MapVal ) =>
+                        val fieldValues = pfe.extract( mapVal, HNil, fieldDescriptions )
+                        schema.constructor( fieldValues, Map.empty )
+                    }
+
+                    schemaFromBimap( writer, reader )
+                }
             }
 
-            val reader = { ( mapVal : MapVal ) =>
-                val additionalFieldValues : Map[ String, AFt ] = afe.extract( mapVal, aftSchema )
-                val fieldValues = pfe.extract( mapVal, HNil, fieldDescriptions )
-                schema.constructor( fieldValues, additionalFieldValues )
-            }
+        implicit def productTranslationWithAF[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFtRt ](
+            fm : Mapper[ RWFieldDescriptionMapper.type, Rt ] { type Out = FDL },
+            pfe : Extractor.Aux[ MapVal, HNil, FDL, RVt ],
+            pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],
+            afe : SimpleExtractor.Aux[ MapVal, OtherSchema[ AFt ], Map[ String, AFt ] ],
+            afw : Injector.Aux[ Map[ String, AFt ], BuildMapVal, OtherSchema[ AFt ], BuildMapVal ],
+            afTrans : SchemaBridge[ AFt, ({ type A[X] = Schema.Aux[ X, AFtRt ] })#A, OtherSchema ],
+        ) : SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] =
+            new SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] {
 
-            schemaFromBimap( writer, reader )
-        }
+                override def translate(
+                    schema : ProductSchema[ T, Rt,  RVt, AFt, AFtRt ],
+                ) : OtherSchema[ T ] = {
+                    val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
+                    val aftSchema = afTrans.translate( schema.additionalFieldsSchema )
+
+                    val writer : T => MapVal = { ( value : T ) =>
+                        val (fields : RVt, additionalFields : Map[ String, AFt ]) = schema.deconstructor( value )
+                        val buildMapWithAdditionalFields = afw.inject( additionalFields, initMapVal, aftSchema )
+                        val buildMapWithFields = pfw.inject( fields, buildMapWithAdditionalFields, fieldDescriptions )
+                        buildMapVal( buildMapWithFields )
+                    }
+
+                    val reader : MapVal => T = { ( mapVal : MapVal ) =>
+                        val additionalFieldValues : Map[ String, AFt ] = afe.extract( mapVal, aftSchema )
+                        val fieldValues = pfe.extract( mapVal, HNil, fieldDescriptions )
+                        schema.constructor( fieldValues, additionalFieldValues )
+                    }
+
+                    schemaFromBimap( writer, reader )
+                }
+
+            }
 
     }
 

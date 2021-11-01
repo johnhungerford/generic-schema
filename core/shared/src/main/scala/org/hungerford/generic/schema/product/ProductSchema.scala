@@ -6,6 +6,7 @@ import org.hungerford.generic.schema.validator.Validator
 import shapeless._
 import shapeless.ops.hlist.Tupler
 
+import scala.annotation.implicitNotFound
 import scala.language.higherKinds
 
 
@@ -17,7 +18,8 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFtRt ](
     private[ schema ] val constructor : (RVt, Map[ String, AFt ]) => T,
     private[ schema ] val deconstructor : T => (RVt, Map[ String, AFt ])
 )(
-    implicit fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
+    implicit
+    fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
     val tupler : Tupler[ RVt ],
     lengther : HListIntLength[ Rt ],
     generic: Generic.Aux[ T, RVt ],
@@ -51,13 +53,7 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFtRt ](
 }
 
 
-object FieldNameExtractor extends Poly1 {
-    implicit def fieldNameCase[ T, Rt ] : Case.Aux[ FieldDescription[ T ], String ] = at[ FieldDescription[ T ] ]( _.fieldName )
-}
 
-object DescriptionExtractor extends Poly1 {
-    implicit def descriptionCase[ T, Rt ] : Case.Aux[ FieldDescription[ T ], Option[ String ] ] = at[ FieldDescription[ T ] ]( _.description )
-}
 
 trait HListIntLength[ L <: HList ] {
     def length : Int
@@ -92,8 +88,9 @@ object CtxWrapHListsConstraint {
     implicit def hnilFieldAndDescConst[ F[ _ ] ] : CtxWrapHListsConstraint[ F, HNil, HNil ] = new CtxWrapHListsConstraint[ F, HNil, HNil ] {}
 
     implicit def idFieldAndDescConst[ F[ _ ], HeadRt, TailRt <: HList, HeadRVt, TailRVt <: HList ](
-                                                                                                    implicit evHead : HeadRt <:< F[ HeadRVt ],
-                                                                                                    evTail : CtxWrapHListsConstraint[ F, TailRt, TailRVt ],
+        implicit
+        evHead : HeadRt <:< F[ HeadRVt ],
+        evTail : CtxWrapHListsConstraint[ F, TailRt, TailRVt ],
     ) : CtxWrapHListsConstraint[ F, HeadRt :: TailRt, HeadRVt :: TailRVt ] = new CtxWrapHListsConstraint[ F, HeadRt :: TailRt, HeadRVt :: TailRVt ] {}
 
     def apply[ F[ _ ], Rt <: HList, RVt <: HList ]( implicit ev : CtxWrapHListsConstraint[ F, Rt, RVt ] ) : CtxWrapHListsConstraint[ F, Rt, RVt ] = ev

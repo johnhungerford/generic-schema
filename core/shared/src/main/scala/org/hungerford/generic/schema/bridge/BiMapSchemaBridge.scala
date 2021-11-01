@@ -2,8 +2,8 @@ package org.hungerford.generic.schema.bridge
 
 import org.hungerford.generic.schema.product.ProductSchema
 import org.hungerford.generic.schema.product.field.{FieldDescriptionMapper, TranslatedFieldDescription}
-import org.hungerford.generic.schema.types.Extractor
-import org.hungerford.generic.schema.{NoSchema, Primitive}
+import org.hungerford.generic.schema.types.{Extractor, Injector, SimpleExtractor}
+import org.hungerford.generic.schema.{NoSchema, Primitive, Schema}
 import shapeless._
 import shapeless.ops.hlist._
 import ujson.Value
@@ -18,18 +18,6 @@ object UjsonSchemaBridge {
 
     implicit def primitiveTranslation[ T, Rt ]( implicit rw : ReadWriter[ T ] ) : SchemaBridge[ T, Primitive, ReadWriter ] =
         ( _ : Primitive[ T ] ) => rw
-
-
-    implicit def additionalFieldsExtractor[ AFt ](
-        implicit
-        sch : ReadWriter[ AFt ],
-    ) : AdditionalFieldsExtractor[ AFt, Map[ String, Value.Value ] ] = {
-        ( from : Map[ String, Value.Value ] ) => {
-            from
-              .filter( ( v : (String, Value) ) => Try( read[ AFt ]( v._2 )( sch ) ).toOption.nonEmpty )
-              .mapValues( ( v : Value ) => read[ AFt ]( v )( sch ) )
-        }
-    }
 
     implicit def additionalFieldsWriter[ AFt ] : AdditionalFieldsWriter[ AFt, Map[ String, Value.Value ], ReadWriter ] = {
         ( fields : Map[ String, AFt ], to : Map[ String, Value ], using : default.ReadWriter[ AFt ] ) => {
@@ -51,13 +39,13 @@ object UjsonSchemaBridge {
     object RWFieldDescriptionMapper extends FieldDescriptionMapper[ ReadWriter ]
 
     // For no fields
-    implicit def productTranslation[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFtRt ](
+    implicit def productTranslation[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFtRt, Intermediate, OtherSchema[ _ ] ](
         fm : Mapper[ RWFieldDescriptionMapper.type, Rt ] { type Out = FDL },
-        pfe : Extractor.Aux[ Value.Value, HNil, FDL, RVt ],
-        afe : AdditionalFieldsExtractor[ AFt, Value.Value ],
-        flw : FieldListWriter[ RVt, FDL, Map[ String, Value.Value ] ],
-        afw : AdditionalFieldsWriter[ AFt, Map[ String, Value.Value ], ReadWriter ],
-        aftSchema : ReadWriter[ AFt ]
+        pfe : Extractor.Aux[ Intermediate, HNil, FDL, RVt ],
+        pfw : Injector.Aux[ RVt, Intermediate, Rt, Intermediate ],
+        afe : SimpleExtractor.Aux[ Intermediate, OtherSchema[ AFt ], Map[ String, AFt ] ],
+        afw : Injector.Aux[ Map[ String, AFt ], Intermediate, OtherSchema[ AFt ], Intermediate ],
+        afTrans : SchemaBridge[ AFt, Schema[ _ ], OtherSchema ],
     ) : SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, ReadWriter ] =
         new SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, ReadWriter ] {
         override def translate(
@@ -68,8 +56,8 @@ object UjsonSchemaBridge {
                     // generate ujson Value from object value
                     ( value : T ) => {
                         val (fields : RVt, additionalFields : Map[ String, AFt ]) = schema.deconstructor( value )
-                        val startingMap : Map[ String, Value.Value ] = Map.empty
-                        val updatedMap = flw.write( fields, startingMap, fieldDescriptions )
+                        val startingMap : Map[ String, Inte ] = Map.empty
+                        val updatedMap = pfw.inject( fields, startingMap, fieldDescriptions )
                         val finalMap = afw.write( additionalFields, updatedMap, aftSchema )
                         ujson.Obj.from( finalMap )
                     },

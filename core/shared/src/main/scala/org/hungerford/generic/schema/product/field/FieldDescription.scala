@@ -62,6 +62,14 @@ object FieldTranslator {
     }
 }
 
+object FieldNameExtractor extends Poly1 {
+    implicit def fieldNameCase[ T, Rt ] : Case.Aux[ FieldDescription[ T ], String ] = at[ FieldDescription[ T ] ]( _.fieldName )
+}
+
+object DescriptionExtractor extends Poly1 {
+    implicit def descriptionCase[ T, Rt ] : Case.Aux[ FieldDescription[ T ], Option[ String ] ] = at[ FieldDescription[ T ] ]( _.description )
+}
+
 class FieldDescriptionMapper[ OtherSchema[ _ ] ] extends Poly1 {
     implicit val hnilCase : Case.Aux[ HNil, HNil ] = at[ HNil ]( identity )
 

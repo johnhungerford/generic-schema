@@ -42,7 +42,7 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
     /**
      * Resolves type class instances for primitive schemas
      */
-    implicit def primitiveTranslation[ T, Rt ]( implicit os : OtherSchema[ T ] ) : SchemaBridge[ T, Primitive, OtherSchema ] =
+    implicit def primitiveTranslation[ T, Rt ]( implicit os : OtherSchema[ T ] ) : SchemaTranslation[ T, Primitive, OtherSchema ] =
         ( _ : Primitive[ T ] ) => os
 
 
@@ -52,11 +52,12 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
     object Implicits {
 
         implicit def productTranslationWithoutAF[ T, Rt <: HList, RVt <: HList, FDL <: HList ](
+            implicit
             fm : Mapper[ RWFieldDescriptionMapper.type, Rt ] { type Out = FDL },
             pfe : Extractor.Aux[ MapVal, HNil, FDL, RVt ],
             pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],
-        ) : SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, Nothing, Nothing ] })#A, OtherSchema ] =
-            new SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, Nothing, Nothing ] })#A, OtherSchema ] {
+        ) : SchemaTranslation[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, Nothing, Nothing ] })#A, OtherSchema ] =
+            new SchemaTranslation[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, Nothing, Nothing ] })#A, OtherSchema ] {
                 override def translate( schema : ProductSchema[ T, Rt, RVt, Nothing, Nothing ] ) : OtherSchema[ T ] = {
                     val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
 
@@ -81,9 +82,9 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
             pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],
             afe : SimpleExtractor.Aux[ MapVal, OtherSchema[ AFt ], Map[ String, AFt ] ],
             afw : Injector.Aux[ Map[ String, AFt ], BuildMapVal, OtherSchema[ AFt ], BuildMapVal ],
-            afTrans : SchemaBridge[ AFt, ({ type A[X] = Schema.Aux[ X, AFtRt ] })#A, OtherSchema ],
-        ) : SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] =
-            new SchemaBridge[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] {
+            afTrans : SchemaTranslation[ AFt, ({ type A[X] = Schema.Aux[ X, AFtRt ] })#A, OtherSchema ],
+        ) : SchemaTranslation[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] =
+            new SchemaTranslation[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ] {
 
                 override def translate(
                     schema : ProductSchema[ T, Rt,  RVt, AFt, AFtRt ],
@@ -109,6 +110,11 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
 
             }
 
+        def rw[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFtRt ](
+            implicit
+            schema : ProductSchema[ T, Rt,  RVt, AFt, AFtRt ],
+            trans : SchemaTranslation[ T, ({ type A[X] = ProductSchema[ X, Rt,  RVt, AFt, AFtRt ] })#A, OtherSchema ],
+        ) : OtherSchema[ T ] = trans.translate( schema )
     }
 
 }

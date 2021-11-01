@@ -75,8 +75,8 @@ class FieldDescriptionMapper[ OtherSchema[ _ ] ] extends Poly1 {
 
     implicit def genericCase[ T, Rt ](
         implicit ft : FieldTranslator[ T, OtherSchema ],
-    ) : Case.Aux[ FieldDescription[ T ], TranslatedFieldDescription[ T, OtherSchema ] ] =
-        at[ FieldDescription[ T ] ]( ( fd : FieldDescription[ T ] ) => ft.translate( fd ) )
+    ) : Case.Aux[ FieldDescription.Aux[ T, Rt ], TranslatedFieldDescription[ T, OtherSchema ] ] =
+        at[ FieldDescription.Aux[ T, Rt ] ]( ( fd : FieldDescription[ T ] ) => ft.translate( fd ) )
 }
 
 object FieldDescriptionMapper {

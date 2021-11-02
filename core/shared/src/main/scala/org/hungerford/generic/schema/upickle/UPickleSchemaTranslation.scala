@@ -60,19 +60,14 @@ object UPickleSchemaTranslation extends BiMapProductSchemaBridge[ ReadWriter, Va
 
     override def writeField[ T ]( value : T, to : ListMap[ String, Value.Value ], using : TranslatedFieldDescription[ T, ReadWriter ] ) : ListMap[ String, Value ] = {
         val valueJson : Value.Value = writeJs( value )( using.schema )
-        println( valueJson )
-        val newMap = to + ( (using.fieldName, valueJson) )
-        println( newMap )
-        newMap
+        to + ( (using.fieldName, valueJson) )
     }
 
     override def writeAdditionalFields[ T ]( from : Map[ String, T ], to : ListMap[ String, Value ], using : ReadWriter[ T ] ) : ListMap[ String, Value ] = {
         from.mapValues( v => writeJs( v )( using ) )
         from.foldLeft( to )( (oldFields : ListMap[ String, Value ], nextField : (String, T) ) => {
             val (fieldName, fieldValue) = nextField
-            val newFields = oldFields + (fieldName -> writeJs( fieldValue )( using ))
-            println( newFields )
-            newFields
+            oldFields + (fieldName -> writeJs( fieldValue )( using ))
         } )
     }
 

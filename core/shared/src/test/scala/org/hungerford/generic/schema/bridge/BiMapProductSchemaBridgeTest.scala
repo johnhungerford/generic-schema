@@ -38,8 +38,7 @@ class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
     it should "translate a product schema with additional fields" in {
         case class HasAF( str : String, bool : Boolean, other : Map[ String, Double ] )
 
-        implicit val testSchema : ProductSchema[ HasAF, Aux[String, Primitive[String]] :: Aux[Boolean, Primitive[Boolean]] :: HNil, String :: Boolean :: HNil, Double, Primitive[
-          Double ], (String, Boolean) ] = SchemaBuilder[ HasAF ]
+        implicit val testSchema = SchemaBuilder[ HasAF ]
           .product
           .additionalFields[ Double ].buildSchema( _.primitive.build )
           .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )

@@ -6,6 +6,7 @@ import org.hungerford.generic.schema.validator.Validator
 import shapeless._
 import shapeless.ops.hlist._
 
+import scala.collection.mutable
 import scala.language.higherKinds
 
 trait FieldDescription[ T ] {
@@ -63,7 +64,7 @@ object FieldTranslator {
 }
 
 object FieldNameExtractor extends Poly1 {
-    implicit def fieldNameCase[ T, Rt ] : Case.Aux[ FieldDescription[ T ], String ] = at[ FieldDescription[ T ] ]( _.fieldName )
+    implicit def fieldNameCase[ T, S <: Schema[ T ] ] : Case.Aux[ FieldDescription.Aux[ T, S ], String ] = at[ FieldDescription.Aux[ T, S ] ]( _.fieldName )
 }
 
 object DescriptionExtractor extends Poly1 {
@@ -81,4 +82,18 @@ class FieldDescriptionMapper[ OtherSchema[ _ ] ] extends Poly1 {
 
 object FieldDescriptionMapper {
     def apply[ OtherSchema[ _ ] ] : FieldDescriptionMapper[ OtherSchema ] = new FieldDescriptionMapper[ OtherSchema ]
+}
+
+trait FieldNamesCollector[ T ] {
+    def collect( from : T ) : Set[ String ]
+}
+
+object FieldNamesCollector {
+    implicit def extractor[ L <: HList, R <: HList ](
+        implicit
+        m : Mapper.Aux[ FieldNameExtractor.type, L, R ],
+        l : ToList[ R, String ],
+    ) : FieldNamesCollector[ L ] = {
+        ( from : L ) => from.map( FieldNameExtractor ).toList.toSet
+    }
 }

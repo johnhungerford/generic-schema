@@ -5,9 +5,10 @@ import org.hungerford.generic.schema.product.field.TranslatedFieldDescription
 import ujson.Value
 import upickle.default._
 
+import scala.collection.immutable.ListMap
 import scala.util.Try
 
-object UPickleSchemaTranslation extends BiMapProductSchemaBridge[ ReadWriter, Value.Value, Map[ String, Value.Value ] ] {
+object UPickleSchemaTranslation extends BiMapProductSchemaBridge[ ReadWriter, Value.Value, ListMap[ String, Value.Value ] ] {
 
     /**
      * Construct a schema from the two parts of a bimap.
@@ -28,7 +29,7 @@ object UPickleSchemaTranslation extends BiMapProductSchemaBridge[ ReadWriter, Va
      *
      * @return initial value of buildable bimap type
      */
-    override def initMapVal : Map[ String, Value ] = Map.empty
+    override def initMapVal : ListMap[ String, Value.Value ] = ListMap.empty
 
     /**
      * Construct the final type to be bimapped to and from
@@ -36,7 +37,7 @@ object UPickleSchemaTranslation extends BiMapProductSchemaBridge[ ReadWriter, Va
      * @param buildableValue
      * @return
      */
-    override def buildMapVal( buildableValue : Map[ String, Value ] ) : Value = {
+    override def buildMapVal( buildableValue : ListMap[ String, Value.Value ] ) : Value.Value = {
         val bvSeq : Seq[ (String, Value) ] = buildableValue.toSeq
         ujson.Obj( bvSeq.head, bvSeq : _* )
     }
@@ -57,13 +58,22 @@ object UPickleSchemaTranslation extends BiMapProductSchemaBridge[ ReadWriter, Va
         }
     }
 
-    override def writeField[ T ]( value : T, to : Map[ String, Value ], using : TranslatedFieldDescription[ T, ReadWriter ] ) : Map[ String, Value ] = {
+    override def writeField[ T ]( value : T, to : ListMap[ String, Value.Value ], using : TranslatedFieldDescription[ T, ReadWriter ] ) : ListMap[ String, Value ] = {
         val valueJson : Value.Value = writeJs( value )( using.schema )
-        to + ( (using.fieldName, valueJson) )
+        println( valueJson )
+        val newMap = to + ( (using.fieldName, valueJson) )
+        println( newMap )
+        newMap
     }
 
-    override def writeAdditionalFields[ T ]( from : Map[ String, T ], to : Map[ String, Value ], using : ReadWriter[ T ] ) : Map[ String, Value ] = {
+    override def writeAdditionalFields[ T ]( from : Map[ String, T ], to : ListMap[ String, Value ], using : ReadWriter[ T ] ) : ListMap[ String, Value ] = {
         from.mapValues( v => writeJs( v )( using ) )
+        from.foldLeft( to )( (oldFields : ListMap[ String, Value ], nextField : (String, T) ) => {
+            val (fieldName, fieldValue) = nextField
+            val newFields = oldFields + (fieldName -> writeJs( fieldValue )( using ))
+            println( newFields )
+            newFields
+        } )
     }
 
 }

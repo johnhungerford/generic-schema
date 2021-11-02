@@ -1,12 +1,11 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.product.field.FieldDescription
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._
-import shapeless.ops.hlist.Tupler
+import shapeless.ops.hlist.{ToList, Tupler}
 
-import scala.annotation.implicitNotFound
 import scala.language.higherKinds
 
 
@@ -22,6 +21,7 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt
     fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
     val tupler : Tupler.Aux[ RVt, Tupt ],
     lengther : HListIntLength[ Rt ],
+    fns : FieldNamesCollector[ Rt ],
 ) extends Schema[ T ] {
     // Field descriptions
     override type R = Rt
@@ -46,6 +46,8 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt
 
     lazy val size : Int = lengther.length
 
+    def fields : Set[ String ] = fns.collect( fieldDescriptions )
+
     override def withDescription( description : String ) : Schema[ T ] = copy( genericDescription = Some( description ) )
 
     override def withoutDescription : Schema[ T ] = copy( genericDescription = None )
@@ -54,8 +56,6 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt
 
     override def withoutValidation : Schema[ T ] = copy( genericValidators = Set.empty )
 }
-
-
 
 
 trait HListIntLength[ L <: HList ] {

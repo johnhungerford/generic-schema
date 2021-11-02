@@ -1,11 +1,12 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.product.field.FieldDescription.Aux
-import org.hungerford.generic.schema.{PrimitiveSchemaBuilder, Schema, SchemaBuilder}
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, FieldDescriptionBuilderWithoutSchema}
+import org.hungerford.generic.schema.{Primitive, PrimitiveSchemaBuilder, Schema, SchemaBuilder}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, FieldDescriptionBuilderWithoutSchema, FieldNamesCollector}
 import org.hungerford.generic.schema.validator.Validator
-import shapeless.ops.hlist.{Prepend, Tupler}
+import shapeless.ops.hlist.{Prepend, ToList, Tupler}
 import shapeless._
+
 
 case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](
     private[ product ] val desc : Option[ String ] = None,
@@ -22,11 +23,11 @@ case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ 
         validate ( validator +: otherValidators )
     def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] = copy( vals = validators.toSet )
 
-    def addField[ F, NewR <: HList, NewRV <: HList, NewTup ](
-        fd : FieldDescription[ F ],
+    def addField[ F, NewR <: HList, NewRV <: HList, NewTup, S <: Schema[ F ] ](
+        fd : FieldDescription.Aux[ F, S ],
     )(
         implicit
-        prepR : Prepend.Aux[ R, FieldDescription[ F ] :: HNil, NewR ],
+        prepR : Prepend.Aux[ R, FieldDescription.Aux[ F, S ] :: HNil, NewR ],
         prepRV : Prepend.Aux[ RV, F :: HNil, NewRV ],
         tup : Tupler.Aux[ NewRV, NewTup ],
         rConstraint : CtxWrapHListsConstraint[ FieldDescription, NewR, NewRV ]
@@ -35,13 +36,12 @@ case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ 
         copy[ T, NewR, NewRV, AF, AFS, NewTup ]( desc, vals, aftSch, newFieldDescs )
     }
 
-    def additionalFields[ F, S <: Schema[ F ] ]( implicit schema : S ) : ProductSchemaBuilder[ T, R, RV, F, S, Tup ] = {
-        copy[ T, R, RV, F, S, Tup ]( desc, vals, schema, fieldDescs )
-    }
-
-    def buildAdditionalFieldsSchema[ F, S <: Schema[ F ] ]( builder : SchemaBuilder[ F ] => S ) : ProductSchemaBuilder[ T, R, RV, F, S, Tup ] = {
-        copy[ T, R, RV, F, S, Tup ]( desc, vals, builder( SchemaBuilder[ F ] ) )
-    }
+    def additionalFields[ F ] : AdditionalFieldsBuilder[ T, R, RV, F, Tup ] =
+        AdditionalFieldsBuilder[ T, R, RV, F, Tup ](
+            desc,
+            vals,
+            fieldDescs,
+        )
 
     def construct(
         constructor : ( Tup, Map[ String, AF ] ) => T,
@@ -183,6 +183,7 @@ case class BuildableProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <:
     def build(
         implicit
         lengther : HListIntLength[ R ],
+        fns : FieldNamesCollector[ R ],
     ) : ProductSchema[ T, R, RV, AF, AFS, Tup ] =
         ProductSchema[ T, R, RV, AF, AFS, Tup ](
             desc,
@@ -192,4 +193,31 @@ case class BuildableProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <:
             constr,
             deconstr,
         )
+}
+
+case class AdditionalFieldsBuilder[ T, R <: HList, RV <: HList, AF, Tup ](
+    private[ product ] val desc : Option[ String ] = None,
+    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+    private[ product ] val fieldDescs : R,
+)(
+    implicit
+    fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
+    val tupler : Tupler.Aux[ RV, Tup ],
+) {
+    def fromSchema[ S <: Schema[ AF ] ](
+        implicit schema : S,
+    ) : ProductSchemaBuilder[ T, R, RV, AF, S, Tup ] = {
+        ProductSchemaBuilder[ T, R, RV, AF, S, Tup ](
+            desc,
+            vals,
+            schema,
+            fieldDescs,
+        )
+    }
+
+    def buildSchema[ S <: Schema[ AF ] ](
+        builder : SchemaBuilder[ AF ] => S,
+    ) : ProductSchemaBuilder[ T, R, RV, AF, S, Tup ] = {
+        fromSchema( builder( SchemaBuilder[ AF ] ) )
+    }
 }

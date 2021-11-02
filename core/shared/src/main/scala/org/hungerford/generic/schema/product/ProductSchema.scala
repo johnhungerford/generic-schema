@@ -1,47 +1,52 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.product.field.FieldDescription
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._
-import shapeless.ops.hlist.Tupler
+import shapeless.ops.hlist.{ToList, Tupler}
 
-import scala.annotation.implicitNotFound
 import scala.language.higherKinds
 
 
-case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFtRt ](
+case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt ], Tupt ](
     genericDescription : Option[ String ],
     genericValidators : Set[ Validator[ T ] ],
     fieldDescriptions : Rt,
-    additionalFieldsSchema : Schema.Aux[ AFt, AFtRt ],
+    additionalFieldsSchema : AFSt,
     private[ schema ] val constructor : (RVt, Map[ String, AFt ]) => T,
     private[ schema ] val deconstructor : T => (RVt, Map[ String, AFt ])
 )(
     implicit
     fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
-    val tupler : Tupler[ RVt ],
+    val tupler : Tupler.Aux[ RVt, Tupt ],
     lengther : HListIntLength[ Rt ],
-    generic: Generic.Aux[ T, RVt ],
+    fns : FieldNamesCollector[ Rt ],
 ) extends Schema[ T ] {
     // Field descriptions
     override type R = Rt
 
     type RV = RVt
 
-    type AdditionalFieldType = AFt
+    type AF = AFt
 
-    def construct( fieldParams : tupler.Out, additionalFields : Map[ String, AdditionalFieldType ] )(
-        implicit tupleGeneric : Generic.Aux[ tupler.Out, RVt ],
+    type AFS = AFSt
+
+    type Tup = Tupt
+
+    def construct( fieldParams : Tup, additionalFields : Map[ String, AF ] )(
+        implicit tupleGeneric : Generic.Aux[ Tup, RVt ],
     ) : T =
         constructor( tupleGeneric.to( fieldParams ), additionalFields )
 
-    def deconstruct( value : T ) : (Tupler[ RVt ]#Out, Map[ String, AdditionalFieldType ]) = {
+    def deconstruct( value : T ) : (Tup, Map[ String, AF ]) = {
         val (fieldsRVt, additionalFields) = deconstructor( value )
         (fieldsRVt.tupled, additionalFields)
     }
 
     lazy val size : Int = lengther.length
+
+    def fields : Set[ String ] = fns.collect( fieldDescriptions )
 
     override def withDescription( description : String ) : Schema[ T ] = copy( genericDescription = Some( description ) )
 
@@ -51,8 +56,6 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFtRt ](
 
     override def withoutValidation : Schema[ T ] = copy( genericValidators = Set.empty )
 }
-
-
 
 
 trait HListIntLength[ L <: HList ] {

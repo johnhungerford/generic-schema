@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{Schema, SchemaBuilder}
+import org.hungerford.generic.schema.{Primitive, Schema, SchemaBuilder}
 
 
 case class FieldDescriptionBuilderWithoutSchema[ T ](
@@ -9,6 +9,15 @@ case class FieldDescriptionBuilderWithoutSchema[ T ](
     private val desc : Option[ String ] = None,
     private val vs : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
 ){
+    def primitive : FieldDescriptionBuilderWithSchema[ T, Primitive[ T ] ] = {
+        FieldDescriptionBuilderWithSchema[ T, Primitive[ T ] ](
+            Primitive[ T ](),
+            fn,
+            desc,
+            vs,
+        )
+    }
+
     def fromSchema[ S <: Schema[ T ] ]( implicit schema : S ) : FieldDescriptionBuilderWithSchema[ T, S ] = {
         FieldDescriptionBuilderWithSchema[ T, S ](
             schema,
@@ -19,7 +28,7 @@ case class FieldDescriptionBuilderWithoutSchema[ T ](
     }
 
     def buildSchema[ Rt, S <: Schema[ T ] ]( builder : SchemaBuilder[ T ] => S ) : FieldDescriptionBuilderWithSchema[ T, S ] = {
-        fromSchema( builder( SchemaBuilder.empty[ T ] ) )
+        fromSchema( builder( SchemaBuilder[ T ] ) )
     }
 
     def fieldName( name : String ) : FieldDescriptionBuilderWithoutSchema[ T ] = copy( fn = Some( name ) )
@@ -39,6 +48,10 @@ case class FieldDescriptionBuilderWithSchema[ T, S <: Schema[ T ] ](
         copy( desc = Some( description ) )
     def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithSchema[ T, S ] =
         copy( vs = validators.toSet )
+
+    def build : FieldDescription.Aux[ T, S ] = {
+        FieldDescriptionCase[ T, S ]( fn.get, sch, desc, vs )
+    }
 }
 
 object FieldDescriptionBuilder {

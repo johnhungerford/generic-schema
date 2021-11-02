@@ -22,14 +22,14 @@ case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ 
         validate ( validator +: otherValidators )
     def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS ] = copy( vals = validators.toSet )
 
-    def addField[ F, S <: Schema[ F ] ](
-        builder : FieldDescriptionBuilderWithoutSchema[ F ] => FieldDescription.Aux[ F, S ],
+    def addField[ F ](
+        builder : FieldDescriptionBuilderWithoutSchema[ F ] => FieldDescription[ F ],
     )(
         implicit tup : Tupler[ F :: RV ],
-    ) : ProductSchemaBuilder[ T, FieldDescription.Aux[ F, S ] :: R, F :: RV, AF, AFS ] = {
-        val fd : Aux[ F, S ] = builder( FieldDescriptionBuilder[ F ] )
+    ) : ProductSchemaBuilder[ T, FieldDescription[ F ] :: R, F :: RV, AF, AFS ] = {
+        val fd : FieldDescription[ F ] = builder( FieldDescriptionBuilder[ F ] )
         val newFieldDescs = fd :: fieldDescs
-        copy[ T, FieldDescription.Aux[ F, S ] :: R, F :: RV, AF, AFS ]( desc, vals, aftSch, newFieldDescs )
+        copy[ T, FieldDescription[ F ] :: R, F :: RV, AF, AFS ]( desc, vals, aftSch, newFieldDescs )
     }
 
     def additionalFields[ F, S <: Schema[ F ] ]( implicit schema : S ) : ProductSchemaBuilder[ T, R, RV, F, S ] = {

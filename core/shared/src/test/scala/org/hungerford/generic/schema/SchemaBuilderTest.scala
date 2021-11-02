@@ -4,6 +4,7 @@ import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
+import shapeless.HNil
 
 class SchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
@@ -47,7 +48,7 @@ class SchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .validate( TestValidator )
           .product
 
-        schb shouldBe ProductSchemaBuilder[ Int ]( Some( "some description" ), Set( TestValidator ) )
+        schb shouldBe ProductSchemaBuilder[ Int, HNil, HNil, Nothing, NoSchema.type ]( Some( "some description" ), Set( TestValidator ), None, HNil )
     }
 
     behavior of "PrimitiveSchemaBuilder"

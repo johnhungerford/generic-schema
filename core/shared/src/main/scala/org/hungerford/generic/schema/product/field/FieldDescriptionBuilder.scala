@@ -39,6 +39,10 @@ case class FieldDescriptionBuilderWithSchema[ T, S <: Schema[ T ] ](
         copy( desc = Some( description ) )
     def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithSchema[ T, S ] =
         copy( vs = validators.toSet )
+
+    def build : FieldDescription.Aux[ T, S ] = {
+        FieldDescriptionCase[ T, S ]( fn.get, sch, desc, vs )
+    }
 }
 
 object FieldDescriptionBuilder {

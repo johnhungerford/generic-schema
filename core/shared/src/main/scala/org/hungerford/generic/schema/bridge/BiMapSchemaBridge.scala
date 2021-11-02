@@ -97,7 +97,7 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
                 val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
 
                 val writer : T => MapVal = { ( value : T ) =>
-                    val (fields : RVt, _ : Map[ String, Nothing ]) = schema.deconstructor( value )
+                    val (fields, _ : Map[ String, Nothing ]) = schema.deconstructor( value )
                     val buildMapWithFields = pfw.inject( fields, initMapVal, fieldDescriptions )
                     buildMapVal( buildMapWithFields )
                 }
@@ -130,7 +130,7 @@ trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
 
                 // Note order of building might matter
                 val writer : T => MapVal = { ( value : T ) =>
-                    val (fields : RVt, additionalFields : Map[ String, AFt ]) = schema.deconstructor( value )
+                    val (fields, additionalFields : Map[ String, AFt ]) = schema.deconstructor( value )
                     val fieldsSet = schema.fields
                     val buildMapWithFields = pfw.inject( fields, initMapVal, fieldDescriptions )
                     val fixedAdditionalFields = additionalFields.filter( v => !fieldsSet.contains( v._1 ) )

@@ -83,7 +83,39 @@ class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
         res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
     }
 
-    it should "be able to use nested product schemas" in {
+    it should "be able to use nested product schemas through nested building" in {
+        case class Inside( str : String )
+        case class Outside( inside : Inside )
+
+        import org.hungerford.generic.schema.primitives._
+
+        implicit val outsideSch = SchemaBuilder[ Outside ]
+          .product
+          .addField(
+              FieldDescriptionBuilder[ Inside ]
+                .fieldName( "inside_field" )
+                .buildSchema( _.product
+                  .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+                  .construct( (tup, _) => Inside( tup._1 ) )
+                  .deconstruct( value => (Tuple1( value.str ), Map.empty) )
+                  .build
+                )
+                .build
+          )
+          .construct( (tup, _) => Outside( tup._1 ) )
+          .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
+          .build
+
+        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
+
+        implicit val outsideRW : ReadWriter[ Outside ] = rw
+
+        val testOutside = Outside( Inside( "hello" ) )
+
+        write( testOutside ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+    }
+
+    it should "be able to use nested product schemas through implicit resolution" in {
         case class Inside( str : String )
         case class Outside( inside : Inside )
 

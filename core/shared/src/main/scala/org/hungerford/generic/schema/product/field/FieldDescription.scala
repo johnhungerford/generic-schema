@@ -18,7 +18,7 @@ trait FieldDescription[ T ] {
 }
 
 object FieldDescription {
-    type Aux[ T, St ] = FieldDescription[ T ] { type S = St }
+    type Aux[ T, St <: Schema[ T ] ] = FieldDescription[ T ] { type S = St }
 }
 
 case class FieldDescriptionCase[ T, St <: Schema[ T ] ](
@@ -73,10 +73,10 @@ object DescriptionExtractor extends Poly1 {
 class FieldDescriptionMapper[ OtherSchema[ _ ] ] extends Poly1 {
     implicit val hnilCase : Case.Aux[ HNil, HNil ] = at[ HNil ]( identity )
 
-    implicit def genericCase[ T, Rt ](
+    implicit def genericCase[ T, S <: Schema[ T ] ](
         implicit ft : FieldTranslator[ T, OtherSchema ],
-    ) : Case.Aux[ FieldDescription.Aux[ T, Rt ], TranslatedFieldDescription[ T, OtherSchema ] ] =
-        at[ FieldDescription.Aux[ T, Rt ] ]( ( fd : FieldDescription[ T ] ) => ft.translate( fd ) )
+    ) : Case.Aux[ FieldDescription.Aux[ T, S ], TranslatedFieldDescription[ T, OtherSchema ] ] =
+        at[ FieldDescription.Aux[ T, S ] ]( ( fd : FieldDescription[ T ] ) => ft.translate( fd ) )
 }
 
 object FieldDescriptionMapper {

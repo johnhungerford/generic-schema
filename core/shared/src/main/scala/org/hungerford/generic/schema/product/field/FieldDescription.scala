@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.bridge.SchemaTranslation
+import org.hungerford.generic.schema.translation.SchemaTranslation
 import org.hungerford.generic.schema.product.ProductSchema
 import org.hungerford.generic.schema.product.field.FieldDescription.Aux
 import org.hungerford.generic.schema.validator.Validator

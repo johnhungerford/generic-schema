@@ -1,4 +1,4 @@
-package org.hungerford.generic.schema.bridge
+package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.Schema
 

@@ -1,4 +1,4 @@
-package org.hungerford.generic.schema.bridge
+package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.product.ProductSchema
 import org.hungerford.generic.schema.product.field.{FieldDescriptionMapper, TranslatedFieldDescription}
@@ -9,7 +9,7 @@ import shapeless.ops.hlist._
 
 import scala.language.higherKinds
 
-trait BiMapProductSchemaBridge[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
+trait BiMapProductSchemaTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
 
     /**
      * Construct a schema from the two parts of a bimap.

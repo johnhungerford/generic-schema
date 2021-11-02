@@ -1,13 +1,10 @@
 package org.hungerford.generic.schema.translation
 
-import org.hungerford.generic.schema.product.ProductSchema
-import org.hungerford.generic.schema.product.field.FieldDescription.Aux
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
-import org.hungerford.generic.schema.{Primitive, SchemaBuilder}
+import org.hungerford.generic.schema.SchemaBuilder
+import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import upickle.default._
-import shapeless._
 
 class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
 
@@ -144,7 +141,5 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
         write( testOutside ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
 
     }
-
-
 
 }

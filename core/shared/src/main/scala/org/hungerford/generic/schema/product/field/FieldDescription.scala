@@ -6,6 +6,7 @@ import org.hungerford.generic.schema.product.ProductSchema
 import org.hungerford.generic.schema.product.field.FieldDescription.Aux
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._
+import shapeless.labelled.FieldType
 import shapeless.ops.hlist._
 
 import scala.collection.mutable
@@ -72,7 +73,12 @@ object FieldTranslator {
 }
 
 object FieldNameExtractor extends Poly1 {
-    implicit def fieldNameCase[ T, S <: Schema[ T ] ] : Case.Aux[ FieldDescription.Aux[ T, S ], String ] = at[ FieldDescription.Aux[ T, S ] ]( _.fieldName )
+    implicit def fieldNameCase[ T, S <: Schema[ T ] ] : Case.Aux[ FieldDescription.Aux[ T, S ], String ] =
+        at[ FieldDescription.Aux[ T, S ] ]( _.fieldName )
+
+    implicit def fieldTypeCase[ K <: Symbol, T ](
+        implicit wit : Witness.Aux[ K ],
+    ) : Case.Aux[ FieldType[ K, T ], String ] = at[ FieldType[ K, T ] ]( ft => wit.value.name )
 }
 
 object DescriptionExtractor extends Poly1 {

@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{Schema, SchemaBuilder}
+import org.hungerford.generic.schema.{Primitive, Schema, SchemaBuilder}
 
 
 case class FieldDescriptionBuilderWithoutSchema[ T ](
@@ -9,6 +9,15 @@ case class FieldDescriptionBuilderWithoutSchema[ T ](
     private val desc : Option[ String ] = None,
     private val vs : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
 ){
+    def primitive : FieldDescriptionBuilderWithSchema[ T, Primitive[ T ] ] = {
+        FieldDescriptionBuilderWithSchema[ T, Primitive[ T ] ](
+            Primitive[ T ](),
+            fn,
+            desc,
+            vs,
+        )
+    }
+
     def fromSchema[ S <: Schema[ T ] ]( implicit schema : S ) : FieldDescriptionBuilderWithSchema[ T, S ] = {
         FieldDescriptionBuilderWithSchema[ T, S ](
             schema,

@@ -28,7 +28,7 @@ class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
 
         val generic = Generic.materialize[ NoAF, RVt ]
 
-        implicit val testSchema = ProductSchema[ NoAF, FieldDescription.Aux[ Int, Primitive[ Int ] ] :: FieldDescription.Aux[ String, Primitive[ String ] ] :: HNil, Int :: String :: HNil, Nothing, Nothing ](
+        implicit val testSchema = ProductSchema[ NoAF, FieldDescription.Aux[ Int, Primitive[ Int ] ] :: FieldDescription.Aux[ String, Primitive[ String ] ] :: HNil, Int :: String :: HNil, Nothing, NoSchema.type ](
             Some( "test schema description" ),
             Set.empty,
             intFieldDesc :: strFieldDesc :: HNil,
@@ -37,60 +37,7 @@ class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
             ( value ) => (generic.to( value ), Map.empty),
         )
 
-        val upickleTransl = new BiMapProductSchemaBridge[ ReadWriter, Value.Value, Map[ String, Value.Value ] ] {
-
-            /**
-             * Construct a schema from the two parts of a bimap.
-             *
-             * @param to   T => MapVal : writer
-             * @param from MapVal => T : reader
-             * @tparam T type being read/written
-             * @return type class instance for some reader/writer
-             */
-            override def schemaFromBimap[ T ]( to : T => Value, from : Value => T ) : ReadWriter[ T ] = {
-                readwriter[ Value.Value ].bimap[ T ]( to, from )
-            }
-
-            /**
-             * Initial empty value for the type being mapped to and from, that can be built
-             * by adding field values. For instance, if the value type is Map[ String, T ],
-             * initMapVal would be Map.empty[ String, T ]
-             *
-             * @return initial value of buildable bimap type
-             */
-            override def initMapVal : Map[ String, Value ] = Map.empty
-
-            /**
-             * Construct the final type to be bimapped to and from
-             *
-             * @param buildableValue
-             * @return
-             */
-            override def buildMapVal( buildableValue : Map[ String, Value ] ) : Value = {
-                val bvSeq : Seq[ (String, Value) ] = buildableValue.toSeq
-                ujson.Obj( bvSeq.head, bvSeq : _* )
-            }
-
-            override def extractField[ T ](
-                from : Value,
-                using : TranslatedFieldDescription[ T, default.ReadWriter ],
-            ) : T = {
-                val fieldValue : Value = from.obj( using.fieldName )
-                val rw : ReadWriter[ T ] = using.schema
-                read[ T ]( fieldValue )( rw )
-            }
-
-            override def extractAdditionalFields[ T ]( from : Value, using : default.ReadWriter[ T ] ) : Map[String, T ] = ???
-
-            override def writeField[ T ]( value : T, to : Map[String, Value ], using : TranslatedFieldDescription[ T, default.ReadWriter ] ) : Map[String, Value ] = {
-                val valueJson : Value.Value = writeJs( value )( using.schema )
-                to + ((using.fieldName, valueJson ))
-            }
-
-            override def writeAdditionalFields[ T ]( from : Map[String, T ], to : Map[String, Value ], using : default.ReadWriter[ T ] ) : Map[String, Value ] = ???
-        }
-
-        import upickleTransl.Implicits._
+        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
 
         implicit val noAfRw: ReadWriter[ NoAF ] = rw
 

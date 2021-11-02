@@ -18,7 +18,7 @@ case class SchemaBuilder[ T ](
     def product : ProductSchemaBuilder[ T, HNil, HNil, Nothing, NoSchema.type ] = ProductSchemaBuilder[ T, HNil, HNil, Nothing, NoSchema.type  ](
         desc,
         vals,
-        None,
+        NoSchema,
         HNil,
     )
 }

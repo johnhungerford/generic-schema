@@ -48,7 +48,7 @@ class SchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .validate( TestValidator )
           .product
 
-        schb shouldBe ProductSchemaBuilder[ Int, HNil, HNil, Nothing, NoSchema.type ]( Some( "some description" ), Set( TestValidator ), None, HNil )
+        schb shouldBe ProductSchemaBuilder[ Int, HNil, HNil, Nothing, NoSchema.type ]( Some( "some description" ), Set( TestValidator ), NoSchema, HNil )
     }
 
     behavior of "PrimitiveSchemaBuilder"

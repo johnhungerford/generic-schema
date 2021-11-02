@@ -27,6 +27,11 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
                 .fieldName( "bool" )
                 .build
           )
+          .addField[ BigInt ](
+              _.primitive
+                .fieldName( "and another" )
+                .build
+          )
     }
 
 }

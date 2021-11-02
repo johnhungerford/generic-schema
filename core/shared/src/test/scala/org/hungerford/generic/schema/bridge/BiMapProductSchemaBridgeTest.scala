@@ -28,7 +28,7 @@ class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
 
         val generic = Generic.materialize[ NoAF, RVt ]
 
-        implicit val testSchema = ProductSchema[ NoAF, FieldDescription.Aux[ Int, Primitive[ Int ] ] :: FieldDescription.Aux[ String, Primitive[ String ] ] :: HNil, Int :: String :: HNil, Nothing, NoSchema.type ](
+        implicit val testSchema = ProductSchema[ NoAF, FieldDescription.Aux[ Int, Primitive[ Int ] ] :: FieldDescription.Aux[ String, Primitive[ String ] ] :: HNil, Int :: String :: HNil, Nothing, NoSchema.type, (Int, String) ](
             Some( "test schema description" ),
             Set.empty,
             intFieldDesc :: strFieldDesc :: HNil,

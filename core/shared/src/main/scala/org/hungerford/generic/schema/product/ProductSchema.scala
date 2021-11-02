@@ -10,7 +10,7 @@ import scala.annotation.implicitNotFound
 import scala.language.higherKinds
 
 
-case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt ] ](
+case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt ], Tupt ](
     genericDescription : Option[ String ],
     genericValidators : Set[ Validator[ T ] ],
     fieldDescriptions : Rt,
@@ -20,7 +20,7 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt
 )(
     implicit
     fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
-    val tupler : Tupler[ RVt ],
+    val tupler : Tupler.Aux[ RVt, Tupt ],
     lengther : HListIntLength[ Rt ],
 ) extends Schema[ T ] {
     // Field descriptions
@@ -32,12 +32,14 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt
 
     type AFS = AFSt
 
-    def construct( fieldParams : tupler.Out, additionalFields : Map[ String, AF ] )(
-        implicit tupleGeneric : Generic.Aux[ tupler.Out, RVt ],
+    type Tup = Tupt
+
+    def construct( fieldParams : Tup, additionalFields : Map[ String, AF ] )(
+        implicit tupleGeneric : Generic.Aux[ Tup, RVt ],
     ) : T =
         constructor( tupleGeneric.to( fieldParams ), additionalFields )
 
-    def deconstruct( value : T ) : (Tupler[ RVt ]#Out, Map[ String, AF ]) = {
+    def deconstruct( value : T ) : (Tup, Map[ String, AF ]) = {
         val (fieldsRVt, additionalFields) = deconstructor( value )
         (fieldsRVt.tupled, additionalFields)
     }

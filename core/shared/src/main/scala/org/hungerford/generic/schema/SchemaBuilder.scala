@@ -3,6 +3,7 @@ package org.hungerford.generic.schema
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._
+import shapeless.ops.hlist.Tupler
 
 case class SchemaBuilder[ T ](
     private[ schema ] val desc : Option[ String ] = None,
@@ -15,7 +16,7 @@ case class SchemaBuilder[ T ](
 
     def primitive : PrimitiveSchemaBuilder[ T ] = PrimitiveSchemaBuilder[ T ]( desc, vals )
     def buildPrimitive : Primitive[ T ] = Primitive[ T ]( desc, vals )
-    def product : ProductSchemaBuilder[ T, HNil, HNil, Nothing, NoSchema.type ] = ProductSchemaBuilder[ T, HNil, HNil, Nothing, NoSchema.type  ](
+    def product : ProductSchemaBuilder[ T, HNil, HNil, Nothing, NoSchema.type, Unit ] = ProductSchemaBuilder[ T, HNil, HNil, Nothing, NoSchema.type, Unit ](
         desc,
         vals,
         NoSchema,

@@ -2,12 +2,12 @@ package org.hungerford.generic.schema.bridge
 
 import org.hungerford.generic.schema.product.ProductSchema
 import org.hungerford.generic.schema.product.field.FieldDescription.Aux
-import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
 import org.hungerford.generic.schema.{Primitive, SchemaBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-import shapeless._
 import upickle.default._
+import shapeless._
 
 class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
 
@@ -57,5 +57,62 @@ class BiMapProductSchemaBridgeTest extends AnyFlatSpecLike with Matchers {
         val res = write( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ) )
         res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
     }
+
+    it should "use implicit primitive types" in {
+        case class HasAF( str : String, bool : Boolean, other : Map[ String, Double ] )
+
+        import org.hungerford.generic.schema.primitives._
+
+        implicit val testSchema = SchemaBuilder[ HasAF ]
+          .product
+          .additionalFields[ Double ].buildSchema( _.primitive.build )
+          .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+          .addField( FieldDescriptionBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
+          .construct( (tup, af : Map[ String, Double ]) => {
+              val (str : String, bool : Boolean) = tup
+              HasAF( str, bool, af )
+          } )
+          .deconstruct( value => ((value.str, value.bool), value.other) )
+          .build
+
+        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
+
+        implicit val hasAFrw: ReadWriter[ HasAF ] = rw
+
+        val res = write( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ) )
+        res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
+    }
+
+    it should "be able to use nested product schemas" in {
+        case class Inside( str : String )
+        case class Outside( inside : Inside )
+
+        import org.hungerford.generic.schema.primitives._
+
+        implicit val insideSch = SchemaBuilder[ Inside ]
+          .product
+          .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+          .construct( (tup, _) => Inside( tup._1 ) )
+          .deconstruct( value => (Tuple1( value.str ), Map.empty) )
+          .build
+
+        implicit val outsideSch = SchemaBuilder[ Outside ]
+          .product
+          .addField( FieldDescriptionBuilder[ Inside ].fromSchema.fieldName( "inside_field" ).build )
+          .construct( (tup, _) => Outside( tup._1 ) )
+          .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
+          .build
+
+        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
+
+        implicit val outsideRW : ReadWriter[ Outside ] = rw
+
+        val testOutside = Outside( Inside( "hello" ) )
+
+        write( testOutside ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+
+    }
+
+
 
 }

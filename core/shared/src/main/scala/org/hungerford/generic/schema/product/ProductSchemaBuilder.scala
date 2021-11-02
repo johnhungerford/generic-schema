@@ -1,11 +1,10 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.FieldDescription.Aux
-import org.hungerford.generic.schema.{Primitive, PrimitiveSchemaBuilder, Schema, SchemaBuilder}
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, FieldDescriptionBuilderWithoutSchema, FieldNamesCollector}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
 import org.hungerford.generic.schema.validator.Validator
-import shapeless.ops.hlist.{Prepend, ToList, Tupler}
+import org.hungerford.generic.schema.{Schema, SchemaBuilder}
 import shapeless._
+import shapeless.ops.hlist.{Prepend, Tupler}
 
 
 case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](

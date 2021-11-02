@@ -1,7 +1,9 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.bridge.SchemaTranslation
 import org.hungerford.generic.schema.product.ProductSchema
+import org.hungerford.generic.schema.product.field.FieldDescription.Aux
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._
 import shapeless.ops.hlist._
@@ -38,20 +40,20 @@ case class TranslatedFieldDescription[ T, OtherSchema[ _ ] ](
     validators : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
 )
 
-trait FieldTranslator[ T, OtherSchema[ _ ] ] {
-    def translate( fd : FieldDescription[ T ] ) : TranslatedFieldDescription[ T, OtherSchema ]
+trait FieldTranslator[ T, S <: Schema[ T ], OtherSchema[ _ ] ] {
+    def translate( fd : FieldDescription.Aux[ T, S ] ) : TranslatedFieldDescription[ T, OtherSchema ]
 }
 
 object FieldTranslator {
-    def apply[ T, OtherSchema[ _ ] ](
-        implicit ft : FieldTranslator[ T, OtherSchema ],
-    ) : FieldTranslator[ T, OtherSchema ] = ft
+    def apply[ T, S <: Schema[ T ], OtherSchema[ _ ] ](
+        implicit ft : FieldTranslator[ T, S, OtherSchema ],
+    ) : FieldTranslator[ T, S, OtherSchema ] = ft
 
-    implicit def genericFieldTranslator[ T, OtherSchema[ _ ] ](
+    def genericFieldTranslator[ T, S <: Schema[ T ], OtherSchema[ _ ] ](
         implicit osc : OtherSchema[ T ],
-    ) : FieldTranslator[ T, OtherSchema ] = {
+    ) : FieldTranslator[ T, S, OtherSchema ] = {
 
-        ( fd : FieldDescription[ T ] ) => {
+        ( fd : FieldDescription.Aux[ T, S ] ) => {
             TranslatedFieldDescription(
                 fd.fieldName,
                 osc,
@@ -59,7 +61,13 @@ object FieldTranslator {
                 fd.validators,
             )
         }
+    }
 
+    implicit def genericSchemaFieldTranslator[ T, S <: Schema[ T ], OtherSchema[ _ ] ](
+        implicit
+        schTrans : SchemaTranslation[ T, S, OtherSchema ],
+    ) : FieldTranslator[ T, S, OtherSchema ] = {
+        ( fd : Aux[ T, S ] ) => genericFieldTranslator( schTrans.translate( fd.schema ) ).translate( fd )
     }
 }
 
@@ -75,9 +83,9 @@ class FieldDescriptionMapper[ OtherSchema[ _ ] ] extends Poly1 {
     implicit val hnilCase : Case.Aux[ HNil, HNil ] = at[ HNil ]( identity )
 
     implicit def genericCase[ T, S <: Schema[ T ] ](
-        implicit ft : FieldTranslator[ T, OtherSchema ],
+        implicit ft : FieldTranslator[ T, S, OtherSchema ],
     ) : Case.Aux[ FieldDescription.Aux[ T, S ], TranslatedFieldDescription[ T, OtherSchema ] ] =
-        at[ FieldDescription.Aux[ T, S ] ]( ( fd : FieldDescription[ T ] ) => ft.translate( fd ) )
+        at[ FieldDescription.Aux[ T, S ] ]( ( fd : FieldDescription.Aux[ T, S ] ) => ft.translate( fd ) )
 }
 
 object FieldDescriptionMapper {

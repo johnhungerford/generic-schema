@@ -1,15 +1,10 @@
 package org.hungerford.generic.schema
 
-import org.hungerford.generic.schema.product.{ProductDeriver, ProductSchema}
+import org.hungerford.generic.schema.product.ProductSchema
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-import shapeless.LabelledGeneric.Aux
 import shapeless._
-import shapeless.labelled.FieldType
-import shapeless.ops.record.Keys
-import shapeless.syntax.singleton.mkSingletonOps
-import upickle.default._
 
 
 class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {

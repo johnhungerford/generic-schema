@@ -220,3 +220,22 @@ case class AdditionalFieldsBuilder[ T, R <: HList, RV <: HList, AF, Tup ](
         fromSchema( builder( SchemaBuilder[ AF ] ) )
     }
 }
+
+object ProductSchemaBuilder {
+    def from[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](
+        schema : ProductSchema[ T, R, RV, AF, AFS, Tup ],
+    )(
+        implicit
+        fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
+        tupler : Tupler.Aux[ RV, Tup ],
+    ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] = {
+        BuildableProductSchemaBuilder(
+            schema.genericDescription,
+            schema.genericValidators,
+            schema.additionalFieldsSchema,
+            schema.fieldDescriptions,
+            schema.constructor,
+            schema.deconstructor
+        )
+    }
+}

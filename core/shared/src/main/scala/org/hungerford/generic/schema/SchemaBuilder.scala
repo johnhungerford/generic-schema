@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
-import org.hungerford.generic.schema.product.{CtxWrapHListsConstraint, HListIntLength, ProductDeriver, ProductSchema, ProductSchemaBuilder}
+import org.hungerford.generic.schema.product.{BuildableProductSchemaBuilder, CtxWrapHListsConstraint, HListIntLength, ProductDeriver, ProductSchema, ProductSchemaBuilder}
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._
 import shapeless.ops.hlist.Tupler
@@ -32,8 +32,10 @@ case class SchemaBuilder[ T ](
     def caseClass[ R <: HList, Rt <: HList, RVt <: HList, Tupt ](
         implicit
         deriver : SchemaDeriver.Aux[ T, ProductSchema[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] ],
-    ) : ProductSchema[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] = {
-        deriver.derive
+        fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
+        tupler : Tupler.Aux[ RVt, Tupt ],
+    ) : BuildableProductSchemaBuilder[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] = {
+        ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ]( deriver.derive )
     }
 }
 

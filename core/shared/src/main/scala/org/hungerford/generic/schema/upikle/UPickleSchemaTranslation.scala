@@ -1,4 +1,4 @@
-package org.hungerford.generic.schema.upickle
+package org.hungerford.generic.schema.upikle
 
 import org.hungerford.generic.schema.translation.BiMapProductSchemaTranslation
 import org.hungerford.generic.schema.product.field.TranslatedFieldDescription

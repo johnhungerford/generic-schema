@@ -25,7 +25,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => ((value.intField, value.strField), Map.empty) )
           .build
 
-        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
+        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
         implicit val noAfRw: ReadWriter[ NoAF ] = rw
 
@@ -47,7 +47,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => ((value.str, value.bool), value.other) )
           .build
 
-        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
+        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
         implicit val hasAFrw: ReadWriter[ HasAF ] = rw
 
@@ -72,7 +72,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => ((value.str, value.bool), value.other) )
           .build
 
-        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
+        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
         implicit val hasAFrw: ReadWriter[ HasAF ] = rw
 
@@ -103,7 +103,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
           .build
 
-        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
+        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
         implicit val outsideRW : ReadWriter[ Outside ] = rw
 
@@ -132,7 +132,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
           .build
 
-        import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation._
+        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
         implicit val outsideRW : ReadWriter[ Outside ] = rw
 

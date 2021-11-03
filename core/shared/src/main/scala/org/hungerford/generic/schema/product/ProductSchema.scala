@@ -23,6 +23,7 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt
     lengther : HListIntLength[ Rt ],
     fns : FieldNamesCollector[ Rt ],
 ) extends Schema[ T ] {
+
     // Field descriptions
     override type R = Rt
 

@@ -1,12 +1,15 @@
 package org.hungerford.generic.schema.translation
 
-import org.hungerford.generic.schema.SchemaBuilder
+import org.hungerford.generic.schema.{NoSchema, Primitive, SchemaBuilder}
+import org.hungerford.generic.schema.product.ProductSchema
+import org.hungerford.generic.schema.product.field.FieldDescription.Aux
 import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
+import shapeless.HNil
 import upickle.default._
 
-class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
+class BiMapProductSchemaTranslatorTest extends AnyFlatSpecLike with Matchers {
 
     behavior of "BiMapProductSchemaBridge.Implicits.productTranslationWithoutAF"
 
@@ -27,7 +30,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
 
         import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
-        implicit val noAfRw: ReadWriter[ NoAF ] = rw
+        implicit val noAfRw: ReadWriter[ NoAF ] = SchemaTranslator.translate( testSchema )
 
         write( NoAF( 1, "hello" ) ) shouldBe """{"int_field":1,"str_field":"hello"}"""
     }
@@ -49,7 +52,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
 
         import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
-        implicit val hasAFrw: ReadWriter[ HasAF ] = rw
+        implicit val hasAFrw: ReadWriter[ HasAF ] = SchemaTranslator.translate( testSchema )
 
         val res = write( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ) )
         res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
@@ -74,7 +77,8 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
 
         import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
-        implicit val hasAFrw: ReadWriter[ HasAF ] = rw
+        implicit val hasAFrw: ReadWriter[ HasAF ] = SchemaTranslator.translate( testSchema )
+
 
         val res = write( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ) )
         res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
@@ -105,7 +109,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
 
         import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
-        implicit val outsideRW : ReadWriter[ Outside ] = rw
+        implicit val outsideRW : ReadWriter[ Outside ] = SchemaTranslator.translate( outsideSch )
 
         val testOutside = Outside( Inside( "hello" ) )
 
@@ -134,7 +138,7 @@ class BiMapProductSchemaTranslationTest extends AnyFlatSpecLike with Matchers {
 
         import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
 
-        implicit val outsideRW : ReadWriter[ Outside ] = rw
+        implicit val outsideRW : ReadWriter[ Outside ] = SchemaTranslator.translate( outsideSch )
 
         val testOutside = Outside( Inside( "hello" ) )
 

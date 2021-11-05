@@ -11,17 +11,6 @@ class ExtractorTest extends AnyFlatSpecLike with Matchers {
 
     it should "extract to a list" in {
 
-//        implicit def testExtractor[ L <: HList, Res <: HList ](
-//            implicit
-//            prep : Prepend.Aux[ L, String :: HNil, Res ],
-//        ) : Extractor.Aux[ Map[ Int, String ], L, Int, prep.Out ] =
-//            new Extractor[ Map[ Int, String ], L, Int ] {
-//                override type Out = Res
-//
-//                override def extract( from : Map[ Int, String ], to : L, using : Int ) : Res =
-//                    to :+ from( using )
-//            }
-
         implicit def testSimpleExtractor : SimpleExtractor.Aux[ Map[ Int, String ], Int, String ] = {
             new SimpleExtractor[ Map[ Int, String ], Int ] {
                 override type Out = String

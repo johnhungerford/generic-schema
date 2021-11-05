@@ -13,6 +13,8 @@ class SchemaProviderTest extends AnyFlatSpecLike with Matchers {
         import primitives._
 
         val sch = SchemaProvider.schema[ Test ]
+
+        sch.shape.fields shouldBe Set( "int" )
     }
 
 }

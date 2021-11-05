@@ -16,10 +16,6 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
 
         import primitives._
 
-//        type Rt = FieldDescription.Aux[ Int, Primitive[ Int ] ] :: FieldDescription.Aux[ String, Primitive[ String ] ] :: HNil
-//        type RVt = Int :: String :: HNil
-//        type Tupt = (Int, String)
-
         val testSchema = SchemaBuilder[ Test ]
           .product
           .addField( FieldDescriptionBuilder[ Int ].fromSchema.fieldName( "int" ).build )

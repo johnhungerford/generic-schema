@@ -51,16 +51,16 @@ class SchemaBuilderTest extends AnyFlatSpecLike with Matchers {
         schb shouldBe ProductSchemaBuilder[ Int, HNil, HNil, Nothing, NoSchema.type, Unit ]( Some( "some description" ), Set( TestValidator ), NoSchema, HNil )
     }
 
-//    it should "be able to derive a product schema and build on it" in {
-//        case class Test( int : Int, str : String )
-//
-//        import primitives._
-//
-//        val schemaBuilder = SchemaBuilder[ Test ].caseClass
-//        val schema = schemaBuilder.build
-//
-//        assertCompiles( "implicitly[ schema.type <:< Schema[ Test ] ]" )
-//    }
+    it should "be able to derive a product schema and build on it" in {
+        case class Test( int : Int, str : String )
+
+        import primitives._
+
+        val schemaBuilder = SchemaBuilder[ Test ].caseClass
+        val schema = schemaBuilder.build
+
+        assertCompiles( "implicitly[ schema.type <:< Schema[ Test ] ]" )
+    }
 
     behavior of "PrimitiveSchemaBuilder"
 

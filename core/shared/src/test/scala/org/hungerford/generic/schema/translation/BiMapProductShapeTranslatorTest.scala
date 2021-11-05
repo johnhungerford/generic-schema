@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.{NoSchema, Primitive, SchemaBuilder}
-import org.hungerford.generic.schema.product.ProductSchema
+import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldDescription.Aux
 import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
 import org.scalatest.flatspec.AnyFlatSpecLike
@@ -9,7 +9,7 @@ import org.scalatest.matchers.should.Matchers
 import shapeless.HNil
 import upickle.default._
 
-class BiMapProductSchemaTranslatorTest extends AnyFlatSpecLike with Matchers {
+class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
 
     behavior of "BiMapProductSchemaBridge.Implicits.productTranslationWithoutAF"
 

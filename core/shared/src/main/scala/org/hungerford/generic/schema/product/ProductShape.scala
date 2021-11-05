@@ -9,9 +9,7 @@ import shapeless.ops.hlist.{ToList, Tupler}
 import scala.language.higherKinds
 
 
-case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt ], Tupt ](
-    genericDescription : Option[ String ],
-    genericValidators : Set[ Validator[ T ] ],
+case class ProductShape[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt ], Tupt ](
     fieldDescriptions : Rt,
     additionalFieldsSchema : AFSt,
     private[ schema ] val constructor : (RVt, Map[ String, AFt ]) => T,
@@ -22,10 +20,10 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt
     val tupler : Tupler.Aux[ RVt, Tupt ],
     lengther : HListIntLength[ Rt ],
     fns : FieldNamesCollector[ Rt ],
-) extends Schema[ T ] {
+) {
 
     // Field descriptions
-    override type R = Rt
+    type R = Rt
 
     type RV = RVt
 
@@ -48,14 +46,6 @@ case class ProductSchema[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt
     lazy val size : Int = lengther.length
 
     def fields : Set[ String ] = fns.collect( fieldDescriptions )
-
-    override def withDescription( description : String ) : Schema[ T ] = copy( genericDescription = Some( description ) )
-
-    override def withoutDescription : Schema[ T ] = copy( genericDescription = None )
-
-    override def withValidation( validators : Validator[ T ]* ) : Schema[ T ] = copy( genericValidators = genericValidators ++ validators.toSet )
-
-    override def withoutValidation : Schema[ T ] = copy( genericValidators = Set.empty )
 }
 
 
@@ -94,6 +84,7 @@ object CtxWrapHListsConstraint {
     implicit def idFieldAndDescConst[ F[ _ ], HeadRt, TailRt <: HList, HeadRVt, TailRVt <: HList ](
         implicit
         evHead : HeadRt <:< F[ HeadRVt ],
+        evNotNothing : HeadRt =:!= Nothing,
         evTail : CtxWrapHListsConstraint[ F, TailRt, TailRVt ],
     ) : CtxWrapHListsConstraint[ F, HeadRt :: TailRt, HeadRVt :: TailRVt ] = new CtxWrapHListsConstraint[ F, HeadRt :: TailRt, HeadRVt :: TailRVt ] {}
 

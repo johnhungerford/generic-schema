@@ -1,12 +1,13 @@
 package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
-import org.hungerford.generic.schema.product.{CtxWrapHListsConstraint, HListIntLength, ProductDeriver, ProductSchema}
+import org.hungerford.generic.schema.product.{CtxWrapHListsConstraint, HListIntLength, ProductDeriver, ProductShape}
+import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._
 import shapeless.ops.hlist.Tupler
 
-trait SchemaDeriver[ T ] {
+trait SchemaDeriver[ T ] extends Deriver[ T ] {
     type Out <: Schema[ T ]
 
     def derive : Out
@@ -19,18 +20,13 @@ object SchemaDeriver {
         implicit sd : SchemaDeriver.Aux[ T, S ],
     ) : SchemaDeriver.Aux[ T, S ] = sd
 
-    implicit def productDeriver[ T, R <: HList, Rt <: HList, RVt <: HList, Tupt ](
-        implicit
-        pd : ProductDeriver.Aux[ T, ProductSchema[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] ],
 
-    ) : SchemaDeriver.Aux[ T, ProductSchema[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] ] = {
-        new SchemaDeriver[ T ] {
-            override type Out = pd.Out
+    implicit def productSchemaDeriver[ T ](
+        implicit prd : ProductDeriver[ T ],
+    ) : SchemaDeriver.Aux[ T, ComplexSchema[ T, prd.Out ] ] = new SchemaDeriver[ T ] {
+        override type Out = ComplexSchema[ T, prd.Out ]
 
-            override def derive : ProductSchema[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] = {
-                pd.derive
-            }
-        }
+        override def derive : Out = ComplexSchema[ T, prd.Out ]( prd.derive )
     }
 
     def schema[ T ](

@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema
 
-import org.hungerford.generic.schema.product.ProductSchema
+import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -16,11 +16,11 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
 
         import primitives._
 
-        type Rt = FieldDescription.Aux[ Int, Primitive[ Int ] ] :: FieldDescription.Aux[ String, Primitive[ String ] ] :: HNil
-        type RVt = Int :: String :: HNil
-        type Tupt = (Int, String)
+//        type Rt = FieldDescription.Aux[ Int, Primitive[ Int ] ] :: FieldDescription.Aux[ String, Primitive[ String ] ] :: HNil
+//        type RVt = Int :: String :: HNil
+//        type Tupt = (Int, String)
 
-        val testSchema : ProductSchema[ Test, FieldDescription.Aux[Int, Primitive[Int]] :: FieldDescription.Aux[String, Primitive[String]] :: HNil, Int :: String :: HNil, Nothing, NoSchema.type, (Int, String) ] = SchemaBuilder[ Test ]
+        val testSchema = SchemaBuilder[ Test ]
           .product
           .addField( FieldDescriptionBuilder[ Int ].fromSchema.fieldName( "int" ).build )
           .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str" ).build )
@@ -30,7 +30,7 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
 
         val newTestRes = SchemaDeriver.schema[ Test ]
 
-        newTestRes.fieldDescriptions shouldBe testSchema.fieldDescriptions
+        newTestRes.shape.fieldDescriptions shouldBe testSchema.shape.fieldDescriptions
 
     }
 

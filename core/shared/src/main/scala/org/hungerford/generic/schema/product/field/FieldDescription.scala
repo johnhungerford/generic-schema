@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.translation.SchemaTranslator
-import org.hungerford.generic.schema.product.ProductSchema
+import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldDescription.Aux
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._

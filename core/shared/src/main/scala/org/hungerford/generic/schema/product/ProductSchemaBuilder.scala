@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{Schema, SchemaBuilder}
+import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder}
 import shapeless._
 import shapeless.ops.hlist.{Prepend, Tupler}
 
@@ -183,14 +183,16 @@ case class BuildableProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <:
         implicit
         lengther : HListIntLength[ R ],
         fns : FieldNamesCollector[ R ],
-    ) : ProductSchema[ T, R, RV, AF, AFS, Tup ] =
-        ProductSchema[ T, R, RV, AF, AFS, Tup ](
-            desc,
-            vals,
-            fieldDescs,
-            aftSch,
-            constr,
-            deconstr,
+    ) : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, Tup ] ] =
+        ComplexSchema(
+            ProductShape[ T, R, RV, AF, AFS, Tup ](
+                fieldDescriptions = fieldDescs,
+                additionalFieldsSchema = aftSch,
+                constructor = constr,
+                deconstructor = deconstr,
+            ),
+            genericDescription = desc,
+            genericValidators = vals,
         )
 }
 
@@ -223,7 +225,7 @@ case class AdditionalFieldsBuilder[ T, R <: HList, RV <: HList, AF, Tup ](
 
 object ProductSchemaBuilder {
     def from[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](
-        schema : ProductSchema[ T, R, RV, AF, AFS, Tup ],
+        schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, Tup ] ],
     )(
         implicit
         fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
@@ -232,10 +234,10 @@ object ProductSchemaBuilder {
         BuildableProductSchemaBuilder(
             schema.genericDescription,
             schema.genericValidators,
-            schema.additionalFieldsSchema,
-            schema.fieldDescriptions,
-            schema.constructor,
-            schema.deconstructor
+            schema.shape.additionalFieldsSchema,
+            schema.shape.fieldDescriptions,
+            schema.shape.constructor,
+            schema.shape.deconstructor
         )
     }
 }

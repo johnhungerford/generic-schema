@@ -1,7 +1,8 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
-import org.hungerford.generic.schema.{Primitive, SchemaBuilder}
+import org.hungerford.generic.schema.types.Provider
+import org.hungerford.generic.schema.{Primitive, SchemaBuilder, SchemaProvider}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
@@ -59,6 +60,21 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be able to build schema if constructor and deconstructor are provided" in {
+        implicit val schema = SchemaBuilder[ TestCase ]
+          .product
+          .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
+          .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
+          .construct( (tup, _) => {
+              val (int, str) = tup
+              TestCase( int, str )
+          } )
+          .deconstruct( ( value : TestCase ) => {
+              ((value.int, value.str), Map.empty)
+          } )
+          .build
+    }
+
+    it should "be able to rebuild" in {
         SchemaBuilder[ TestCase ]
           .product
           .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
@@ -71,6 +87,8 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
               ((value.int, value.str), Map.empty)
           } )
           .build
+//          .rebuild( _.build )
+
     }
 
 }

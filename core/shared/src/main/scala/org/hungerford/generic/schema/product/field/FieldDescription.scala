@@ -1,11 +1,12 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.translation.SchemaTranslation
-import org.hungerford.generic.schema.product.ProductSchema
+import org.hungerford.generic.schema.translation.SchemaTranslator
+import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldDescription.Aux
 import org.hungerford.generic.schema.validator.Validator
 import shapeless._
+import shapeless.labelled.FieldType
 import shapeless.ops.hlist._
 
 import scala.collection.mutable
@@ -65,14 +66,19 @@ object FieldTranslator {
 
     implicit def genericSchemaFieldTranslator[ T, S <: Schema[ T ], OtherSchema[ _ ] ](
         implicit
-        schTrans : SchemaTranslation[ T, S, OtherSchema ],
+        schTrans : SchemaTranslator.Aux[ T, OtherSchema, S ],
     ) : FieldTranslator[ T, S, OtherSchema ] = {
         ( fd : Aux[ T, S ] ) => genericFieldTranslator( schTrans.translate( fd.schema ) ).translate( fd )
     }
 }
 
 object FieldNameExtractor extends Poly1 {
-    implicit def fieldNameCase[ T, S <: Schema[ T ] ] : Case.Aux[ FieldDescription.Aux[ T, S ], String ] = at[ FieldDescription.Aux[ T, S ] ]( _.fieldName )
+    implicit def fieldNameCase[ T, S <: Schema[ T ] ] : Case.Aux[ FieldDescription.Aux[ T, S ], String ] =
+        at[ FieldDescription.Aux[ T, S ] ]( _.fieldName )
+
+    implicit def fieldTypeCase[ K <: Symbol, T ](
+        implicit wit : Witness.Aux[ K ],
+    ) : Case.Aux[ FieldType[ K, T ], String ] = at[ FieldType[ K, T ] ]( ft => wit.value.name )
 }
 
 object DescriptionExtractor extends Poly1 {

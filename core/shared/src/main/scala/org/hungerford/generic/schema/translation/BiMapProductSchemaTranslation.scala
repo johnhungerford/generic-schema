@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.translation
 
-import org.hungerford.generic.schema.product.ProductSchema
+import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.{FieldDescriptionMapper, TranslatedFieldDescription}
 import org.hungerford.generic.schema.types.{Extractor, Injector, SimpleExtractor}
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema}
@@ -83,28 +83,34 @@ trait BiMapProductSchemaTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
     /**
      * Resolves type class instances for primitive schemas
      */
-    implicit def primitiveTranslation[ T, Rt, S <: Primitive[ T ] ]( implicit os : OtherSchema[ T ] ) : SchemaTranslation[ T, S, OtherSchema ] =
-        ( _ : S ) => os
+    implicit def primitiveTranslation[ T, Rt, S <: Primitive[ T ] ]( implicit os : OtherSchema[ T ] ) : SchemaTranslator.Aux[ T, OtherSchema, S ] =
+        new SchemaTranslator[ T, OtherSchema ] {
+            override type OurSchema = S
+
+            override def translate( schema : OurSchema ) : OtherSchema[ T ] = os
+        }
 
     implicit def productTranslationWithoutAF[ T, Rt <: HList, RVt <: HList, FDL <: HList, Tup ](
         implicit
         fm : Mapper[ RWFieldDescriptionMapper.type, Rt ] {type Out = FDL},
         pfe : Extractor.Aux[ MapVal, HNil, FDL, RVt ],
         pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],
-    ) : SchemaTranslation[ T, ProductSchema[ T, Rt, RVt, Nothing, NoSchema.type, Tup ], OtherSchema ] =
-        new SchemaTranslation[ T, ProductSchema[ T, Rt, RVt, Nothing, NoSchema.type, Tup ], OtherSchema ] {
-            override def translate( schema : ProductSchema[ T, Rt, RVt, Nothing, NoSchema.type, Tup ] ) : OtherSchema[ T ] = {
-                val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
+    ) : SchemaTranslator.Aux[ T, OtherSchema, Schema.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, NoSchema.type, Tup ] ] ] =
+        new SchemaTranslator[ T, OtherSchema ] {
+            override type OurSchema = Schema.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, NoSchema.type, Tup ] ]
+
+            override def translate( schema : OurSchema ) : OtherSchema[ T ] = {
+                val fieldDescriptions : FDL = schema.shape.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
 
                 val writer : T => MapVal = { ( value : T ) =>
-                    val (fields, _ : Map[ String, Nothing ]) = schema.deconstructor( value )
+                    val (fields, _ : Map[ String, Nothing ]) = schema.shape.deconstructor( value )
                     val buildMapWithFields = pfw.inject( fields, initMapVal, fieldDescriptions )
                     buildMapVal( buildMapWithFields )
                 }
 
                 val reader : MapVal => T = { ( mapVal : MapVal ) =>
                     val fieldValues = pfe.extract( mapVal, HNil, fieldDescriptions )
-                    schema.constructor( fieldValues, Map.empty )
+                    schema.shape.constructor( fieldValues, Map.empty )
                 }
 
                 schemaFromBimap( writer, reader )
@@ -118,20 +124,21 @@ trait BiMapProductSchemaTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
         pfw : Injector.Aux[ RVt, BuildMapVal, FDL, BuildMapVal ],
         afe : SimpleExtractor.Aux[ MapVal, OtherSchema[ AFt ], Map[ String, AFt ] ],
         afw : Injector.Aux[ Map[ String, AFt ], BuildMapVal, OtherSchema[ AFt ], BuildMapVal ],
-        afTrans : SchemaTranslation[ AFt, AFSt, OtherSchema ],
-    ) : SchemaTranslation[ T, ProductSchema[ T, Rt, RVt, AFt, AFSt, Tup ], OtherSchema ] =
-        new SchemaTranslation[ T, ProductSchema[ T, Rt, RVt, AFt, AFSt, Tup ], OtherSchema ] {
+        afTrans : SchemaTranslator.Aux[ AFt, OtherSchema, AFSt ],
+    ) : SchemaTranslator.Aux[ T, OtherSchema, Schema.Aux[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, Tup ] ] ] =
+        new SchemaTranslator[ T, OtherSchema ] {
+            override type OurSchema = Schema.Aux[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, Tup ] ]
 
             override def translate(
-                schema : ProductSchema[ T, Rt, RVt, AFt, AFSt, Tup ],
+                schema : OurSchema,
             ) : OtherSchema[ T ] = {
-                val fieldDescriptions : FDL = schema.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
-                val aftSchema = afTrans.translate( schema.additionalFieldsSchema )
+                val fieldDescriptions : FDL = schema.shape.fieldDescriptions.map( RWFieldDescriptionMapper )( fm )
+                val aftSchema = afTrans.translate( schema.shape.additionalFieldsSchema )
 
                 // Note order of building might matter
                 val writer : T => MapVal = { ( value : T ) =>
-                    val (fields, additionalFields : Map[ String, AFt ]) = schema.deconstructor( value )
-                    val fieldsSet = schema.fields
+                    val (fields, additionalFields : Map[ String, AFt ]) = schema.shape.deconstructor( value )
+                    val fieldsSet = schema.shape.fields
                     val buildMapWithFields = pfw.inject( fields, initMapVal, fieldDescriptions )
                     val fixedAdditionalFields = additionalFields.filter( v => !fieldsSet.contains( v._1 ) )
                     val buildMapWithAdditionalFields = afw.inject( fixedAdditionalFields, buildMapWithFields, aftSchema )
@@ -141,18 +148,12 @@ trait BiMapProductSchemaTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
                 val reader : MapVal => T = { ( mapVal : MapVal ) =>
                     val additionalFieldValues : Map[ String, AFt ] = afe.extract( mapVal, aftSchema )
                     val fieldValues = pfe.extract( mapVal, HNil, fieldDescriptions )
-                    schema.constructor( fieldValues, additionalFieldValues )
+                    schema.shape.constructor( fieldValues, additionalFieldValues )
                 }
 
                 schemaFromBimap( writer, reader )
             }
 
         }
-
-    def rw[ T, Rt <: HList, RVt <: HList, FDL <: HList, AFt, AFSt <: Schema[ AFt ], Tup ](
-        implicit
-        schema : ProductSchema[ T, Rt, RVt, AFt, AFSt, Tup ],
-        trans : SchemaTranslation[ T, ProductSchema[ T, Rt, RVt, AFt, AFSt, Tup ], OtherSchema ],
-    ) : OtherSchema[ T ] = trans.translate( schema )
 
 }

@@ -48,7 +48,7 @@ class SchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .validate( TestValidator )
           .product
 
-        schb shouldBe ProductSchemaBuilder[ Int, HNil, HNil, Nothing, NoSchema.type, Unit ]( Some( "some description" ), Set( TestValidator ), NoSchema, HNil )
+        schb shouldBe ProductSchemaBuilder[ Int, HNil, HNil, Nothing, Unit, Unit ]( Some( "some description" ), Set( TestValidator ), NoSchema, HNil )
     }
 
     it should "be able to derive a product schema and build on it" in {

@@ -5,24 +5,20 @@ import shapeless.Lazy
 
 import scala.language.higherKinds
 
-trait SchemaTranslator[ T, OtherSchema[ _ ] ] {
-    type OurSchema <: Schema[ T ]
-
-    def translate( schema : OurSchema ) : OtherSchema[ T ]
+trait SchemaTranslator[ T, S, OtherSchema[ _ ] ] {
+    def translate( schema : Schema.Aux[ T, S ] ) : OtherSchema[ T ]
 }
 
 object SchemaTranslator {
-    type Aux[ T, OtherSchema[ _ ], OurSch <: Schema[ T ] ] = SchemaTranslator[ T, OtherSchema ] { type OurSchema = OurSch }
+    def apply[ T, S, OtherSchema[ _ ] ](
+        implicit sch : SchemaTranslator[ T, S, OtherSchema ],
+    ) : SchemaTranslator[ T, S, OtherSchema ] = sch
 
-    def apply[ T, OtherSchema[ _ ], OurSch <: Schema[ T ] ](
-        implicit sch : SchemaTranslator.Aux[ T, OtherSchema, OurSch ],
-    ) : SchemaTranslator.Aux[ T, OtherSchema, OurSch ] = sch
-
-    def translate[ T, OtherSchema[ _ ], OurSch <: Schema[ T ] ](
-        sch : OurSch,
+    def translate[ T, S,  OtherSchema[ _ ] ](
+        sch : Schema.Aux[ T, S ],
     )(
         implicit
-        trans : SchemaTranslator.Aux[ T, OtherSchema, OurSch ],
+        trans : SchemaTranslator[ T, S, OtherSchema ],
     ) : OtherSchema[ T ] = trans.translate( sch )
 
 }

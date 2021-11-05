@@ -1,17 +1,24 @@
 package org.hungerford.generic.schema.translation
 
-import org.hungerford.generic.schema.{NoSchema, Primitive, SchemaBuilder}
+import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldDescription.Aux
-import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import shapeless.HNil
+import shapeless.ops.hlist.Mapper
 import upickle.default._
 
-class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
+class UpickleTranslatorTest extends AnyFlatSpecLike with Matchers {
 
     behavior of "BiMapProductSchemaBridge.Implicits.productTranslationWithoutAF"
+
+    it should "translate primitives" in {
+        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
+
+        assertCompiles( "SchemaTranslator.translate( Primitive[ Int ]() )" )
+    }
 
     it should "translate a product schema without additional fields" in {
 
@@ -29,6 +36,8 @@ class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
           .build
 
         import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
+
+        import shapeless._
 
         implicit val noAfRw: ReadWriter[ NoAF ] = SchemaTranslator.translate( testSchema )
 
@@ -143,7 +152,23 @@ class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
         val testOutside = Outside( Inside( "hello" ) )
 
         write( testOutside ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+    }
 
+    it should "be able to translated nested product schemas provided by derivation" in {
+        case class Inside( str : String )
+        case class Outside( inside : Inside )
+
+        import org.hungerford.generic.schema.primitives._
+
+        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
+
+        implicit val outsideSchema = SchemaProvider.schema[ Outside ]
+
+        implicit val outsideRW : ReadWriter[ Outside ] = SchemaTranslator.translate( outsideSchema )
+
+        val testOutside = Outside( Inside( "hello" ) )
+
+        write( testOutside ) shouldBe """{"inside":{"str":"hello"}}"""
     }
 
 }

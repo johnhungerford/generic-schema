@@ -129,7 +129,7 @@ lazy val core = ( crossProject( JSPlatform, JVMPlatform ) in file( "core" ) )
 
 lazy val gsUPickle = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-upickle" ) )
   .configs( IntegrationConfig, WipConfig )
-  .dependsOn( core )
+  .dependsOn( core % "compile->compile;test->test" )
   .disablePlugins( sbtassembly.AssemblyPlugin )
   .settings(
       name := "gsUPickle",

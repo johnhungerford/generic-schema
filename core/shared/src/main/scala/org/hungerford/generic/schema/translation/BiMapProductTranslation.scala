@@ -9,7 +9,7 @@ import shapeless.ops.hlist._
 
 import scala.language.higherKinds
 
-trait BiMapProductSchemaTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
+trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
 
     /**
      * Construct a schema from the two parts of a bimap.
@@ -79,14 +79,6 @@ trait BiMapProductSchemaTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
             ( value : Map[ String, T ], target : BuildMapVal, using : OtherSchema[ T ] ) =>
                 writeAdditionalFields( value, target, using )
         }
-
-    /**
-     * Resolves type class instances for primitive schemas
-     */
-    implicit def primitiveTranslation[ T ](
-        implicit os : OtherSchema[ T ],
-    ) : SchemaTranslator[ T, Unit, OtherSchema ] =
-        ( _ : Schema.Aux[ T, Unit ] ) => os
 
     implicit def productTranslationWithoutAF[ T, Rt <: HList, RVt <: HList, FDL <: HList, Tup ](
         implicit

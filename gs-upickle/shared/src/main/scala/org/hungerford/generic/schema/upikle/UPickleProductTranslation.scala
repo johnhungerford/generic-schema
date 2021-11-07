@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.upikle
 
-import org.hungerford.generic.schema.translation.BiMapProductSchemaTranslation
+import org.hungerford.generic.schema.translation.BiMapProductTranslation
 import org.hungerford.generic.schema.product.field.TranslatedFieldDescription
 import ujson.Value
 import upickle.default._
@@ -8,7 +8,7 @@ import upickle.default._
 import scala.collection.immutable.ListMap
 import scala.util.Try
 
-object UPickleSchemaTranslation extends BiMapProductSchemaTranslation[ ReadWriter, Value.Value, ListMap[ String, Value.Value ] ] {
+trait UPickleProductTranslation extends BiMapProductTranslation[ ReadWriter, Value.Value, ListMap[ String, Value.Value ] ] {
 
     /**
      * Construct a schema from the two parts of a bimap.
@@ -72,3 +72,5 @@ object UPickleSchemaTranslation extends BiMapProductSchemaTranslation[ ReadWrite
     }
 
 }
+
+object UPickleProductTranslation extends UPickleProductTranslation

@@ -14,6 +14,14 @@ object SchemaTranslator {
         implicit sch : SchemaTranslator[ T, S, OtherSchema ],
     ) : SchemaTranslator[ T, S, OtherSchema ] = sch
 
+    /**
+     * Resolves type class instances for primitive schemas
+     */
+    implicit def primitiveTranslation[ T, OtherSchema[ _ ] ](
+        implicit os : OtherSchema[ T ],
+    ) : SchemaTranslator[ T, Unit, OtherSchema ] =
+        ( _ : Schema.Aux[ T, Unit ] ) => os
+
     def translate[ T, S,  OtherSchema[ _ ] ](
         sch : Schema.Aux[ T, S ],
     )(

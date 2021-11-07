@@ -1,17 +1,22 @@
 package org.hungerford.generic.schema.translation
 
-import org.hungerford.generic.schema.{NoSchema, Primitive, SchemaBuilder}
-import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.FieldDescription.Aux
-import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
+import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-import shapeless.HNil
-import upickle.default._
 
-class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
+import scala.language.higherKinds
 
-    behavior of "BiMapProductSchemaBridge.Implicits.productTranslationWithoutAF"
+abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVal ](
+    implicit
+    intSch : OtherSchema[ Int ],
+    strSch : OtherSchema[ String ],
+    dblSch : OtherSchema[ Double ],
+    boolSch : OtherSchema[ Boolean ],
+) extends AnyFlatSpecLike
+  with Matchers { this : BiMapProductTranslation[ OtherSchema, MapVal, BuildMapVal ] =>
+
+    def writeJson[ T ]( value : T, schm : OtherSchema[ T ] ) : String
 
     it should "translate a product schema without additional fields" in {
 
@@ -28,11 +33,9 @@ class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => ((value.intField, value.strField), Map.empty) )
           .build
 
-        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
+        val noAfRw: OtherSchema[ NoAF ] = SchemaTranslator.translate( testSchema )
 
-        implicit val noAfRw: ReadWriter[ NoAF ] = SchemaTranslator.translate( testSchema )
-
-        write( NoAF( 1, "hello" ) ) shouldBe """{"int_field":1,"str_field":"hello"}"""
+        writeJson( NoAF( 1, "hello" ), noAfRw ) shouldBe """{"int_field":1,"str_field":"hello"}"""
     }
 
     it should "translate a product schema with additional fields" in {
@@ -50,11 +53,9 @@ class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => ((value.str, value.bool), value.other) )
           .build
 
-        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
+        val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( testSchema )
 
-        implicit val hasAFrw: ReadWriter[ HasAF ] = SchemaTranslator.translate( testSchema )
-
-        val res = write( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ) )
+        val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
         res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
     }
 
@@ -75,12 +76,10 @@ class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => ((value.str, value.bool), value.other) )
           .build
 
-        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
-
-        implicit val hasAFrw: ReadWriter[ HasAF ] = SchemaTranslator.translate( testSchema )
+        val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( testSchema )
 
 
-        val res = write( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ) )
+        val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
         res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
     }
 
@@ -107,13 +106,11 @@ class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
           .build
 
-        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
-
-        implicit val outsideRW : ReadWriter[ Outside ] = SchemaTranslator.translate( outsideSch )
+        implicit val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )
 
         val testOutside = Outside( Inside( "hello" ) )
 
-        write( testOutside ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+        writeJson( testOutside, outsideRW ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
     }
 
     it should "be able to use nested product schemas through implicit resolution" in {
@@ -136,14 +133,26 @@ class BiMapProductShapeTranslatorTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
           .build
 
-        import org.hungerford.generic.schema.upikle.UPickleSchemaTranslation._
-
-        implicit val outsideRW : ReadWriter[ Outside ] = SchemaTranslator.translate( outsideSch )
+        implicit val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )
 
         val testOutside = Outside( Inside( "hello" ) )
 
-        write( testOutside ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+        writeJson( testOutside, outsideRW ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+    }
 
+    it should "be able to translated nested product schemas provided by derivation" in {
+        case class Inside( str : String )
+        case class Outside( inside : Inside )
+
+        import org.hungerford.generic.schema.primitives._
+
+        implicit val outsideSchema = SchemaProvider.schema[ Outside ]
+
+        implicit val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSchema )
+
+        val testOutside = Outside( Inside( "hello" ) )
+
+        writeJson( testOutside, outsideRW ) shouldBe """{"inside":{"str":"hello"}}"""
     }
 
 }

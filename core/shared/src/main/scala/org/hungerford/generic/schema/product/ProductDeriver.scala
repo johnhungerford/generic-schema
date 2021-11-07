@@ -30,12 +30,12 @@ object ProductDeriver {
         fns : FieldNamesCollector[ Rt ],
         tupler : Tupler.Aux[ RVt, Tupt ],
         valEv : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
-    ) : ProductDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] ] = {
+    ) : ProductDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ] ] = {
         new ProductDeriver[ T ] {
-            override type Out = ProductShape[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ]
+            override type Out = ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ]
 
-            override def derive : ProductShape[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] = {
-                ProductShape[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ](
+            override def derive : ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ] = {
+                ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ](
                     fieldDescriptions = fieldDeriver.derive,
                     additionalFieldsSchema = NoSchema,
                     (rv, _) => gen.from( rv ),
@@ -55,13 +55,13 @@ object FieldDeriver {
         implicit
         witness: Witness.Aux[ K ],
         provider : SchemaProvider[ T ],
-    ) : FieldDeriver.Aux[ FieldType[ K, T ], FieldDescription.Aux[ T, provider.Out ] ] = {
+    ) : FieldDeriver.Aux[ FieldType[ K, T ], FieldDescription.Aux[ T, provider.Shape ] ] = {
         new FieldDeriver[ FieldType[ K, T ] ] {
-            override type Out = FieldDescription.Aux[ T, provider.Out ]
+            override type Out = FieldDescription.Aux[ T, provider.Shape ]
 
             override def derive : Out = {
                 val fn = witness.value.name
-                FieldDescriptionCase[ T, provider.Out ]( fn, provider.provide )
+                FieldDescriptionCase[ T, provider.Shape ]( fn, provider.provide )
             }
         }
     }
@@ -74,7 +74,7 @@ object FieldDeriver {
         }
     }
 
-    implicit def hlistFDFieldDeriver[ T, S <: Schema[ T ], THead, TTail <: HList, Res <: HList ](
+    implicit def hlistFDFieldDeriver[ T, S, THead, TTail <: HList, Res <: HList ](
         implicit
         fdFieldDeriver : Lazy[ FieldDeriver.Aux[ THead, FieldDescription.Aux[ T, S ] ] ],
         next : FieldDeriver.Aux[ TTail, Res ],

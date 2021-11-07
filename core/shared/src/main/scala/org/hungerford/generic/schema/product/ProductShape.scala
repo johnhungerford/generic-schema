@@ -9,9 +9,9 @@ import shapeless.ops.hlist.{ToList, Tupler}
 import scala.language.higherKinds
 
 
-case class ProductShape[ T, Rt <: HList, RVt <: HList, AFt, AFSt <: Schema[ AFt ], Tupt ](
+case class ProductShape[ T, Rt <: HList, RVt <: HList, AFt, AFSt , Tupt ](
     fieldDescriptions : Rt,
-    additionalFieldsSchema : AFSt,
+    additionalFieldsSchema : Schema.Aux[ AFt, AFSt ],
     private[ schema ] val constructor : (RVt, Map[ String, AFt ]) => T,
     private[ schema ] val deconstructor : T => (RVt, Map[ String, AFt ])
 )(

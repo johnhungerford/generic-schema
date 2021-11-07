@@ -31,7 +31,6 @@ lazy val commonSettings =
             "JCenter" at "https://jcenter.bintray.com",
             "Local Ivy Repository" at s"file://${System.getProperty( "user.home" )}/.ivy2/local/default" ),
         javacOptions ++= Seq( "-source", "1.8", "-target", "1.8" ),
-//        scalacOptions ++= Seq( "-Xlog-implicits" ),
         scalacOptions += "-target:jvm-1.8",
         useCoursier := false,
         libraryDependencies ++= scalaTest,
@@ -108,6 +107,8 @@ lazy val root = ( project in file( "." ) )
   .aggregate(
       core.projects( JVMPlatform ),
       core.projects( JSPlatform ),
+      gsUPickle.projects( JVMPlatform ),
+      gsUPickle.projects( JSPlatform ),
   )
   .settings(
       name := "generic-schema",
@@ -120,6 +121,18 @@ lazy val core = ( crossProject( JSPlatform, JVMPlatform ) in file( "core" ) )
   .disablePlugins( sbtassembly.AssemblyPlugin )
   .settings(
       name := "core",
+      commonSettings,
+      publishSettings,
+      disableBuild,
+      libraryDependencies ++= shapeless,
+  )
+
+lazy val gsUPickle = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-upickle" ) )
+  .configs( IntegrationConfig, WipConfig )
+  .dependsOn( core % "compile->compile;test->test" )
+  .disablePlugins( sbtassembly.AssemblyPlugin )
+  .settings(
+      name := "gsUPickle",
       commonSettings,
       publishSettings,
       disableBuild,

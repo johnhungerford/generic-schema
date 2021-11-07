@@ -7,30 +7,30 @@ import org.hungerford.generic.schema.validator.Validator
 import shapeless._
 import shapeless.ops.hlist.Tupler
 
-trait SchemaDeriver[ T ] extends Deriver[ T ] {
-    type Out <: Schema[ T ]
+trait SchemaDeriver[ T ] {
+    type Shape
 
-    def derive : Out
+    def derive : Schema.Aux[ T, Shape ]
 }
 
 object SchemaDeriver {
-    type Aux[ T, S <: Schema[ T ] ] = SchemaDeriver[ T ] { type Out = S }
+    type Aux[ T, S ] = SchemaDeriver[ T ] { type Shape = S }
 
-    def apply[ T, S <: Schema[ T ] ](
-        implicit sd : SchemaDeriver.Aux[ T, S ],
-    ) : SchemaDeriver.Aux[ T, S ] = sd
+    def apply[ T ](
+        implicit sd : SchemaDeriver[ T ],
+    ) : SchemaDeriver.Aux[ T, sd.Shape ] = sd
 
 
     implicit def productSchemaDeriver[ T ](
         implicit prd : ProductDeriver[ T ],
-    ) : SchemaDeriver.Aux[ T, ComplexSchema[ T, prd.Out ] ] = new SchemaDeriver[ T ] {
-        override type Out = ComplexSchema[ T, prd.Out ]
+    ) : SchemaDeriver.Aux[ T, prd.Out ] = new SchemaDeriver[ T ] {
+        override type Shape = prd.Out
 
-        override def derive : Out = ComplexSchema[ T, prd.Out ]( prd.derive )
+        override def derive : Schema.Aux[ T, Shape ] = ComplexSchema[ T, Shape ]( prd.derive )
     }
 
     def schema[ T ](
         implicit schemaDeriver : SchemaDeriver[ T ],
-    ) : schemaDeriver.Out = schemaDeriver.derive
+    ) : Schema.Aux[ T, schemaDeriver.Shape ] = schemaDeriver.derive
 
 }

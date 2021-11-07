@@ -21,8 +21,8 @@ case class SchemaBuilder[ T ](
 
     def buildPrimitive : Primitive[ T ] = Primitive[ T ]( desc, vals )
 
-    def product : ProductSchemaBuilder[ T, HNil, HNil, Nothing, NoSchema.type, Unit ] =
-        ProductSchemaBuilder[ T, HNil, HNil, Nothing, NoSchema.type, Unit ](
+    def product : ProductSchemaBuilder[ T, HNil, HNil, Nothing, Unit, Unit ] =
+        ProductSchemaBuilder[ T, HNil, HNil, Nothing, Unit, Unit ](
             desc,
             vals,
             NoSchema,
@@ -31,11 +31,11 @@ case class SchemaBuilder[ T ](
 
     def caseClass[ R <: HList, Rt <: HList, RVt <: HList, Tupt ](
         implicit
-        deriver : SchemaDeriver.Aux[ T, ComplexSchema[ T, ProductShape[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] ] ],
+        deriver : SchemaDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ] ],
         fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
         tupler : Tupler.Aux[ RVt, Tupt ],
-    ) : BuildableProductSchemaBuilder[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ] = {
-        ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, NoSchema.type, Tupt ]( deriver.derive )
+    ) : BuildableProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit, Tupt ] = {
+        ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, Unit, Tupt ]( deriver.derive )
     }
 }
 
@@ -59,5 +59,5 @@ case class PrimitiveSchemaBuilder[ T ](
 object SchemaBuilder {
     def apply[ T ] : SchemaBuilder[ T ] = SchemaBuilder[ T ]()
 
-    def none : NoSchema.type = NoSchema
+    def none : Schema.Aux[ Nothing, Unit ] = NoSchema
 }

@@ -9,8 +9,8 @@ case class FieldDescriptionBuilderWithoutSchema[ T ](
     private val desc : Option[ String ] = None,
     private val vs : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
 ){
-    def primitive : FieldDescriptionBuilderWithSchema[ T, Primitive[ T ] ] = {
-        FieldDescriptionBuilderWithSchema[ T, Primitive[ T ] ](
+    def primitive : FieldDescriptionBuilderWithSchema[ T, Unit ] = {
+        FieldDescriptionBuilderWithSchema[ T, Unit ](
             Primitive[ T ](),
             fn,
             desc,
@@ -18,7 +18,7 @@ case class FieldDescriptionBuilderWithoutSchema[ T ](
         )
     }
 
-    def fromSchema[ S <: Schema[ T ] ]( implicit schema : S ) : FieldDescriptionBuilderWithSchema[ T, S ] = {
+    def fromSchema[ S ]( implicit schema : Schema.Aux[ T, S ] ) : FieldDescriptionBuilderWithSchema[ T, S ] = {
         FieldDescriptionBuilderWithSchema[ T, S ](
             schema,
             fn,
@@ -27,7 +27,7 @@ case class FieldDescriptionBuilderWithoutSchema[ T ](
         )
     }
 
-    def buildSchema[ Rt, S <: Schema[ T ] ]( builder : SchemaBuilder[ T ] => S ) : FieldDescriptionBuilderWithSchema[ T, S ] = {
+    def buildSchema[ Rt, S ]( builder : SchemaBuilder[ T ] => Schema.Aux[ T, S ] ) : FieldDescriptionBuilderWithSchema[ T, S ] = {
         fromSchema( builder( SchemaBuilder[ T ] ) )
     }
 
@@ -36,8 +36,8 @@ case class FieldDescriptionBuilderWithoutSchema[ T ](
     def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithoutSchema[ T ] = copy( vs = validators.toSet )
 }
 
-case class FieldDescriptionBuilderWithSchema[ T, S <: Schema[ T ] ](
-    private val sch : S,
+case class FieldDescriptionBuilderWithSchema[ T, S ](
+    private val sch : Schema.Aux[ T, S ],
     private val fn : Option[ String ] = None,
     private val desc : Option[ String ] = None,
     private val vs : Set[ Validator[ T ] ],

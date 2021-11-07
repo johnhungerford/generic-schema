@@ -10,8 +10,6 @@ class SchemaProviderTest extends AnyFlatSpecLike with Matchers {
     it should "provide a schema from derivation" in {
         case class Test( int : Int )
 
-        import primitives._
-
         val sch = SchemaProvider.schema[ Test ]
 
         sch.shape.fields shouldBe Set( "int" )

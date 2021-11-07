@@ -7,10 +7,10 @@ import shapeless._
 import shapeless.ops.hlist.{Prepend, Tupler}
 
 
-case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](
+case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
     private[ product ] val desc : Option[ String ] = None,
     private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val aftSch : AFS,
+    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
     private[ product ] val fieldDescs : R,
 )(
     implicit
@@ -22,7 +22,7 @@ case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ 
         validate ( validator +: otherValidators )
     def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] = copy( vals = validators.toSet )
 
-    def addField[ F, NewR <: HList, NewRV <: HList, NewTup, S <: Schema[ F ] ](
+    def addField[ F, NewR <: HList, NewRV <: HList, NewTup, S ](
         fd : FieldDescription.Aux[ F, S ],
     )(
         implicit
@@ -72,10 +72,10 @@ case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ 
         )
 }
 
-case class ProductSchemaBuilderWithConstructor[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](
+case class ProductSchemaBuilderWithConstructor[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
     private[ product ] val desc : Option[ String ] = None,
     private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val aftSch : AFS,
+    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
     private[ product ] val fieldDescs : R,
     private[ product ] val constr : ( RV, Map[ String, AF ] ) => T
 )(
@@ -115,10 +115,10 @@ case class ProductSchemaBuilderWithConstructor[ T, R <: HList, RV <: HList, AF, 
         )
 }
 
-case class ProductSchemaBuilderWithDeconstructor[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](
+case class ProductSchemaBuilderWithDeconstructor[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
     private[ product ] val desc : Option[ String ] = None,
     private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val aftSch : AFS,
+    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
     private[ product ] val fieldDescs : R,
     private[ product ] val deconstr : T => (RV, Map[ String, AF ])
 )(
@@ -160,10 +160,10 @@ case class ProductSchemaBuilderWithDeconstructor[ T, R <: HList, RV <: HList, AF
         )
 }
 
-case class BuildableProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](
+case class BuildableProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
     private[ product ] val desc : Option[ String ] = None,
     private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val aftSch : AFS,
+    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
     private[ product ] val fieldDescs : R,
     private[ product ] val constr : ( RV, Map[ String, AF ] ) => T,
     private[ product ] val deconstr : T => (RV, Map[ String, AF ]),
@@ -205,8 +205,8 @@ case class AdditionalFieldsBuilder[ T, R <: HList, RV <: HList, AF, Tup ](
     fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
     val tupler : Tupler.Aux[ RV, Tup ],
 ) {
-    def fromSchema[ S <: Schema[ AF ] ](
-        implicit schema : S,
+    def fromSchema[ S ](
+        implicit schema : Schema.Aux[ AF, S ],
     ) : ProductSchemaBuilder[ T, R, RV, AF, S, Tup ] = {
         ProductSchemaBuilder[ T, R, RV, AF, S, Tup ](
             desc,
@@ -216,15 +216,15 @@ case class AdditionalFieldsBuilder[ T, R <: HList, RV <: HList, AF, Tup ](
         )
     }
 
-    def buildSchema[ S <: Schema[ AF ] ](
-        builder : SchemaBuilder[ AF ] => S,
+    def buildSchema[ S ](
+        builder : SchemaBuilder[ AF ] => Schema.Aux[ AF, S ],
     ) : ProductSchemaBuilder[ T, R, RV, AF, S, Tup ] = {
         fromSchema( builder( SchemaBuilder[ AF ] ) )
     }
 }
 
 object ProductSchemaBuilder {
-    def from[ T, R <: HList, RV <: HList, AF, AFS <: Schema[ AF ], Tup ](
+    def from[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
         schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, Tup ] ],
     )(
         implicit

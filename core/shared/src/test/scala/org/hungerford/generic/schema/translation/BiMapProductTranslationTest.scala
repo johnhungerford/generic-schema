@@ -7,7 +7,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.language.higherKinds
 
-abstract class BiMapProductTranslatorTest[ OtherSchema[ _ ], MapVal, BuildMapVal ](
+abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVal ](
     implicit
     intSch : OtherSchema[ Int ],
     strSch : OtherSchema[ String ],

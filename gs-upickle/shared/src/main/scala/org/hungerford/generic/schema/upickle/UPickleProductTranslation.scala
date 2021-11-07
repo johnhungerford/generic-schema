@@ -1,7 +1,7 @@
-package org.hungerford.generic.schema.upikle
+package org.hungerford.generic.schema.upickle
 
-import org.hungerford.generic.schema.translation.BiMapProductTranslation
 import org.hungerford.generic.schema.product.field.TranslatedFieldDescription
+import org.hungerford.generic.schema.translation.BiMapProductTranslation
 import ujson.Value
 import upickle.default._
 

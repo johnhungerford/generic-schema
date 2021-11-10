@@ -15,10 +15,10 @@ class InjectorTest extends AnyFlatSpecLike with Matchers {
                 into + (from.toString -> from.toString * using)
         }
 
-        val tList : Int :: String :: Boolean :: HNil = 5 :: "hello" :: true :: HNil
-        val intList : Int :: Int :: Int :: HNil = 1 :: 2 :: 3 :: HNil
+        val tList : Int *: String *: Boolean *: EmptyTuple = 5 *: "hello" *: true *: EmptyTuple
+        val intList : Int *: Int *: Int *: EmptyTuple = 1 *: 2 *: 3 *: EmptyTuple
 
-        val flExtractor = implicitly[ Injector.Aux[ Int :: String :: Boolean :: HNil, Map[ String, String ], Int :: Int :: Int :: HNil, Map[ String, String ] ] ]
+        val flExtractor = implicitly[ Injector.Aux[ Int *: String *: Boolean *: EmptyTuple, Map[ String, String ], Int *: Int *: Int *: EmptyTuple, Map[ String, String ] ] ]
 
         flExtractor.inject( tList, Map.empty, intList ) shouldBe Map( "5" -> "5", "hello" -> "hellohello", "true" -> "truetruetrue" )
     }

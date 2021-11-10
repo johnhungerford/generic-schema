@@ -21,12 +21,12 @@ class ExtractorTest extends AnyFlatSpecLike with Matchers {
             }
         }
 
-        implicitly[ Extractor[ Map[ Int, String ], HNil, Int ] ].extract( Map( 1 -> "one" ), HNil, 1 ) shouldBe "one" :: HNil
+        implicitly[ Extractor[ Map[ Int, String ], EmptyTuple, Int ] ].extract( Map( 1 -> "one" ), EmptyTuple, 1 ) shouldBe "one" *: EmptyTuple
 
-        val res = implicitly[ Extractor.Aux[ Map[ Int, String ], HNil, Int :: Int :: Int :: HNil, String :: String :: String :: HNil ] ]
-          .extract( Map( 1 -> "one", 2 -> "two", 3 -> "three" ), HNil, 1 :: 2 :: 3 :: HNil )
+        val res = implicitly[ Extractor.Aux[ Map[ Int, String ], EmptyTuple, Int *: Int *: Int *: EmptyTuple, String *: String *: String *: EmptyTuple ] ]
+          .extract( Map( 1 -> "one", 2 -> "two", 3 -> "three" ), EmptyTuple, 1 *: 2 *: 3 *: EmptyTuple )
 
-        res shouldBe "one" :: "two" :: "three" :: HNil
+        res shouldBe "one" *: "two" *: "three" *: EmptyTuple
     }
 
 }

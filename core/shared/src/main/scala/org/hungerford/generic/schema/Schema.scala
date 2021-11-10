@@ -1,5 +1,6 @@
 package org.hungerford.generic.schema
 
+import org.hungerford.generic.schema.empty._
 import org.hungerford.generic.schema.validator.Validator
 
 import scala.language.higherKinds

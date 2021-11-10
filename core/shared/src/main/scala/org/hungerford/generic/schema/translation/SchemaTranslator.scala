@@ -1,7 +1,6 @@
 package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.Schema
-import shapeless.Lazy
 
 import scala.language.higherKinds
 

@@ -9,6 +9,10 @@ import org.hungerford.generic.schema.validator.Validator
 
 import scala.collection.mutable
 import scala.language.higherKinds
+import scala.annotation.meta.field
+
+import scala.compiletime.{erasedValue, summonInline}
+import org.hungerford.generic.schema.types.SimpleExtractor
 
 trait FieldDescription[ T ] {
     type Name <: String
@@ -74,5 +78,32 @@ object FieldTranslator {
         def translate( fd : FieldDescription.AuxS[ T, S ] ) : TranslatedFieldDescription[ T, OtherSchema ] = {
             genericFieldTranslator[ T, S, OtherSchema ]( using schTrans.translate( fd.schema ) ).translate( fd )
         }
+
+    transparent inline def translateFieldDescriptions[ R <: Tuple, OtherSchema[ _ ] ](
+        fieldDescriptions : R
+    ) : Tuple = {
+        inline fieldDescriptions match {
+            case EmptyTuple => EmptyTuple
+            case fds : (FieldDescription.AuxS[ t, s ] *: fts) =>
+                val fieldTranslator = summonInline[ FieldTranslator[ t, s, OtherSchema ] ]
+                fieldTranslator.translate( fds.head ) *: translateFieldDescriptions[ fts, OtherSchema ]( fds.tail )
+        }
+    }
+
+}
+
+object FieldExtractor {
+
+    transparent inline def extractFromFieldDescriptions[ Source, R <: Tuple ](
+        source : Source,
+        fields : R,
+    ) : Tuple = {
+        inline fields match {
+            case EmptyTuple => EmptyTuple
+            case fds : ( FieldDescription.AuxS[ t, s ] *: ts) =>
+                val fieldExtractor = summonInline[ SimpleExtractor[ Source, FieldDescription.AuxS[ t, s ] ] ]
+                fieldExtractor.extract( source, fds.head ) *: extractFromFieldDescriptions( source, fds.tail )
+        }
+    }
 
 }

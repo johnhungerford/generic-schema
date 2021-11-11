@@ -34,6 +34,7 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
         deconstructor( value )
     }
 
+
     lazy val size : Int = fieldDescriptions.size
 }
 

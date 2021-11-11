@@ -7,12 +7,19 @@ class SchemaProviderTest extends AnyFlatSpecLike with Matchers {
 
     behavior of "SchemaProvider"
 
+    import org.hungerford.generic.schema.Primitives.given
+
+    it should "provide a schema from an implicit if one exists" in {
+
+        val intSch = SchemaProvider.schema[ Int ]
+    }
+
     it should "provide a schema from derivation" in {
         case class Test( int : Int )
 
         val sch = SchemaProvider.schema[ Test ]
 
-        sch.shape.fields shouldBe Set( "int" )
-    }
+        sch.shape.size shouldBe 1
+   }
 
 }

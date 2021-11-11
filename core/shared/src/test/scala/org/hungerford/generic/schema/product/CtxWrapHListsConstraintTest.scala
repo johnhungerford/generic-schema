@@ -1,7 +1,6 @@
 package org.hungerford.generic.schema.product
 
 import org.scalatest.flatspec.AnyFlatSpecLike
-import shapeless._
 
 class CtxWrapTuplesConstraintTest extends AnyFlatSpecLike {
 

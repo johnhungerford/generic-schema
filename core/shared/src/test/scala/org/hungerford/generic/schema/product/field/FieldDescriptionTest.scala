@@ -60,5 +60,65 @@ class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
 
     }
 
+    behavior of "FieldInjector"
+
+    it should "inject fields into an object" in {
+
+        val intFd = FieldDescriptionBuilder[ Int ].fieldName( "int" ).primitive.build
+        val strFd = FieldDescriptionBuilder[ String ].fieldName( "str" ).primitive.build
+        val boolFd = FieldDescriptionBuilder[ Boolean ].fieldName( "bool" ).primitive.build
+
+        val fds = intFd *: strFd *: boolFd *: EmptyTuple
+
+        given [ T, S ] : FieldInjector[ T, S, Map[ String, String ] ] = {
+            new FieldInjector[ T, S, Map[ String, String ] ] {
+                def inject( field : FieldDescription.AuxS[ T, S ], value : T, into : Map[ String, String ] ) : Map[ String, String ] = {
+                    into + (field.fieldName -> value.toString)
+                }
+            }
+        }
+
+        val injectionResults = FieldInjector.inject( fds, 3 *: "hello" *: false *: EmptyTuple, Map.empty[ String, String ] )
+        
+        injectionResults shouldBe Map( "int" -> "3", "str" -> "hello", "bool" -> "false" )
+
+    }
+
+    behavior of "TranslatedFieldInjector"
+
+    it should "inject fields into an object" in {
+        case class ID[ T ]()
+
+        val intFd = FieldDescriptionBuilder[ Int ].fieldName( "int" ).primitive.build
+        val strFd = FieldDescriptionBuilder[ String ].fieldName( "str" ).primitive.build
+        val boolFd = FieldDescriptionBuilder[ Boolean ].fieldName( "bool" ).primitive.build
+
+        val intTfd = TranslatedFieldDescription[ Int, ID ]( intFd.fieldName, new ID[ Int ](), intFd.description, intFd.validators )
+        val strTfd = TranslatedFieldDescription[ String, ID ]( strFd.fieldName, new ID[ String ](), strFd.description, strFd.validators )
+        val boolTfd = TranslatedFieldDescription[ Boolean, ID ]( boolFd.fieldName, new ID[ Boolean ](), boolFd.description, boolFd.validators )
+
+        val fds = intFd *: strFd *: boolFd *: EmptyTuple
+        val tfds = intTfd *: strTfd *: boolTfd *: EmptyTuple
+
+        given idFt[ T, S ] : FieldTranslator[ T, S, ID ] = new FieldTranslator[ T, S, ID ] {
+            def translate( description : FieldDescription.AuxS[ T, S ] ) : TranslatedFieldDescription[ T, ID ] =
+                TranslatedFieldDescription[ T, ID ]( description.fieldName, new ID[ T ](), description.description, description.validators )
+        }
+
+        given [ T ] : TranslatedFieldInjector[ T, Map[ String, String ], ID ] = {
+            new TranslatedFieldInjector[ T, Map[ String, String ], ID ] {
+                def inject( field : TranslatedFieldDescription[ T, ID ], value : T, into : Map[ String, String ] ) : Map[ String, String ] = {
+                    into + (field.fieldName -> value.toString)
+                }
+            }
+        }
+
+        val injectionResults1 = TranslatedFieldInjector.inject[ FieldDescription.AuxS[ Int, Unit ] *: FieldDescription.AuxS[ String, Unit ] *: FieldDescription.AuxS[ Boolean, Unit ] *: EmptyTuple, Int *: String *: Boolean *: EmptyTuple, Map[ String, String ], ID ]( fds, 3 *: "hello" *: false *: EmptyTuple, Map.empty[ String, String ] )
+        val injectionResults2 = TranslatedFieldInjector.inject[ TranslatedFieldDescription[ Int, ID ] *: TranslatedFieldDescription[ String, ID ] *: TranslatedFieldDescription[ Boolean, ID ] *: EmptyTuple, Int *: String *: Boolean *: EmptyTuple, Map[ String, String ], ID ]( tfds, 3 *: "hello" *: false *: EmptyTuple, Map.empty[ String, String ] )
+
+        injectionResults1 shouldBe Map( "int" -> "3", "str" -> "hello", "bool" -> "false" )
+
+    }
+
 
 }

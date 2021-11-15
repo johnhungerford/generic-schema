@@ -27,7 +27,7 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
 
     type AFS = AFSt
 
-    def construct( fieldParams : RV, additionalFields : Map[ String, AF ] ) : T =
+    def construct( fieldParams : RV, additionalFields : Map[ String, AF ] = Map.empty[ String, AF ] ) : T =
         constructor( fieldParams, additionalFields )
 
     def deconstruct( value : T ) : (RV, Map[ String, AF ]) = {

@@ -44,7 +44,7 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
     it should "derive a ProductShape from a case class type by constructing primitives" in {
         val product = ProductDeriver[ Test ].derive
 
-        product.construct( Tuple1( 5 ), Map.empty[ String, Nothing ] ) shouldBe Test( 5 )
+        product.construct( Tuple1( 5 ) ) shouldBe Test( 5 )
 
         product.size shouldBe 1
 
@@ -59,5 +59,13 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
 //          .shape
 //
 //        product.fieldDescriptions shouldBe manualProduct.fieldDescriptions
+    }
+
+    it should "derive a big product" in {
+        case class TestProduct( int : Int, str : String, bool : Boolean, double : Double, secondStr : String )
+
+        val productSchema = ProductDeriver[ TestProduct ].derive
+
+        productSchema.construct( ( 5, "hello", true, 0.23, "world" ) ) shouldBe TestProduct( 5, "hello", true, 0.23, "world" )
     }
 }

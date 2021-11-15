@@ -51,15 +51,40 @@ object FieldTranslator {
             genericFieldTranslator[ T, S, OtherSchema ]( using schTrans.translate( fd.schema ) ).translate( fd )
         }
 
-    transparent inline def translateFieldDescriptions[ R <: Tuple, OtherSchema[ _ ] ](
-        fieldDescriptions : R
-    ) : Tuple = {
-        inline fieldDescriptions match {
-            case EmptyTuple => EmptyTuple
-            case fds : (FieldDescription.AuxS[ t, s ] *: fts) =>
-                val fieldTranslator = summonInline[ FieldTranslator[ t, s, OtherSchema ] ]
-                fieldTranslator.translate( fds.head ) *: translateFieldDescriptions[ fts, OtherSchema ]( fds.tail )
-        }
-    }
+}
 
+trait FieldTupleTranslator[ FS <: Tuple, OtherSchema[ _ ] ] {
+    type TFS <: Tuple
+
+    def translate( fields : FS ) : TFS
+}
+
+object FieldTupleTranslator {
+    type Aux[ FSt <: Tuple, OtherSchema[ _ ], TFSt <: Tuple ] = FieldTupleTranslator[ FSt, OtherSchema ] { type TFS = TFSt }
+
+    given [ OtherSchema[ _ ] ] : FieldTupleTranslator[ EmptyTuple, OtherSchema ] with
+        type TFS = EmptyTuple
+        def translate( fields : EmptyTuple ) : EmptyTuple = EmptyTuple
+    
+    given [ T, S, FTail <: Tuple, TFTail <: Tuple, OtherSchema[ _ ] ](
+        using
+        ft : FieldTranslator[ T, S, OtherSchema ],
+        nt : FieldTupleTranslator.Aux[ FTail, OtherSchema, TFTail ],
+    ) : FieldTupleTranslator[ FieldDescription.AuxS[ T, S ] *: FTail, OtherSchema ] with
+        type TFS = TranslatedFieldDescription[ T, OtherSchema ] *: TFTail
+
+        def translate( fields : FieldDescription.AuxS[ T, S ] *: FTail ) : TranslatedFieldDescription[ T, OtherSchema ] *: TFTail = {
+            val translatedHead = ft.translate( fields.head )
+            val translatedTail = nt.translate( fields.tail )
+            translatedHead *: translatedTail
+        }
+
+    transparent inline def translateFieldDescriptions[ R <: Tuple, OtherSchema[ _ ] ](
+        fieldDescriptions : R,
+    )(
+        using
+        tr : FieldTupleTranslator[ R, OtherSchema ]
+    ) : tr.TFS = {
+        tr.translate( fieldDescriptions )
+    }
 }

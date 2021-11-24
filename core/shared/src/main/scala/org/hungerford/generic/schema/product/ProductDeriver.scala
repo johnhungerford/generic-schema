@@ -53,15 +53,15 @@ trait FieldDeriver[ T ] extends Deriver[ T ]
 object FieldDeriver {
     type Aux[ T, FS ] = FieldDeriver[ T ] { type Out = FS }
 
-    inline given fd[ T, N <: String ](
+    inline given fd[ T, N <: String, S ](
         using
-        provider : SchemaProvider[ T ],
-    ) : FieldDeriver.Aux[ (N, T), FieldDescription.AuxN[ T, N ] ] = new FieldDeriver[ (N, T) ] {
-            override type Out = FieldDescription.AuxN[ T, N ]
+        provider : SchemaProvider.Aux[ T, S ],
+    ) : FieldDeriver.Aux[ (N, T), FieldDescription.AuxS[ T, S ] ] = new FieldDeriver[ (N, T) ] {
+            override type Out = FieldDescription.AuxS[ T, S ]
 
             override def derive : Out = {
                 val fn = constValue[ N ]
-                FieldDescriptionCase[ T, N, provider.Shape ]( fn, provider.provide )
+                FieldDescriptionCase[ T, N, S ]( fn, provider.provide )
             }
     }
 
@@ -71,16 +71,16 @@ object FieldDeriver {
             override def derive : EmptyTuple = EmptyTuple
         }
 
-    inline given hlistFDFieldDeriver[ N <: String, T, TTail <: Tuple, Res <: Tuple ](
+    inline given hlistFDFieldDeriver[ N <: String, T, S, TTail <: Tuple, Res <: Tuple ](
         using
-        fdFieldDeriver : FieldDeriver.Aux[ (N, T), FieldDescription.AuxN[ T, N ] ],
+        fdFieldDeriver : FieldDeriver.Aux[ (N, T), FieldDescription.AuxS[ T, S ] ],
         next : FieldDeriver.Aux[ TTail, Res ],
-    ) : FieldDeriver.Aux[ (N, T) *: TTail, FieldDescription.AuxN[ T, N ] *: Res ] = {
+    ) : FieldDeriver.Aux[ (N, T) *: TTail, FieldDescription.AuxS[ T, S ] *: Res ] = {
         new FieldDeriver[ (N, T) *: TTail ] {
-            override type Out = FieldDescription.AuxN[ T, N ] *: Res
+            override type Out = FieldDescription.AuxS[ T, S ] *: Res
 
-            override def derive : FieldDescription.AuxN[ T, N ] *: Res = {
-                val headRes : FieldDescription.AuxN[ T, N ] = fdFieldDeriver.derive
+            override def derive : FieldDescription.AuxS[ T, S ] *: Res = {
+                val headRes : FieldDescription.AuxS[ T, S ] = fdFieldDeriver.derive
                 headRes *: next.derive
             }
         }

@@ -36,7 +36,7 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
 
        val newTestRes = SchemaDeriver.schema[ Test ]
 
-       
+       newTestRes.shape.size shouldBe 5
    }
 
 }

@@ -6,7 +6,7 @@ import scala.compiletime.{erasedValue, summonInline}
 trait SimpleExtractor[ Source, Using ] {
    type Out
 
-   def extract( from : Source, using : Using ) : Out
+   def extract( from : Source, informedBy : Using ) : Out
 }
 
 object SimpleExtractor {

@@ -68,7 +68,7 @@ object FieldTupleTranslator {
     
     given [ T, S, FTail <: Tuple, TFTail <: Tuple, OtherSchema[ _ ] ](
         using
-        ft : FieldTranslator[ T, S, OtherSchema ],
+        ft : => FieldTranslator[ T, S, OtherSchema ],
         nt : FieldTupleTranslator.Aux[ FTail, OtherSchema, TFTail ],
     ) : FieldTupleTranslator[ FieldDescription.AuxS[ T, S ] *: FTail, OtherSchema ] with
         type TFS = TranslatedFieldDescription[ T, OtherSchema ] *: TFTail

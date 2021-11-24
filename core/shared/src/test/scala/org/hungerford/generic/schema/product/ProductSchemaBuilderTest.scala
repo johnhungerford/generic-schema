@@ -74,20 +74,20 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
          .build
    }
 
-   it should "be able to rebuild" in {
-       SchemaBuilder[ TestCase ]
-         .product
-         .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
-         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
-         .construct( (tup, _) => {
-             val (int, str) = tup
-             TestCase( int, str )
-         } )
-         .deconstruct( ( value : TestCase ) => {
-             ((value.int, value.str), Map.empty)
-         } )
-         .build
+//    it should "be able to rebuild" in {
+//        SchemaBuilder[ TestCase ]
+//          .product
+//          .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
+//          .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
+//          .construct( (tup, _) => {
+//              val (int, str) = tup
+//              TestCase( int, str )
+//          } )
+//          .deconstruct( ( value : TestCase ) => {
+//              ((value.int, value.str), Map.empty)
+//          } )
+//          .build
 
-   }
+//    }
 
 }

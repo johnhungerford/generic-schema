@@ -69,11 +69,11 @@ sealed trait CtxWrapTuplesConstraint[ F[ _ ], Rt <: Tuple, RVt <: Tuple ]
 
 object CtxWrapTuplesConstraint {
 
-    implicit def hnilFieldAndDescConst[ F[ _ ] ] : CtxWrapTuplesConstraint[ F, EmptyTuple, EmptyTuple ] = new CtxWrapTuplesConstraint[ F, EmptyTuple, EmptyTuple ] {}
+    given hnilFieldAndDescConst[ F[ _ ] ] : CtxWrapTuplesConstraint[ F, EmptyTuple, EmptyTuple ] = new CtxWrapTuplesConstraint[ F, EmptyTuple, EmptyTuple ] {}
 
-    implicit def idFieldAndDescConst[ F[ _ ], HeadRt, TailRt <: Tuple, HeadRVt, TailRVt <: Tuple ](
-        implicit
-        evHead : HeadRt <:< F[ HeadRVt ],
+    given idFieldAndDescConst[ F[ _ ], HeadRt, TailRt <: Tuple, HeadRVt, TailRVt <: Tuple ](
+        using
+        evHead : => HeadRt <:< F[ HeadRVt ],
         evTail : CtxWrapTuplesConstraint[ F, TailRt, TailRVt ],
     ) : CtxWrapTuplesConstraint[ F, HeadRt *: TailRt, HeadRVt *: TailRVt ] = new CtxWrapTuplesConstraint[ F, HeadRt *: TailRt, HeadRVt *: TailRVt ] {}
 

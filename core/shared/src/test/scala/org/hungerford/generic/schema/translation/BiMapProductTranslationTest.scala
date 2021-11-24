@@ -1,169 +1,175 @@
-// package org.hungerford.generic.schema.translation
+package org.hungerford.generic.schema.translation
 
-// import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
-// import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
-// import org.scalatest.flatspec.AnyFlatSpecLike
-// import org.scalatest.matchers.should.Matchers
+import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 
-// import scala.language.higherKinds
+import scala.language.higherKinds
+import scala.quoted.ToExpr.EmptyTupleToExpr
 
-// abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVal ](
-//    implicit
-//    intSch : OtherSchema[ Int ],
-//    strSch : OtherSchema[ String ],
-//    dblSch : OtherSchema[ Double ],
-//    boolSch : OtherSchema[ Boolean ],
-// ) extends AnyFlatSpecLike
-//  with Matchers { this : BiMapProductTranslation[ OtherSchema, MapVal, BuildMapVal ] =>
+abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVal ](
+   using
+   intSch : OtherSchema[ Int ],
+   strSch : OtherSchema[ String ],
+   dblSch : OtherSchema[ Double ],
+   boolSch : OtherSchema[ Boolean ],
+) extends AnyFlatSpecLike
+ with Matchers { this : BiMapProductTranslation[ OtherSchema, MapVal, BuildMapVal ] =>
 
-//    def writeJson[ T ]( value : T, schm : OtherSchema[ T ] ) : String
+   def writeJson[ T ]( value : T, schm : OtherSchema[ T ] ) : String
 
-//    it should "translate a product schema without additional fields" in {
+   it should "translate a product schema without additional fields" in {
 
-//        case class NoAF( intField : Int, strField : String )
+       case class NoAF( intField : Int, strField : String )
 
-//        val testSchema = SchemaBuilder[ NoAF ]
-//          .product
-//          .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int_field" ).build )
-//          .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
-//          .construct( (tup, _) => {
-//              val (int, str) = tup
-//              NoAF( int, str )
-//          } )
-//          .deconstruct( value => ((value.intField, value.strField), Map.empty) )
-//          .build
+       val testSchema = SchemaBuilder[ NoAF ]
+         .product
+         .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int_field" ).build )
+         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
+         .construct( (tup, _) => {
+             val (int, str) = tup
+             NoAF( int, str )
+         } )
+         .deconstruct( value => ((value.intField, value.strField), Map.empty) )
+         .build
 
-//        val noAfRw = SchemaTranslator.translate( testSchema )
+         val intExt = summon[ BiMapExtractor[ Int ] ]
+         val strExt = summon[ BiMapExtractor[ String ] ]
 
-//        writeJson( NoAF( 1, "hello" ), noAfRw ) shouldBe """{"int_field":1,"str_field":"hello"}"""
-//    }
+         val tupleExtr = summon[ BiMapTupleExtractor.Aux[ FieldDescription.AuxS[ Int, Unit ] *: FieldDescription.AuxS[ String, Unit ] *:  EmptyTuple, Int *: String *: EmptyTuple ] ]
 
-// //    it should "translate a product schema with additional fields" in {
-// //        case class HasAF( str : String, bool : Boolean, other : Map[ String, Double ] )
+       val noAfRw = SchemaTranslator.translate( testSchema )
 
-// //        val testSchema = SchemaBuilder[ HasAF ]
-// //          .product
-// //          .additionalFields[ Double ].buildSchema( _.primitive.build )
-// //          .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
-// //          .addField( FieldDescriptionBuilder[ Boolean ].primitive.fieldName( "bool_field" ).build )
-// //          .construct( (tup, af : Map[ String, Double ]) => {
-// //              val (str : String, bool : Boolean) = tup
-// //              HasAF( str, bool, af )
-// //          } )
-// //          .deconstruct( value => ((value.str, value.bool), value.other) )
-// //          .build
+       writeJson( NoAF( 1, "hello" ), noAfRw ) shouldBe """{"int_field":1,"str_field":"hello"}"""
+   }
 
-// //        val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( testSchema )
+   it should "translate a product schema with additional fields" in {
+       case class HasAF( str : String, bool : Boolean, other : Map[ String, Double ] )
 
-// //        val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
-// //        res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
-// //    }
+       val testSchema = SchemaBuilder[ HasAF ]
+         .product
+         .additionalFields[ Double ].buildSchema( _.primitive.build )
+         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
+         .addField( FieldDescriptionBuilder[ Boolean ].primitive.fieldName( "bool_field" ).build )
+         .construct( (tup, af : Map[ String, Double ]) => {
+             val (str : String, bool : Boolean) = tup
+             HasAF( str, bool, af )
+         } )
+         .deconstruct( value => ((value.str, value.bool), value.other) )
+         .build
 
-// //    it should "use implicit primitive types" in {
-// //        case class HasAF( str : String, bool : Boolean, other : Map[ String, Double ] )
+       val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( testSchema )
 
-// //         import org.hungerford.generic.schema.Primitives.given
+       val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
+       res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
+   }
 
-// //         val testSchema = SchemaBuilder[ HasAF ]
-// //          .product
-// //          .additionalFields[ Double ].buildSchema( _.primitive.build )
-// //          .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
-// //          .addField( FieldDescriptionBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
-// //          .construct( (tup, af : Map[ String, Double ]) => {
-// //              val (str : String, bool : Boolean) = tup
-// //              HasAF( str, bool, af )
-// //          } )
-// //          .deconstruct( value => ((value.str, value.bool), value.other) )
-// //          .build
+   it should "use implicit primitive types" in {
+       case class HasAF( str : String, bool : Boolean, other : Map[ String, Double ] )
 
-// //        val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( testSchema )
+        import org.hungerford.generic.schema.Primitives.given
 
-// //        val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
-// //        res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
-// //    }
+        val testSchema = SchemaBuilder[ HasAF ]
+         .product
+         .additionalFields[ Double ].buildSchema( _.primitive.build )
+         .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+         .addField( FieldDescriptionBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
+         .construct( (tup, af : Map[ String, Double ]) => {
+             val (str : String, bool : Boolean) = tup
+             HasAF( str, bool, af )
+         } )
+         .deconstruct( value => ((value.str, value.bool), value.other) )
+         .build
 
-// //    it should "be able to use nested product schemas through nested building" in {
-// //        case class Inside( str : String )
-// //        case class Outside( inside : Inside )
+       val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( testSchema )
 
-// //        import org.hungerford.generic.schema.Primitives.given
+       val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
+       res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
+   }
 
-// //        val outsideSch = SchemaBuilder[ Outside ]
-// //          .product
-// //          .addField(
-// //              FieldDescriptionBuilder[ Inside ]
-// //                .fieldName( "inside_field" )
-// //                .buildSchema( _.product
-// //                  .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
-// //                  .construct( (tup, _) => {
-// //                      val Tuple1(str) = tup
-// //                     Inside( str )
-// //                   } )
-// //                  .deconstruct( value => (Tuple1( value.str ), Map.empty) )
-// //                  .build
-// //                )
-// //                .build
-// //          )
-// //          .construct( (tup, _) => {
-// //              val Tuple1( inside ) = tup
-// //             Outside( inside ) 
-// //           } )
-// //          .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
-// //          .build
+   it should "be able to use nested product schemas through nested building" in {
+       case class Inside( str : String )
+       case class Outside( inside : Inside )
 
-// //        val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )
+       import org.hungerford.generic.schema.Primitives.given
 
-// //        val testOutside = Outside( Inside( "hello" ) )
+       val outsideSch = SchemaBuilder[ Outside ]
+         .product
+         .addField(
+             FieldDescriptionBuilder[ Inside ]
+               .fieldName( "inside_field" )
+               .buildSchema( _.product
+                 .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+                 .construct( (tup, _) => {
+                     val Tuple1(str) = tup
+                    Inside( str )
+                  } )
+                 .deconstruct( value => (Tuple1( value.str ), Map.empty) )
+                 .build
+               )
+               .build
+         )
+         .construct( (tup, _) => {
+             val Tuple1( inside ) = tup
+            Outside( inside ) 
+          } )
+         .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
+         .build
 
-// //        writeJson( testOutside, outsideRW ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
-// //    }
+       val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )
 
-// //    it should "be able to use nested product schemas through implicit resolution" in {
-// //        case class Inside( str : String )
-// //        case class Outside( inside : Inside )
+       val testOutside = Outside( Inside( "hello" ) )
 
-// //        import org.hungerford.generic.schema.Primitives.given
+       writeJson( testOutside, outsideRW ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+   }
 
-// //        implicit val insideSch : Schema[ Inside ] = SchemaBuilder[ Inside ]
-// //          .product
-// //          .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
-// //          .construct( (tup, _) => {
-// //              val Tuple1( str ) = tup
-// //             Inside( str ) 
-// //           } )
-// //          .deconstruct( value => (Tuple1( value.str ), Map.empty) )
-// //          .build
+   it should "be able to use nested product schemas through implicit resolution" in {
+       case class Inside( str : String )
+       case class Outside( inside : Inside )
 
-// //        val outsideSch = SchemaBuilder[ Outside ]
-// //          .product
-// //          .addField( FieldDescriptionBuilder[ Inside ].fromSchema.fieldName( "inside_field" ).build )
-// //          .construct( (tup, _) => {
-// //              val Tuple1( inside ) = tup
-// //             Outside( inside )
-// //           } )
-// //          .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
-// //          .build
+       import org.hungerford.generic.schema.Primitives.given
 
-// //        implicit val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )
+       val insideSchema = SchemaBuilder[ Inside ]
+         .product
+         .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+         .construct( (tup, _) => {
+             val Tuple1( str ) = tup
+            Inside( str ) 
+          } )
+         .deconstruct( value => (Tuple1( value.str ), Map.empty) )
+         .build
 
-// //        val testOutside = Outside( Inside( "hello" ) )
+       val outsideSch = SchemaBuilder[ Outside ]
+         .product
+         .addField( FieldDescriptionBuilder[ Inside ].fromSchema( insideSchema ).fieldName( "inside_field" ).build )
+         .construct( (tup, _) => {
+             val Tuple1( inside ) = tup
+            Outside( inside )
+          } )
+         .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
+         .build
 
-// //        writeJson( testOutside, outsideRW ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
-// //    }
+       implicit val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )
 
-// //    it should "be able to translated nested product schemas provided by derivation" in {
-// //        case class Inside( str : String )
-// //        case class Outside( inside : Inside )
+       val testOutside = Outside( Inside( "hello" ) )
 
-// //        import org.hungerford.generic.schema.Primitives.given
+       writeJson( testOutside, outsideRW ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+   }
 
-// //        val outsideSchema = SchemaProvider.schema[ Outside ]
+   it should "be able to translated nested product schemas provided by derivation" in {
+       case class Inside( str : String )
+       case class Outside( inside : Inside )
 
-// //        implicit val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSchema )
+       import org.hungerford.generic.schema.Primitives.given
 
-// //        val testOutside = Outside( Inside( "hello" ) )
+       val outsideSchema = SchemaProvider.schema[ Outside ]
 
-// //        writeJson( testOutside, outsideRW ) shouldBe """{"inside":{"str":"hello"}}"""
-// //    }
+       implicit val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSchema )
 
-// }
+       val testOutside = Outside( Inside( "hello" ) )
+
+       writeJson( testOutside, outsideRW ) shouldBe """{"inside":{"str":"hello"}}"""
+   }
+
+}

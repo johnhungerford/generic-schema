@@ -37,16 +37,17 @@ object TranslatedFieldInjector {
     ) : Target = inline fieldDescriptions match {
         case _ : EmptyTuple => into
         case fds : (TranslatedFieldDescription[ t, OtherSchema ] *: ts) =>
-            val injector = summonInline[ TranslatedFieldInjector[ t, Target, OtherSchema ] ]
             type T = t
+            val injector = summonInline[ TranslatedFieldInjector[ T, Target, OtherSchema ] ]
             inline fieldValues match {
                 case fvs : (T *: vts ) =>
                     val thisRes = injector.inject( fds.head, fvs.head, into )
                     inject[ ts, vts, Target, OtherSchema ]( fds.tail, fvs.tail, thisRes )
                 
             }
-        
-        case _ => throw Exception( "didn't match accepted fieldDescriptions type" )
+        case v =>
+            println( v )
+            throw Exception( "didn't match accepted fieldDescriptions type" )
 
     }
 }

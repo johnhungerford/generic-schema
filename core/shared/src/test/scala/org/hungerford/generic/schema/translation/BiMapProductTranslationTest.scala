@@ -1,10 +1,14 @@
 package org.hungerford.generic.schema.translation
 
+import org.hungerford.generic.schema.Schema.Aux
+import org.hungerford.generic.schema.product.ProductShape
+import org.hungerford.generic.schema.product.field.FieldDescription.AuxS
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
+import scala.Tuple.Concat
 import scala.language.higherKinds
 import scala.quoted.ToExpr.EmptyTupleToExpr
 

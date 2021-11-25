@@ -1,6 +1,5 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.empty.*
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.hungerford.generic.schema.product.ProductShape

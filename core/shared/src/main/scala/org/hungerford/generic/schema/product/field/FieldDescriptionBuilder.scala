@@ -1,6 +1,5 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.empty._
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.{Primitive, Schema, SchemaBuilder}
 

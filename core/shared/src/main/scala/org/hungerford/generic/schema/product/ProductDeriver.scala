@@ -1,6 +1,5 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.empty._
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator

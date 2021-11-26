@@ -21,12 +21,12 @@ class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
         val fds = intFd *: strFd *: boolFd *: EmptyTuple
 
 
-        given idFt[ T, S ] : FieldTranslator[ T, S, ID ] = new FieldTranslator[ T, S, ID ] {
-            def translate( description : FieldDescription.AuxS[ T, S ] ) : TranslatedFieldDescription[ T, ID ] =
+        given idFt[ T, N <: FieldName, S ] : FieldTranslator[ T, N, S, ID ] = new FieldTranslator[ T, N, S, ID ] {
+            def translate( description : FieldDescription.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, ID ] =
                 TranslatedFieldDescription[ T, ID ]( description.fieldName, new ID[ T ](), description.description, description.validators )
         }
 
-        val res = FieldTupleTranslator.translateFieldDescriptions[ FieldDescription.AuxS[Int, Unit] *: FieldDescription.AuxS[String, Unit] *: FieldDescription.AuxS[Boolean, Unit] *: EmptyTuple, ID ]( fds )
+        val res = FieldTupleTranslator.translateFieldDescriptions( fds )
         res shouldBe intTfd *: strTfd *: boolTfd *: EmptyTuple
     }
 

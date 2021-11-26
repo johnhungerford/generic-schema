@@ -1,10 +1,11 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.product.field.FieldDescription
+import org.hungerford.generic.schema.product.field.{FieldDescription, UniqueFieldNames}
 import org.hungerford.generic.schema.validator.Validator
 
 import scala.language.higherKinds
+import org.hungerford.generic.schema.product.field.FieldDescriptionCase
 
 
 case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
@@ -13,8 +14,9 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
     private[ schema ] val constructor : (RVt, Map[ String, AFt ]) => T,
     private[ schema ] val deconstructor : T => (RVt, Map[ String, AFt ])
 )(
-    implicit
+    using
     fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+    uniqueFields : UniqueFieldNames[ Rt ],
     lengther : TupleIntLength[ Rt ],
 ) {
 
@@ -36,6 +38,17 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
 
 
     lazy val size : Int = fieldDescriptions.size
+
+    lazy val fieldNames : Set[ String ] = {
+        def getFieldNames[ FDs <: Tuple ]( fds : FDs, fns : Set[ String ] = Set.empty ) : Set[ String ] = {
+            fds match {
+                case EmptyTuple => fns
+                case FieldDescriptionCase( name, _, _, _ ) *: next =>
+                    getFieldNames( next, fns + name )
+            }
+        }
+        getFieldNames( fieldDescriptions, Set.empty )
+    }
 }
 
 

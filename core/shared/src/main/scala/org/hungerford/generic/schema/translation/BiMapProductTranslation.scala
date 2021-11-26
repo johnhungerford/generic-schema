@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.{TranslatedFieldDescription, TranslatedFieldInjector, FieldTupleTranslator, FieldTranslator}
+import org.hungerford.generic.schema.product.field.{TranslatedFieldDescription, TranslatedFieldInjector, FieldTupleTranslator, FieldTranslator, FieldName}
 import org.hungerford.generic.schema.types.{Extractor, Injector, SimpleExtractor}
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema}
 
@@ -11,6 +11,7 @@ import scala.compiletime.{erasedValue, summonInline}
 import javax.print.attribute.standard.MediaSize.Other
 import org.hungerford.generic.schema.product.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.product.field.FieldDescription
+import org.hungerford.generic.schema.SchemaBuilder
 
 trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
 
@@ -70,13 +71,13 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
            def inject( value : EmptyTuple, into : BuildMapVal, informedBy : EmptyTuple ) : BuildMapVal = into
        }
 
-       given [ T, S, RVTail <: Tuple, RTail <: Tuple ](
+       given [ T, N <: FieldName, S, RVTail <: Tuple, RTail <: Tuple ](
            using
-           trans : FieldTranslator[ T, S, OtherSchema ],
+           trans : FieldTranslator[ T, N, S, OtherSchema ],
            headInjector : BiMapInjector[ T ],
            tailInjector : BiMapTupleInjector[ RVTail, RTail ],
-       ) : BiMapTupleInjector[ T *: RVTail, FieldDescription.AuxS[ T, S ] *: RTail ] with {
-           def inject( value : T *: RVTail, into : BuildMapVal, informedBy : FieldDescription.AuxS[ T, S ] *: RTail ) : BuildMapVal = {
+       ) : BiMapTupleInjector[ T *: RVTail, FieldDescription.Aux[ T, N, S ] *: RTail ] with {
+           def inject( value : T *: RVTail, into : BuildMapVal, informedBy : FieldDescription.Aux[ T, N, S ] *: RTail ) : BuildMapVal = {
                val transHead = trans.translate( informedBy.head )
                val headInjected = headInjector.inject( value.head, into, transHead )
                tailInjector.inject( value.tail, headInjected, informedBy.tail )
@@ -112,17 +113,17 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
         }
 
     
-        given [ T, S, Tail <: Tuple, TailRes <: Tuple ](
+        given [ T, N <: FieldName, S, Tail <: Tuple, TailRes <: Tuple ](
            using
-           trans : FieldTranslator[ T, S, OtherSchema ],
+           trans : FieldTranslator[ T, N, S, OtherSchema ],
            headExtr : BiMapExtractor[ T ],
            tailExtr : BiMapTupleExtractor.Aux[ Tail, TailRes ],
     
-        ) : BiMapTupleExtractor.Aux[ FieldDescription.AuxS[ T, S ] *: Tail, T *: TailRes ] =
-             new BiMapTupleExtractor[ FieldDescription.AuxS[ T, S ] *: Tail ] {
+        ) : BiMapTupleExtractor.Aux[ FieldDescription.Aux[ T, N, S ] *: Tail, T *: TailRes ] =
+             new BiMapTupleExtractor[ FieldDescription.Aux[ T, N, S ] *: Tail ] {
             type Out = T *: TailRes
 
-            def extract( from : MapVal, informedBy : FieldDescription.AuxS[ T, S ] *: Tail ) : T *: tailExtr.Out = {
+            def extract( from : MapVal, informedBy : FieldDescription.Aux[ T, N, S ] *: Tail ) : T *: tailExtr.Out = {
                 val translatedHead = trans.translate( informedBy.head )
                 headExtr.extract( from, translatedHead ) *: tailExtr.extract( from, informedBy.tail )
             }
@@ -174,9 +175,10 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
     ) : Encoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ], MapVal ] with {
         def encode( value : T, product : ProductShape[ T, Rt, RVt, AFt, AFSt ] ): MapVal = {
             val (fields, additionalFields) = product.deconstructor( value )
+            val additionalFieldsCorrected = additionalFields -- product.fieldNames
             val buildMapWithFields : BuildMapVal = inj.inject( fields, initMapVal, product.fieldDescriptions )
             val afSchema = afTranslator.translate( product.additionalFieldsSchema )
-            val buildMapWithAF : BuildMapVal = afInjector.inject( additionalFields, buildMapWithFields, afSchema )
+            val buildMapWithAF : BuildMapVal = afInjector.inject( additionalFieldsCorrected, buildMapWithFields, afSchema )
             buildMapVal( buildMapWithAF )
         }
     }

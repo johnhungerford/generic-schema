@@ -2,8 +2,8 @@ package org.hungerford.generic.schema.product.field
 
 import scala.compiletime.{erasedValue, summonInline}
 
-trait FieldInjector[ T, S, Target ] {    
-    def inject( field : FieldDescription.AuxS[ T, S ], value : T, into : Target ) : Target
+trait FieldInjector[ T, N <: FieldName, S, Target ] {    
+    def inject( field : FieldDescription.Aux[ T, N, S ], value : T, into : Target ) : Target
 }
 
 object FieldInjector {
@@ -13,8 +13,8 @@ object FieldInjector {
         into : Target,
     ) : Any = inline fieldDescriptions match {
         case _ : EmptyTuple => into
-        case fds : (FieldDescription.AuxS[ t, s ] *: ts) =>
-            val injector = summonInline[ FieldInjector[ t, s, Target ] ]
+        case fds : (FieldDescription.Aux[ t, n, s ] *: ts) =>
+            val injector = summonInline[ FieldInjector[ t, n, s, Target ] ]
             type T = t
             inline fieldValues match {
                 case fvs : (T *: vts ) =>

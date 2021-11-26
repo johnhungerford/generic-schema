@@ -17,8 +17,8 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
 
        val testSchema = SchemaBuilder[ Test ]
          .product
-         .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
-         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
+         .addField( FieldDescriptionBuilder[ Int ].fieldName( "int" ).primitive.build )
+         .addField( FieldDescriptionBuilder[ String ].fieldName( "str" ).primitive.build )
          .construct( (tup, _) => Test(tup.head, tup.tail.head) )
          .deconstruct( value => ((value.int, value.str), Map.empty) )
          .build

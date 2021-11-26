@@ -1,12 +1,13 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase, FieldName}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider, product}
 import scala.compiletime.constValue
 
 import scala.deriving.Mirror
+import org.hungerford.generic.schema.product.field.UniqueFieldNames
 
 trait ProductDeriver[ T ] extends Deriver[ T ] {
     type Out
@@ -33,6 +34,7 @@ object ProductDeriver {
         fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
         lengther : TupleIntLength[ Rt ],
         valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+        uniq : UniqueFieldNames[ Rt ],
     ) : ProductDeriver[ T ] with {
             override type Out = ProductShape[ T, Rt, RVt, Nothing, Unit ]
 
@@ -52,11 +54,11 @@ trait FieldDeriver[ T ] extends Deriver[ T ]
 object FieldDeriver {
     type Aux[ T, FS ] = FieldDeriver[ T ] { type Out = FS }
 
-    inline given fd[ T, N <: String, S ](
+    inline given fd[ T, N <: FieldName, S ](
         using
         provider : SchemaProvider.Aux[ T, S ],
-    ) : FieldDeriver.Aux[ (N, T), FieldDescription.AuxS[ T, S ] ] = new FieldDeriver[ (N, T) ] {
-            override type Out = FieldDescription.AuxS[ T, S ]
+    ) : FieldDeriver.Aux[ (N, T), FieldDescription.Aux[ T, N, S ] ] = new FieldDeriver[ (N, T) ] {
+            override type Out = FieldDescription.Aux[ T, N, S ]
 
             override def derive : Out = {
                 val fn = constValue[ N ]
@@ -70,16 +72,16 @@ object FieldDeriver {
             override def derive : EmptyTuple = EmptyTuple
         }
 
-    inline given hlistFDFieldDeriver[ N <: String, T, S, TTail <: Tuple, Res <: Tuple ](
+    inline given hlistFDFieldDeriver[ N <: FieldName, T, S, TTail <: Tuple, Res <: Tuple ](
         using
-        fdFieldDeriver : FieldDeriver.Aux[ (N, T), FieldDescription.AuxS[ T, S ] ],
+        fdFieldDeriver : FieldDeriver.Aux[ (N, T), FieldDescription.Aux[ T, N, S ] ],
         next : FieldDeriver.Aux[ TTail, Res ],
-    ) : FieldDeriver.Aux[ (N, T) *: TTail, FieldDescription.AuxS[ T, S ] *: Res ] = {
+    ) : FieldDeriver.Aux[ (N, T) *: TTail, FieldDescription.Aux[ T, N, S ] *: Res ] = {
         new FieldDeriver[ (N, T) *: TTail ] {
-            override type Out = FieldDescription.AuxS[ T, S ] *: Res
+            override type Out = FieldDescription.Aux[ T, N, S ] *: Res
 
-            override def derive : FieldDescription.AuxS[ T, S ] *: Res = {
-                val headRes : FieldDescription.AuxS[ T, S ] = fdFieldDeriver.derive
+            override def derive : FieldDescription.Aux[ T, N, S ] *: Res = {
+                val headRes : FieldDescription.Aux[ T, N, S ] = fdFieldDeriver.derive
                 headRes *: next.derive
             }
         }

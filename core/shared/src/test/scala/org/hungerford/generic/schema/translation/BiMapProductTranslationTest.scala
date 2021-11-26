@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldDescription.AuxS
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, UniqueFieldNames}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
@@ -41,7 +41,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
          val intExt = summon[ BiMapExtractor[ Int ] ]
          val strExt = summon[ BiMapExtractor[ String ] ]
 
-         val tupleExtr = summon[ BiMapTupleExtractor.Aux[ FieldDescription.AuxS[ Int, Unit ] *: FieldDescription.AuxS[ String, Unit ] *:  EmptyTuple, Int *: String *: EmptyTuple ] ]
+//         val tupleExtr = summon[ BiMapTupleExtractor.Aux[ FieldDescription.Aux[ Int, intFieldName.type, Unit ] *: FieldDescription.AuxS[ String, strFieldName.type, Unit ] *:  EmptyTuple, Int *: String *: EmptyTuple ] ]
 
        val noAfRw = SchemaTranslator.translate( testSchema )
 
@@ -76,9 +76,9 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
 
         val testSchema = SchemaBuilder[ HasAF ]
          .product
-         .additionalFields[ Double ].buildSchema( _.primitive.build )
          .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
          .addField( FieldDescriptionBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
+         .additionalFields[ Double ].buildSchema( _.primitive.build )
          .construct( (tup, af : Map[ String, Double ]) => {
              val (str : String, bool : Boolean) = tup
              HasAF( str, bool, af )
@@ -139,7 +139,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
          .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
          .construct( (tup, _) => {
              val Tuple1( str ) = tup
-            Inside( str ) 
+             Inside( str ) 
           } )
          .deconstruct( value => (Tuple1( value.str ), Map.empty) )
          .build

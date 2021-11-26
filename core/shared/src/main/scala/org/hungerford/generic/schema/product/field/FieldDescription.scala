@@ -13,8 +13,10 @@ import scala.annotation.meta.field
 import scala.compiletime.{erasedValue, summonInline}
 import org.hungerford.generic.schema.types.SimpleExtractor
 
+type FieldName = Stringleton
+
 trait FieldDescription[ T ] {
-    type Name <: String
+    type Name <: FieldName
     type Shape
 
     val fieldName : Name
@@ -24,12 +26,12 @@ trait FieldDescription[ T ] {
 }
 
 object FieldDescription {
-    type Aux[ T, N <: String, S ] = FieldDescription[ T ] { type Name = N; type Shape = S }
-    type AuxN[ T, N <: String ] = FieldDescription[ T ] { type Name = N }
+    type Aux[ T, N <: FieldName, S ] = FieldDescription[ T ] { type Name = N; type Shape = S }
+    type AuxN[ T, N <: FieldName ] = FieldDescription[ T ] { type Name = N }
     type AuxS[ T, S ] = FieldDescription[ T ] { type Shape = S }
 }
 
-case class FieldDescriptionCase[ T, N <: String, S ](
+case class FieldDescriptionCase[ T, N <: FieldName, S ](
     override val fieldName : N,
     override val schema : Schema.Aux[ T, S ],
     override val description : Option[ String ] = None,

@@ -19,9 +19,9 @@ class FieldInjectorTest extends AnyFlatSpecLike with Matchers {
 
         val fds = intFd *: strFd *: boolFd *: EmptyTuple
 
-        given [ T, S ] : FieldInjector[ T, S, Map[ String, String ] ] = {
-            new FieldInjector[ T, S, Map[ String, String ] ] {
-                def inject( field : FieldDescription.AuxS[ T, S ], value : T, into : Map[ String, String ] ) : Map[ String, String ] = {
+        given [ T, N <: FieldName, S ] : FieldInjector[ T, N, S, Map[ String, String ] ] = {
+            new FieldInjector[ T, N, S, Map[ String, String ] ] {
+                def inject( field : FieldDescription.Aux[ T, N, S ], value : T, into : Map[ String, String ] ) : Map[ String, String ] = {
                     into + (field.fieldName -> value.toString)
                 }
             }
@@ -49,8 +49,8 @@ class FieldInjectorTest extends AnyFlatSpecLike with Matchers {
         val fds = intFd *: strFd *: boolFd *: EmptyTuple
         val tfds = intTfd *: strTfd *: boolTfd *: EmptyTuple
 
-        given idFt[ T, S ] : FieldTranslator[ T, S, ID ] = new FieldTranslator[ T, S, ID ] {
-            def translate( description : FieldDescription.AuxS[ T, S ] ) : TranslatedFieldDescription[ T, ID ] =
+        given idFt[ T, N <: FieldName, S ] : FieldTranslator[ T, N, S, ID ] = new FieldTranslator[ T, N, S, ID ] {
+            def translate( description : FieldDescription.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, ID ] =
                 TranslatedFieldDescription[ T, ID ]( description.fieldName, new ID[ T ](), description.description, description.validators )
         }
 

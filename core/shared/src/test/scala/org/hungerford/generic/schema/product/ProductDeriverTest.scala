@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaProvider}
-import org.hungerford.generic.schema.product.field.FieldDescription
+import org.hungerford.generic.schema.product.field.{FieldDescription, UniqueFieldNames}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.hungerford.generic.schema.types.Provider
@@ -67,5 +67,7 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
         val productSchema = ProductDeriver[ TestProduct ].derive
 
         productSchema.construct( ( 5, "hello", true, 0.23, "world" ) ) shouldBe TestProduct( 5, "hello", true, 0.23, "world" )
+
+        // summon[ UniqueFieldNames[ productSchema.R ] ]
     }
 }

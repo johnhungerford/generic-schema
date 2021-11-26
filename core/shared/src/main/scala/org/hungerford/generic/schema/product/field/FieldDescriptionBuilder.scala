@@ -28,13 +28,13 @@ case class FieldDescriptionBuilderWithoutSchemaOrName[ T ](
        fromSchema( builder( SchemaBuilder[ T ] ) )
    }
 
-   def fieldName[ N <: String ]( name : N ) : FieldDescriptionBuilderWithoutSchemaWithName[ T, N ] =
+   def fieldName[ N <: FieldName ]( name : N ) : FieldDescriptionBuilderWithoutSchemaWithName[ T, N ] =
        FieldDescriptionBuilderWithoutSchemaWithName[ T, N ]( name, desc, vs )
    def description( description : String ) : FieldDescriptionBuilderWithoutSchemaOrName[ T ] = copy( desc = Some( description ) )
    def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithoutSchemaOrName[ T ] = copy( vs = validators.toSet )
 }
 
-case class FieldDescriptionBuilderWithoutSchemaWithName[ T, N <: String ](
+case class FieldDescriptionBuilderWithoutSchemaWithName[ T, N <: FieldName ](
     private val fn : N,
     private val desc : Option[ String ] = None,
     private val vs : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
@@ -61,7 +61,7 @@ case class FieldDescriptionBuilderWithoutSchemaWithName[ T, N <: String ](
        fromSchema( builder( SchemaBuilder[ T ] ) )
    }
 
-   def fieldName[ NewN <: String ]( name : NewN ) : FieldDescriptionBuilderWithoutSchemaWithName[ T, NewN ] = copy[ T, NewN ]( fn = name )
+   def fieldName[ NewN <: FieldName ]( name : NewN ) : FieldDescriptionBuilderWithoutSchemaWithName[ T, NewN ] = copy[ T, NewN ]( fn = name )
    def description( description : String ) : FieldDescriptionBuilderWithoutSchemaWithName[ T, N ] = copy( desc = Some( description ) )
    def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithoutSchemaWithName[ T, N ] = copy( vs = validators.toSet )
 }
@@ -91,19 +91,19 @@ case class FieldDescriptionBuilderWithSchemaWithoutName[ T, S ](
        fromSchema( builder( SchemaBuilder[ T ] ) )
    }
 
-   def fieldName[ N <: String ]( name : N ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
+   def fieldName[ N <: FieldName ]( name : N ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
         BuildableFieldDescriptionBuilder[ T, N, S ]( sch, name, desc, vs )
    def description( description : String ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( desc = Some( description ) )
    def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( vs = validators.toSet )
 }
 
-case class BuildableFieldDescriptionBuilder[ T, N <: String, S ](
+case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
    private val sch : Schema.Aux[ T, S ],
    private val fn : N,
    private val desc : Option[ String ] = None,
    private val vs : Set[ Validator[ T ] ],
 ) {
-   def fieldName[ NewN <: String ]( name : NewN ) : BuildableFieldDescriptionBuilder[ T, NewN, S ] =
+   def fieldName[ NewN <: FieldName ]( name : NewN ) : BuildableFieldDescriptionBuilder[ T, NewN, S ] =
        copy[ T, NewN, S ]( fn = name )
    def description( description : String ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
        copy( desc = Some( description ) )

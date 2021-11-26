@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.FieldDescription
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldName, UniqueFieldNames}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder}
 import org.hungerford.generic.schema.validator.Validator
 
@@ -20,14 +20,15 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
        validate ( validator +: otherValidators )
    def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS ] = copy( vals = validators.toSet )
 
-   def addField[ F, S ](
-       fd : FieldDescription.AuxS[ F, S ],
+   def addField[ F, N <: FieldName, S ](
+       fd : FieldDescription.Aux[ F, N, S ],
    )(
-       using
-       fc : CtxWrapTuplesConstraint[ FieldDescription, Tuple.Concat[ R, FieldDescription.AuxS[ F, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ]
-   ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, FieldDescription.AuxS[ F, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS ] = {
+        using
+        fc : => CtxWrapTuplesConstraint[ FieldDescription, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
+        uniq : UniqueFieldNames[ Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ] ]
+   ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS ] = {
        val newFieldDescs = fieldDescs ++ (fd *: EmptyTuple)
-       copy[ T, Tuple.Concat[ R, FieldDescription.AuxS[ F, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS ]( desc, vals, aftSch, newFieldDescs )
+       copy[ T, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS ]( desc, vals, aftSch, newFieldDescs )
    }
 
    def additionalFields[ F ] : AdditionalFieldsBuilder[ T, R, RV, F ] =
@@ -151,6 +152,7 @@ case class BuildableProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
    def build(
        using
        lengther : TupleIntLength[ R ],
+       uniq : => UniqueFieldNames[ R ],
    ) : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS ] ] =
        ComplexSchema(
            ProductShape[ T, R, RV, AF, AFS ](

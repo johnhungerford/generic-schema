@@ -1,12 +1,14 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase, FieldNamesCollector}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase, FieldName}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider, product}
-import shapeless._
-import shapeless.labelled.FieldType
-import shapeless.ops.hlist.Tupler
+import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider}
+import scala.compiletime.constValue
+
+import scala.deriving.Mirror
+import org.hungerford.generic.schema.product.field.UniqueFieldNames
+
 
 trait ProductDeriver[ T ] extends Deriver[ T ] {
     type Out
@@ -18,31 +20,34 @@ object ProductDeriver {
     type Aux[ T, Out0 ] = ProductDeriver[ T ] { type Out = Out0 }
 
     def apply[ T ](
-        implicit prd : ProductDeriver[ T ],
+        using
+        prd : ProductDeriver[ T ],
     ) : ProductDeriver.Aux[ T, prd.Out ] = prd
 
-    implicit def productDeriver[ T, R <: HList, Rt <: HList, RVt <: HList, Tupt ](
-        implicit
-        lg : LabelledGeneric.Aux[ T, R ],
-        gen : Generic.Aux[ T, RVt ],
-        fieldDeriver : FieldDeriver.Aux[ R, Rt ],
-        lengther : HListIntLength[ Rt ],
-        fns : FieldNamesCollector[ Rt ],
-        tupler : Tupler.Aux[ RVt, Tupt ],
-        valEv : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
-    ) : ProductDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ] ] = {
-        new ProductDeriver[ T ] {
-            override type Out = ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ]
+    type MirrorProduct[ T, Elems <: Tuple, ElemLabels <: Tuple ] = Mirror.ProductOf[ T ] {
+        type MirroredElemTypes = Elems
+        type MirroredElemLabels = ElemLabels
+    }
 
-            override def derive : ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ] = {
-                ProductShape[ T, Rt, RVt, Nothing, Unit, Tupt ](
+    inline given [ T <: Product, L <: Tuple, RVt <: Tuple, LRV <: Tuple, Rt <: Tuple ](
+        using
+        mirror : MirrorProduct[ T, RVt, L ],
+        zip : Zipper.Aux[ L, RVt, LRV ],
+        fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
+        lengther : TupleIntLength[ Rt ],
+        valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+        uniq : UniqueFieldNames[ Rt ],
+    ) : ProductDeriver[ T ] with {
+            override type Out = ProductShape[ T, Rt, RVt, Nothing, Unit ]
+
+            override def derive : ProductShape[ T, Rt, RVt, Nothing, Unit ] = {
+                ProductShape[ T, Rt, RVt, Nothing, Unit ](
                     fieldDescriptions = fieldDeriver.derive,
                     additionalFieldsSchema = NoSchema,
-                    (rv, _) => gen.from( rv ),
-                    ( value : T ) => (gen.to( value ), Map.empty),
+                    (rv, _) => mirror.fromProduct( rv ),
+                    ( value : T ) => (Tuple.fromProductTyped[ T ]( value )( using mirror ), Map.empty),
                 )
             }
-        }
     }
 }
 
@@ -51,41 +56,60 @@ trait FieldDeriver[ T ] extends Deriver[ T ]
 object FieldDeriver {
     type Aux[ T, FS ] = FieldDeriver[ T ] { type Out = FS }
 
-    implicit def fieldDescriptionFieldDeriver[ T, K <: Symbol ](
-        implicit
-        witness: Witness.Aux[ K ],
-        provider : SchemaProvider[ T ],
-    ) : FieldDeriver.Aux[ FieldType[ K, T ], FieldDescription.Aux[ T, provider.Shape ] ] = {
-        new FieldDeriver[ FieldType[ K, T ] ] {
-            override type Out = FieldDescription.Aux[ T, provider.Shape ]
+    inline given fd[ T, N <: FieldName, S ](
+        using
+        provider : SchemaProvider.Aux[ T, S ],
+    ) : FieldDeriver.Aux[ (N, T), FieldDescription.Aux[ T, N, S ] ] = new FieldDeriver[ (N, T) ] {
+            override type Out = FieldDescription.Aux[ T, N, S ]
 
             override def derive : Out = {
-                val fn = witness.value.name
-                FieldDescriptionCase[ T, provider.Shape ]( fn, provider.provide )
+                val fn = constValue[ N ]
+                FieldDescriptionCase[ T, N, S ]( fn, provider.provide )
             }
-        }
     }
 
-    implicit val hnilFDFieldDeriver : FieldDeriver.Aux[ HNil, HNil ] = {
-        new FieldDeriver[ HNil ] {
-            type Out = HNil
+    inline given hnilFDFieldDeriver : FieldDeriver[ EmptyTuple ] with {
+            type Out = EmptyTuple
 
-            override def derive : HNil = HNil
+            override def derive : EmptyTuple = EmptyTuple
         }
-    }
 
-    implicit def hlistFDFieldDeriver[ T, S, THead, TTail <: HList, Res <: HList ](
-        implicit
-        fdFieldDeriver : Lazy[ FieldDeriver.Aux[ THead, FieldDescription.Aux[ T, S ] ] ],
+    inline given hlistFDFieldDeriver[ N <: FieldName, T, S, TTail <: Tuple, Res <: Tuple ](
+        using
+        fdFieldDeriver : FieldDeriver.Aux[ (N, T), FieldDescription.Aux[ T, N, S ] ],
         next : FieldDeriver.Aux[ TTail, Res ],
-    ) : FieldDeriver.Aux[ THead :: TTail, FieldDescription.Aux[ T, S ] :: Res ] = {
-        new FieldDeriver[ THead :: TTail ] {
-            override type Out = FieldDescription.Aux[ T, S ] :: Res
+    ) : FieldDeriver.Aux[ (N, T) *: TTail, FieldDescription.Aux[ T, N, S ] *: Res ] = {
+        new FieldDeriver[ (N, T) *: TTail ] {
+            override type Out = FieldDescription.Aux[ T, N, S ] *: Res
 
-            override def derive : FieldDescription.Aux[ T, S ] :: Res = {
-                val headRes = fdFieldDeriver.value.derive
-                headRes :: next.derive
+            override def derive : FieldDescription.Aux[ T, N, S ] *: Res = {
+                val headRes : FieldDescription.Aux[ T, N, S ] = fdFieldDeriver.derive
+                headRes *: next.derive
             }
         }
+    }
+}
+
+sealed trait Zipper[ A, B ] {
+    type Out
+}
+
+trait LowPriorityZippers {
+    inline given [ A, B ] : Zipper[ A, B ] with {
+        type Out = (A, B)
+    }
+}
+
+object Zipper {
+    type Aux[ A, B, Res ] = Zipper[ A, B ] { type Out = Res }
+
+    inline given Zipper[ EmptyTuple, EmptyTuple ] with {
+        type Out = EmptyTuple
+    }
+
+    inline given [ HeadL, TailL <: Tuple, HeadR, TailR <: Tuple, Res <: Tuple ](
+        using zip : Zipper.Aux[ TailL, TailR, Res ],
+    ) : Zipper[ HeadL *: TailL, HeadR *: TailR ] with {
+        type Out = (HeadL, HeadR) *: zip.Out
     }
 }

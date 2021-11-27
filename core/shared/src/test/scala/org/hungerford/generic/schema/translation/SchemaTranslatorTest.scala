@@ -7,14 +7,14 @@ import org.scalatest.matchers.should.Matchers
 import scala.language.higherKinds
 
 class SchemaTranslatorTest[ OtherSchema[ _ ] ](
-    implicit
-    intSchema : OtherSchema[ Int ],
+   implicit
+   intSchema : OtherSchema[ Int ],
 ) extends AnyFlatSpecLike with Matchers {
 
-    behavior of "SchemaTranslator"
+   behavior of "SchemaTranslator"
 
-    it should "translate an integer primitive" in {
-        assertCompiles( "SchemaTranslator.translate( Primitive[ Int ]() )" )
-    }
+   it should "translate an integer primitive" in {
+       assertCompiles( "SchemaTranslator.translate( Primitive[ Int ]() )" )
+   }
 
 }

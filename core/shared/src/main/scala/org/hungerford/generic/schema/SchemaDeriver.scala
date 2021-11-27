@@ -1,11 +1,10 @@
 package org.hungerford.generic.schema
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
-import org.hungerford.generic.schema.product.{CtxWrapHListsConstraint, HListIntLength, ProductDeriver, ProductShape}
+import org.hungerford.generic.schema.product.field.FieldDescription
+import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, TupleIntLength, ProductDeriver, ProductShape}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
-import shapeless._
-import shapeless.ops.hlist.Tupler
+
 
 trait SchemaDeriver[ T ] {
     type Shape

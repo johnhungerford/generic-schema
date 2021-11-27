@@ -4,76 +4,75 @@ import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-import shapeless.HNil
 
 class SchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
-    object TestValidator extends Validator[ Int ] {
-        override def isValid( instance : Int ) : Boolean = instance > 3
-    }
+   object TestValidator extends Validator[ Int ] {
+       override def isValid( instance : Int ) : Boolean = instance > 3
+   }
 
-    behavior of "SchemaBuilder"
+   behavior of "SchemaBuilder"
 
-    it should "be able to update description and validators" in {
+   it should "be able to update description and validators" in {
 
 
-        val schb = SchemaBuilder[ Int ]
-          .description( "some description" )
-          .validate( TestValidator )
+       val schb = SchemaBuilder[ Int ]
+         .description( "some description" )
+         .validate( TestValidator )
 
-        schb.vals shouldBe Set( TestValidator )
-        schb.desc shouldBe Some( "some description" )
-    }
+       schb.vals shouldBe Set( TestValidator )
+       schb.desc shouldBe Some( "some description" )
+   }
 
-    it should "be able to generate a primitive schema builder" in {
-        val schb = SchemaBuilder[ Int ]
-          .description( "some description" )
-          .validate( TestValidator )
-          .primitive
-          .build
+   it should "be able to generate a primitive schema builder" in {
+       val schb = SchemaBuilder[ Int ]
+         .description( "some description" )
+         .validate( TestValidator )
+         .primitive
+         .build
 
-        schb shouldBe Primitive[ Int ]( Some( "some description" ), Set( TestValidator ) )
+       schb shouldBe Primitive[ Int ]( Some( "some description" ), Set( TestValidator ) )
 
-        val schb2 = SchemaBuilder[ Int ]
-          .description( "some description" )
-          .validate( TestValidator )
-          .buildPrimitive
+       val schb2 = SchemaBuilder[ Int ]
+         .description( "some description" )
+         .validate( TestValidator )
+         .buildPrimitive
 
-        schb2 shouldBe schb
-    }
+       schb2 shouldBe schb
+   }
 
-    it should "be able to generate a product schema builder" in {
-        val schb = SchemaBuilder[ Int ]
-          .description( "some description" )
-          .validate( TestValidator )
-          .product
+   it should "be able to generate a product schema builder" in {
+       val schb = SchemaBuilder[ Int ]
+         .description( "some description" )
+         .validate( TestValidator )
+         .product
 
-        schb shouldBe ProductSchemaBuilder[ Int, HNil, HNil, Nothing, Unit, Unit ]( Some( "some description" ), Set( TestValidator ), NoSchema, HNil )
-    }
+       schb shouldBe ProductSchemaBuilder[ Int, EmptyTuple, EmptyTuple, Nothing, Unit ]( Some( "some description" ), Set( TestValidator ), NoSchema, EmptyTuple )
+   }
 
-    it should "be able to derive a product schema and build on it" in {
-        case class Test( int : Int, str : String )
+   it should "be able to derive a product schema and build on it" in {
+       case class Test( int : Int, str : String )
+       
+        import org.hungerford.generic.schema.primitives.Primitives.given
 
-        import primitives._
+       val schemaBuilder = SchemaBuilder[ Test ].caseClass
+       val schema = schemaBuilder.build
 
-        val schemaBuilder = SchemaBuilder[ Test ].caseClass
-        val schema = schemaBuilder.build
+       assertCompiles( "implicitly[ schema.type <:< Schema[ Test ] ]" )
+   }
 
-        assertCompiles( "implicitly[ schema.type <:< Schema[ Test ] ]" )
-    }
+   behavior of "PrimitiveSchemaBuilder"
 
-    behavior of "PrimitiveSchemaBuilder"
+   it should "be able to update description and validators" in {
+       val schb = SchemaBuilder[ Int ]
+         .primitive
+         .description( "some description" )
+         .validate( TestValidator )
 
-    it should "be able to update description and validators" in {
-        val schb = SchemaBuilder[ Int ]
-          .primitive
-          .description( "some description" )
-          .validate( TestValidator )
+       schb.vals shouldBe Set( TestValidator )
+       schb.desc shouldBe Some( "some description" )
 
-        schb.vals shouldBe Set( TestValidator )
-        schb.desc shouldBe Some( "some description" )
-
-        schb.build shouldBe Primitive[ Int ]( Some( "some description" ), Set( TestValidator ) )
-    }
+       schb.build shouldBe Primitive[ Int ]( Some( "some description" ), Set( TestValidator ) )
+   }
 
 }

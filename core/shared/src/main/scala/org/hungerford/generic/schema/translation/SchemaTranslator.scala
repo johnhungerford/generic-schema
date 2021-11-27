@@ -1,7 +1,6 @@
 package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.Schema
-import shapeless.Lazy
 
 import scala.language.higherKinds
 
@@ -18,14 +17,15 @@ object SchemaTranslator {
      * Resolves type class instances for primitive schemas
      */
     implicit def primitiveTranslation[ T, OtherSchema[ _ ] ](
-        implicit os : OtherSchema[ T ],
+        using
+        os : OtherSchema[ T ],
     ) : SchemaTranslator[ T, Unit, OtherSchema ] =
         ( _ : Schema.Aux[ T, Unit ] ) => os
 
     def translate[ T, S,  OtherSchema[ _ ] ](
         sch : Schema.Aux[ T, S ],
     )(
-        implicit
+        using
         trans : SchemaTranslator[ T, S, OtherSchema ],
     ) : OtherSchema[ T ] = trans.translate( sch )
 

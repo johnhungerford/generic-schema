@@ -1,32 +1,29 @@
-package org.hungerford.generic.schema.types
+// package org.hungerford.generic.schema.types
 
-import org.scalatest.flatspec.AnyFlatSpecLike
-import org.scalatest.matchers.should.Matchers
-import shapeless._
-import shapeless.ops.hlist.Prepend
+// import org.scalatest.flatspec.AnyFlatSpecLike
+// import org.scalatest.matchers.should.Matchers
 
-class ExtractorTest extends AnyFlatSpecLike with Matchers {
+// class ExtractorTest extends AnyFlatSpecLike with Matchers {
 
-    behavior of "field extractor"
+//    behavior of "field extractor"
 
-    it should "extract to a list" in {
+//    it should "extract to a tuple" in {
 
-        implicit def testSimpleExtractor : SimpleExtractor.Aux[ Map[ Int, String ], Int, String ] = {
-            new SimpleExtractor[ Map[ Int, String ], Int ] {
-                override type Out = String
+//        given testSimpleExtractor : SimpleExtractor.Aux[ Map[ Int, String ], Int, String ] = {
+//            new SimpleExtractor[ Map[ Int, String ], Int ] {
+//                override type Out = String
 
-                override def extract( from : Map[ Int, String ], using : Int ) : Out = {
-                    from( using )
-                }
-            }
-        }
+//                override def extract( from : Map[ Int, String ], informedBy : Int ) : Out = {
+//                    from( informedBy )
+//                }
+//            }
+//        }
 
-        implicitly[ Extractor[ Map[ Int, String ], HNil, Int ] ].extract( Map( 1 -> "one" ), HNil, 1 ) shouldBe "one" :: HNil
+//        val res = Extractor.extractor[ Map[ Int, String ], EmptyTuple, Int *: EmptyTuple, String *: EmptyTuple ]
+//     //    val res = summon[ Extractor[ Map[ Int, String ], EmptyTuple, Int *: EmptyTuple ] ]
+//     //      .extract( Map( 1 -> "one", 2 -> "two", 3 -> "three" ), EmptyTuple, 1 *: EmptyTuple )
 
-        val res = implicitly[ Extractor.Aux[ Map[ Int, String ], HNil, Int :: Int :: Int :: HNil, String :: String :: String :: HNil ] ]
-          .extract( Map( 1 -> "one", 2 -> "two", 3 -> "three" ), HNil, 1 :: 2 :: 3 :: HNil )
+//        res shouldBe "one" *: EmptyTuple
+//    }
 
-        res shouldBe "one" :: "two" :: "three" :: HNil
-    }
-
-}
+// }

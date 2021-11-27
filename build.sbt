@@ -2,7 +2,7 @@ import sbt._
 import Dependencies._
 //import sbtassembly.AssemblyPlugin.assemblySettings
 
-lazy val projectVersion = "0.0-SNAPSHOT"
+lazy val projectVersion = "0.1-SNAPSHOT"
 
 /*
    ##############################################################################################
@@ -26,7 +26,7 @@ lazy val commonSettings =
         licenses := List( "Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt" ) ),
         homepage := Some( url( "https://johnhungerford.github.io" ) ),
         startYear := Some( 2021 ),
-        scalaVersion := "2.12.7",
+        scalaVersion := "3.1.0",
         resolvers ++= Seq( "Maven Central" at "https://repo1.maven.org/maven2/",
             "JCenter" at "https://jcenter.bintray.com",
             "Local Ivy Repository" at s"file://${System.getProperty( "user.home" )}/.ivy2/local/default" ),
@@ -124,7 +124,6 @@ lazy val core = ( crossProject( JSPlatform, JVMPlatform ) in file( "core" ) )
       commonSettings,
       publishSettings,
       disableBuild,
-      libraryDependencies ++= shapeless,
   )
 
 lazy val gsUPickle = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-upickle" ) )
@@ -136,5 +135,5 @@ lazy val gsUPickle = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-upic
       commonSettings,
       publishSettings,
       disableBuild,
-      libraryDependencies ++= shapeless ++ upickle,
+      libraryDependencies ++= upickle,
   )

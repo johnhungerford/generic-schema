@@ -1,243 +1,211 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
-import org.hungerford.generic.schema.validator.Validator
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldName, UniqueFieldNames}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder}
-import shapeless._
-import shapeless.ops.hlist.{Prepend, Tupler}
+import org.hungerford.generic.schema.validator.Validator
 
 
-case class ProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
-    private[ product ] val desc : Option[ String ] = None,
-    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
-    private[ product ] val fieldDescs : R,
+
+case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
+   private[ product ] val desc : Option[ String ] = None,
+   private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+   private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
+   private[ product ] val fieldDescs : R,
 )(
-    implicit
-    fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
-    val tupler : Tupler.Aux[ RV, Tup ],
+   using
+   fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
 ) {
-    def description( description : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] = copy( desc = Some( description ) )
-    def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] =
-        validate ( validator +: otherValidators )
-    def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] = copy( vals = validators.toSet )
+   def description( description : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS ] = copy( desc = Some( description ) )
+   def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilder[ T, R, RV, AF, AFS ] =
+       validate ( validator +: otherValidators )
+   def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS ] = copy( vals = validators.toSet )
 
-    def addField[ F, NewR <: HList, NewRV <: HList, NewTup, S ](
-        fd : FieldDescription.Aux[ F, S ],
-    )(
-        implicit
-        prepR : Prepend.Aux[ R, FieldDescription.Aux[ F, S ] :: HNil, NewR ],
-        prepRV : Prepend.Aux[ RV, F :: HNil, NewRV ],
-        tup : Tupler.Aux[ NewRV, NewTup ],
-        rConstraint : CtxWrapHListsConstraint[ FieldDescription, NewR, NewRV ]
-    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, NewTup ] = {
-        val newFieldDescs = fieldDescs :+ fd
-        copy[ T, NewR, NewRV, AF, AFS, NewTup ]( desc, vals, aftSch, newFieldDescs )
-    }
+   def addField[ F, N <: FieldName, S ](
+       fd : FieldDescription.Aux[ F, N, S ],
+   )(
+        using
+        fc : => CtxWrapTuplesConstraint[ FieldDescription, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
+        uniq : UniqueFieldNames[ Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ] ]
+   ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS ] = {
+       val newFieldDescs = fieldDescs ++ (fd *: EmptyTuple)
+       copy[ T, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS ]( desc, vals, aftSch, newFieldDescs )
+   }
 
-    def additionalFields[ F ] : AdditionalFieldsBuilder[ T, R, RV, F, Tup ] =
-        AdditionalFieldsBuilder[ T, R, RV, F, Tup ](
-            desc,
-            vals,
-            fieldDescs,
-        )
+   def additionalFields[ F ] : AdditionalFieldsBuilder[ T, R, RV, F ] =
+       AdditionalFieldsBuilder[ T, R, RV, F ](
+           desc,
+           vals,
+           fieldDescs,
+       )
 
-    def construct(
-        constructor : ( Tup, Map[ String, AF ] ) => T,
-    ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS, Tup ] =
-        ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS, Tup ](
-            desc,
-            vals,
-            aftSch,
-            fieldDescs,
-            ( rv : RV, afs : Map[ String, AF ] ) => constructor( tupler( rv ), afs ),
-        )
+   def construct(
+       constructor : ( RV, Map[ String, AF ] ) => T,
+   ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS ] =
+       ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS ](
+           desc,
+           vals,
+           aftSch,
+           fieldDescs,
+           constructor,
+       )
 
-    def deconstruct(
-        deconstructor : T => (Tup, Map[ String, AF ]),
-    )(
-        implicit
-        detup : Generic.Aux[ Tup, RV ],
-    ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS, Tup ] =
-        ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS, Tup ](
-            desc,
-            vals,
-            aftSch,
-            fieldDescs,
-            ( value : T ) => {
-                val (tupleRes, afs) = deconstructor( value )
-                val rvRes = detup.to( tupleRes )
-                (rvRes, afs)
-            }
-        )
+   def deconstruct(
+       deconstructor : T => (RV, Map[ String, AF ]),
+   ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS ] =
+       ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS ](
+           desc,
+           vals,
+           aftSch,
+           fieldDescs,
+           deconstructor,
+       )
 }
 
-case class ProductSchemaBuilderWithConstructor[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
-    private[ product ] val desc : Option[ String ] = None,
-    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
-    private[ product ] val fieldDescs : R,
-    private[ product ] val constr : ( RV, Map[ String, AF ] ) => T
+case class ProductSchemaBuilderWithConstructor[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
+   private[ product ] val desc : Option[ String ] = None,
+   private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+   private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
+   private[ product ] val fieldDescs : R,
+   private[ product ] val constr : ( RV, Map[ String, AF ] ) => T
 )(
-    implicit
-    fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
-    val tupler : Tupler.Aux[ RV, Tup ],
+   implicit
+   fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
 ) {
-    def description( description : String ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS, Tup ] =
-        copy( desc = Some( description ) )
-    def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS, Tup ] =
-        validate ( validator +: otherValidators )
-    def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS, Tup ] =
-        copy( vals = validators.toSet )
+   def description( description : String ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS ] =
+       copy( desc = Some( description ) )
+   def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS ] =
+       validate ( validator +: otherValidators )
+   def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS ] =
+       copy( vals = validators.toSet )
 
-    def construct(
-        constructor : ( Tup, Map[ String, AF ] ) => T,
-    ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS, Tup ] =
-        copy( constr = ( rv : RV, afs : Map[ String, AF ] ) => constructor( tupler( rv ), afs ) )
+   def construct(
+       constructor : (RV, Map[ String, AF ]) => T,
+   ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS ] =
+       copy( constr = constructor )
 
-    def deconstruct(
-        deconstructor : T => (Tup, Map[ String, AF ]),
-    )(
-        implicit
-        detup : Generic.Aux[ Tup, RV ],
-    ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] =
-        BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ](
-            desc,
-            vals,
-            aftSch,
-            fieldDescs,
-            constr,
-            ( value : T ) => {
-                val (tupleRes, afs) = deconstructor( value )
-                val rvRes = detup.to( tupleRes )
-                (rvRes, afs)
-            }
-        )
+   def deconstruct(
+       deconstructor : T => (RV, Map[ String, AF ]),
+   ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ] =
+       BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ](
+           desc,
+           vals,
+           aftSch,
+           fieldDescs,
+           constr,
+           deconstructor,
+       )
 }
 
-case class ProductSchemaBuilderWithDeconstructor[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
-    private[ product ] val desc : Option[ String ] = None,
-    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
-    private[ product ] val fieldDescs : R,
-    private[ product ] val deconstr : T => (RV, Map[ String, AF ])
+case class ProductSchemaBuilderWithDeconstructor[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
+   private[ product ] val desc : Option[ String ] = None,
+   private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+   private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
+   private[ product ] val fieldDescs : R,
+   private[ product ] val deconstr : T => (RV, Map[ String, AF ])
 )(
-    implicit
-    fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
-    val tupler : Tupler.Aux[ RV, Tup ],
+   implicit
+   fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
 ) {
-    def description( description : String ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS, Tup ] =
-        copy( desc = Some( description ) )
-    def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS, Tup ] =
-        validate ( validator +: otherValidators )
-    def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS, Tup ] =
-        copy( vals = validators.toSet )
+   def description( description : String ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS ] =
+       copy( desc = Some( description ) )
+   def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS ] =
+       validate ( validator +: otherValidators )
+   def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS ] =
+       copy( vals = validators.toSet )
 
-    def deconstruct(
-        deconstructor : T => (Tup, Map[ String, AF ]),
-    )(
-        implicit
-        detup : Generic.Aux[ Tup, RV ],
-    ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS, Tup ] =
-        copy( deconstr =
-            ( value : T ) => {
-                val (tupleRes, afs) = deconstructor( value )
-                val rvRes = detup.to( tupleRes )
-                (rvRes, afs)
-            }
-        )
+   def deconstruct(
+       deconstructor : T => (RV, Map[ String, AF ]),
+   ) : ProductSchemaBuilderWithDeconstructor[ T, R, RV, AF, AFS ] =
+       copy( deconstr = deconstructor )
 
-    def construct(
-        constructor : ( Tup, Map[ String, AF ] ) => T,
-    ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] =
-        BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ](
-            desc,
-            vals,
-            aftSch,
-            fieldDescs,
-            ( rv : RV, afs : Map[ String, AF ] ) => constructor( tupler( rv ), afs ),
-            deconstr,
-        )
+   def construct(
+       constructor : ( RV, Map[ String, AF ] ) => T,
+   ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ] =
+       BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ](
+           desc,
+           vals,
+           aftSch,
+           fieldDescs,
+           constructor,
+           deconstr,
+       )
 }
 
-case class BuildableProductSchemaBuilder[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
-    private[ product ] val desc : Option[ String ] = None,
-    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
-    private[ product ] val fieldDescs : R,
-    private[ product ] val constr : ( RV, Map[ String, AF ] ) => T,
-    private[ product ] val deconstr : T => (RV, Map[ String, AF ]),
+case class BuildableProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
+   private[ product ] val desc : Option[ String ] = None,
+   private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+   private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
+   private[ product ] val fieldDescs : R,
+   private[ product ] val constr : ( RV, Map[ String, AF ] ) => T,
+   private[ product ] val deconstr : T => (RV, Map[ String, AF ]),
 )(
-    implicit
-    fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
-    val tupler : Tupler.Aux[ RV, Tup ],
+   implicit
+   fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
 ) {
-    def description( description : String ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] =
-        copy( desc = Some( description ) )
-    def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] =
-        validate ( validator +: otherValidators )
-    def validate( validators : Iterable[ Validator[ T ] ] ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] =
-        copy( vals = validators.toSet )
+   def description( description : String ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ] =
+       copy( desc = Some( description ) )
+   def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ] =
+       validate ( validator +: otherValidators )
+   def validate( validators : Iterable[ Validator[ T ] ] ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ] =
+       copy( vals = validators.toSet )
 
-    def build(
-        implicit
-        lengther : HListIntLength[ R ],
-        fns : FieldNamesCollector[ R ],
-    ) : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, Tup ] ] =
-        ComplexSchema(
-            ProductShape[ T, R, RV, AF, AFS, Tup ](
-                fieldDescriptions = fieldDescs,
-                additionalFieldsSchema = aftSch,
-                constructor = constr,
-                deconstructor = deconstr,
-            ),
-            genericDescription = desc,
-            genericValidators = vals,
-        )
+   def build(
+       using
+       lengther : TupleIntLength[ R ],
+       uniq : => UniqueFieldNames[ R ],
+   ) : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS ] ] =
+       ComplexSchema(
+           ProductShape[ T, R, RV, AF, AFS ](
+               fieldDescriptions = fieldDescs,
+               additionalFieldsSchema = aftSch,
+               constructor = constr,
+               deconstructor = deconstr,
+           ),
+           genericDescription = desc,
+           genericValidators = vals,
+       )
 }
 
-case class AdditionalFieldsBuilder[ T, R <: HList, RV <: HList, AF, Tup ](
-    private[ product ] val desc : Option[ String ] = None,
-    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    private[ product ] val fieldDescs : R,
+case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF ](
+   private[ product ] val desc : Option[ String ] = None,
+   private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+   private[ product ] val fieldDescs : R,
 )(
-    implicit
-    fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
-    val tupler : Tupler.Aux[ RV, Tup ],
+   using
+   fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
 ) {
-    def fromSchema[ S ](
-        implicit schema : Schema.Aux[ AF, S ],
-    ) : ProductSchemaBuilder[ T, R, RV, AF, S, Tup ] = {
-        ProductSchemaBuilder[ T, R, RV, AF, S, Tup ](
-            desc,
-            vals,
-            schema,
-            fieldDescs,
-        )
-    }
+   def fromSchema[ S ](
+       implicit schema : Schema.Aux[ AF, S ],
+   ) : ProductSchemaBuilder[ T, R, RV, AF, S ] = {
+       ProductSchemaBuilder[ T, R, RV, AF, S ](
+           desc,
+           vals,
+           schema,
+           fieldDescs,
+       )
+   }
 
-    def buildSchema[ S ](
-        builder : SchemaBuilder[ AF ] => Schema.Aux[ AF, S ],
-    ) : ProductSchemaBuilder[ T, R, RV, AF, S, Tup ] = {
-        fromSchema( builder( SchemaBuilder[ AF ] ) )
-    }
+   def buildSchema[ S ](
+       builder : SchemaBuilder[ AF ] => Schema.Aux[ AF, S ],
+   ) : ProductSchemaBuilder[ T, R, RV, AF, S ] = {
+       fromSchema( builder( SchemaBuilder[ AF ] ) )
+   }
 }
 
 object ProductSchemaBuilder {
-    def from[ T, R <: HList, RV <: HList, AF, AFS, Tup ](
-        schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, Tup ] ],
-    )(
-        implicit
-        fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, R, RV ],
-        tupler : Tupler.Aux[ RV, Tup ],
-    ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS, Tup ] = {
-        BuildableProductSchemaBuilder(
-            schema.genericDescription,
-            schema.genericValidators,
-            schema.shape.additionalFieldsSchema,
-            schema.shape.fieldDescriptions,
-            schema.shape.constructor,
-            schema.shape.deconstructor
-        )
-    }
+   def from[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
+       schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS ] ],
+   )(
+       using
+       fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
+   ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ] = {
+       BuildableProductSchemaBuilder(
+           schema.genericDescription,
+           schema.genericValidators,
+           schema.shape.additionalFieldsSchema,
+           schema.shape.fieldDescriptions,
+           schema.shape.constructor,
+           schema.shape.deconstructor
+       )
+   }
 }

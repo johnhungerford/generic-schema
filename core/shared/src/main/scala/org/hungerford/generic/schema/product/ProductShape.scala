@@ -1,25 +1,23 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldNamesCollector}
+import org.hungerford.generic.schema.product.field.{FieldDescription, UniqueFieldNames}
 import org.hungerford.generic.schema.validator.Validator
-import shapeless._
-import shapeless.ops.hlist.{ToList, Tupler}
 
 import scala.language.higherKinds
+import org.hungerford.generic.schema.product.field.FieldDescriptionCase
 
 
-case class ProductShape[ T, Rt <: HList, RVt <: HList, AFt, AFSt , Tupt ](
+case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
     fieldDescriptions : Rt,
     additionalFieldsSchema : Schema.Aux[ AFt, AFSt ],
     private[ schema ] val constructor : (RVt, Map[ String, AFt ]) => T,
     private[ schema ] val deconstructor : T => (RVt, Map[ String, AFt ])
 )(
-    implicit
-    fieldsConstraint : CtxWrapHListsConstraint[ FieldDescription, Rt, RVt ],
-    val tupler : Tupler.Aux[ RVt, Tupt ],
-    lengther : HListIntLength[ Rt ],
-    fns : FieldNamesCollector[ Rt ],
+    using
+    fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+    uniqueFields : UniqueFieldNames[ Rt ],
+    lengther : TupleIntLength[ Rt ],
 ) {
 
     // Field descriptions
@@ -31,37 +29,42 @@ case class ProductShape[ T, Rt <: HList, RVt <: HList, AFt, AFSt , Tupt ](
 
     type AFS = AFSt
 
-    type Tup = Tupt
+    def construct( fieldParams : RV, additionalFields : Map[ String, AF ] = Map.empty[ String, AF ] ) : T =
+        constructor( fieldParams, additionalFields )
 
-    def construct( fieldParams : Tup, additionalFields : Map[ String, AF ] )(
-        implicit tupleGeneric : Generic.Aux[ Tup, RVt ],
-    ) : T =
-        constructor( tupleGeneric.to( fieldParams ), additionalFields )
-
-    def deconstruct( value : T ) : (Tup, Map[ String, AF ]) = {
-        val (fieldsRVt, additionalFields) = deconstructor( value )
-        (fieldsRVt.tupled, additionalFields)
+    def deconstruct( value : T ) : (RV, Map[ String, AF ]) = {
+        deconstructor( value )
     }
 
-    lazy val size : Int = lengther.length
 
-    def fields : Set[ String ] = fns.collect( fieldDescriptions )
+    lazy val size : Int = fieldDescriptions.size
+
+    lazy val fieldNames : Set[ String ] = {
+        def getFieldNames[ FDs <: Tuple ]( fds : FDs, fns : Set[ String ] = Set.empty ) : Set[ String ] = {
+            fds match {
+                case EmptyTuple => fns
+                case FieldDescriptionCase( name, _, _, _ ) *: next =>
+                    getFieldNames( next, fns + name )
+            }
+        }
+        getFieldNames( fieldDescriptions, Set.empty )
+    }
 }
 
 
-trait HListIntLength[ L <: HList ] {
+trait TupleIntLength[ L <: Tuple ] {
     def length : Int
 }
 
-object HListIntLength {
-    def apply[ L <: HList ]( implicit ev : HListIntLength[ L ] ) : HListIntLength[ L ] = ev
+object TupleIntLength {
+    def apply[ L <: Tuple ]( implicit ev : TupleIntLength[ L ] ) : TupleIntLength[ L ] = ev
 
-    implicit def hnilLength : HListIntLength[ HNil ] = new HListIntLength[HNil] {
+    implicit def hnilLength : TupleIntLength[ EmptyTuple ] = new TupleIntLength[EmptyTuple] {
         override def length : Int = 0
     }
 
-    implicit def generalLength[ T, Tail <: HList ]( implicit ev : HListIntLength[ Tail ] ) : HListIntLength[ T :: Tail ] = {
-        new HListIntLength[ T :: Tail] {
+    implicit def generalLength[ T, Tail <: Tuple ]( implicit ev : TupleIntLength[ Tail ] ) : TupleIntLength[ T *: Tail ] = {
+        new TupleIntLength[ T *: Tail] {
             override def length : Int = 1 + ev.length
         }
     }
@@ -70,24 +73,23 @@ object HListIntLength {
 /**
  * Type class witness that every element in one hlist has type of the corresponding
  * element in another hlist wrapped in some context type.
- * E.g., List[Int] :: List[Double] :: List[String] :: HNil corresponds to Int :: Double :: String :: HNil
+ * E.g., List[Int] *: List[Double] *: List[String] *: EmptyTuple corresponds to Int *: Double *: String *: EmptyTuple
  * @tparam F context type
  * @tparam Rt hlist of context types
  * @tparam RVt hlist of value types
  */
-sealed trait CtxWrapHListsConstraint[ F[ _ ], Rt <: HList, RVt <: HList ]
+sealed trait CtxWrapTuplesConstraint[ F[ _ ], Rt <: Tuple, RVt <: Tuple ]
 
-object CtxWrapHListsConstraint {
+object CtxWrapTuplesConstraint {
 
-    implicit def hnilFieldAndDescConst[ F[ _ ] ] : CtxWrapHListsConstraint[ F, HNil, HNil ] = new CtxWrapHListsConstraint[ F, HNil, HNil ] {}
+    given hnilFieldAndDescConst[ F[ _ ] ] : CtxWrapTuplesConstraint[ F, EmptyTuple, EmptyTuple ] = new CtxWrapTuplesConstraint[ F, EmptyTuple, EmptyTuple ] {}
 
-    implicit def idFieldAndDescConst[ F[ _ ], HeadRt, TailRt <: HList, HeadRVt, TailRVt <: HList ](
-        implicit
-        evHead : HeadRt <:< F[ HeadRVt ],
-        evNotNothing : HeadRt =:!= Nothing,
-        evTail : CtxWrapHListsConstraint[ F, TailRt, TailRVt ],
-    ) : CtxWrapHListsConstraint[ F, HeadRt :: TailRt, HeadRVt :: TailRVt ] = new CtxWrapHListsConstraint[ F, HeadRt :: TailRt, HeadRVt :: TailRVt ] {}
+    given idFieldAndDescConst[ F[ _ ], HeadRt, TailRt <: Tuple, HeadRVt, TailRVt <: Tuple ](
+        using
+        evHead : => HeadRt <:< F[ HeadRVt ],
+        evTail : CtxWrapTuplesConstraint[ F, TailRt, TailRVt ],
+    ) : CtxWrapTuplesConstraint[ F, HeadRt *: TailRt, HeadRVt *: TailRVt ] = new CtxWrapTuplesConstraint[ F, HeadRt *: TailRt, HeadRVt *: TailRVt ] {}
 
-    def apply[ F[ _ ], Rt <: HList, RVt <: HList ]( implicit ev : CtxWrapHListsConstraint[ F, Rt, RVt ] ) : CtxWrapHListsConstraint[ F, Rt, RVt ] = ev
+    def apply[ F[ _ ], Rt <: Tuple, RVt <: Tuple ]( implicit ev : CtxWrapTuplesConstraint[ F, Rt, RVt ] ) : CtxWrapTuplesConstraint[ F, Rt, RVt ] = ev
 
 }

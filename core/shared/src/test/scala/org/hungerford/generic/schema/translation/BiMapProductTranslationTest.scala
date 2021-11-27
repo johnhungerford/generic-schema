@@ -72,7 +72,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
    it should "use implicit primitive types" in {
        case class HasAF( str : String, bool : Boolean, other : Map[ String, Double ] )
 
-        import org.hungerford.generic.schema.Primitives.given
+        import org.hungerford.generic.schema.primitives.Primitives.given
 
         val testSchema = SchemaBuilder[ HasAF ]
          .product
@@ -96,7 +96,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
        case class Inside( str : String )
        case class Outside( inside : Inside )
 
-       import org.hungerford.generic.schema.Primitives.given
+        import org.hungerford.generic.schema.primitives.Primitives.given
 
        val outsideSch = SchemaBuilder[ Outside ]
          .product
@@ -132,7 +132,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
        case class Inside( str : String )
        case class Outside( inside : Inside )
 
-       import org.hungerford.generic.schema.Primitives.given
+        import org.hungerford.generic.schema.primitives.Primitives.given
 
        val insideSchema = SchemaBuilder[ Inside ]
          .product
@@ -165,7 +165,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
        case class Inside( str : String )
        case class Outside( inside : Inside )
 
-       import org.hungerford.generic.schema.Primitives.given
+        import org.hungerford.generic.schema.primitives.Primitives.given
 
        val outsideSchema = SchemaProvider.schema[ Outside ]
 

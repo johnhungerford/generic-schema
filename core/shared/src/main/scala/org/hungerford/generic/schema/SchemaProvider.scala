@@ -42,14 +42,14 @@ trait LowPrioritySchemaProviders extends LowestPrioritySchemaProviders {
 object SchemaProvider extends LowPrioritySchemaProviders {
     type Aux[ T, S ] = SchemaProvider[ T ] { type Shape = S }
 
-    def schema[ T ](
-        using sp : SchemaProvider[ T ],
-    ) : Schema.Aux[ T, sp.Shape ] = sp.provide
-
     given schemaInstanceProvider[ T ](
         using inst : Schema[ T ],
     ) : SchemaProvider.Aux[ T, inst.Shape ] = new SchemaProvider[ T ] {
-       override type Shape = inst.Shape
-       override def provide : Schema.Aux[ T, inst.Shape ] = inst
-   }
+        override type Shape = inst.Shape
+        override def provide : Schema.Aux[ T, inst.Shape ] = inst
+    }
+
+    def schema[ T ](
+        using sp : SchemaProvider[ T ],
+    ) : Schema.Aux[ T, sp.Shape ] = sp.provide
 }

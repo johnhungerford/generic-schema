@@ -3,11 +3,12 @@ package org.hungerford.generic.schema.product
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase, FieldName}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider, product}
+import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider}
 import scala.compiletime.constValue
 
 import scala.deriving.Mirror
 import org.hungerford.generic.schema.product.field.UniqueFieldNames
+
 
 trait ProductDeriver[ T ] extends Deriver[ T ] {
     type Out
@@ -19,7 +20,8 @@ object ProductDeriver {
     type Aux[ T, Out0 ] = ProductDeriver[ T ] { type Out = Out0 }
 
     def apply[ T ](
-        implicit prd : ProductDeriver[ T ],
+        using
+        prd : ProductDeriver[ T ],
     ) : ProductDeriver.Aux[ T, prd.Out ] = prd
 
     type MirrorProduct[ T, Elems <: Tuple, ElemLabels <: Tuple ] = Mirror.ProductOf[ T ] {

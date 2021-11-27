@@ -53,7 +53,7 @@ class SchemaBuilderTest extends AnyFlatSpecLike with Matchers {
    it should "be able to derive a product schema and build on it" in {
        case class Test( int : Int, str : String )
        
-       import Primitives.given
+        import org.hungerford.generic.schema.primitives.Primitives.given
 
        val schemaBuilder = SchemaBuilder[ Test ].caseClass
        val schema = schemaBuilder.build

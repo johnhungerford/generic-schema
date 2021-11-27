@@ -1,6 +1,6 @@
-package org.hungerford.generic.schema
+package org.hungerford.generic.schema.primitives
 
-import org.hungerford.generic.schema.SchemaBuilder
+import org.hungerford.generic.schema.{SchemaBuilder, Primitive}
 
 object Primitives {
 

@@ -110,6 +110,28 @@ case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
    def validate( validators : Validator[ T ]* ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
        copy( vs = validators.toSet )
 
+    def primitive : BuildableFieldDescriptionBuilder[ T, N, Unit ] = {
+        BuildableFieldDescriptionBuilder[ T, N, Unit ](
+            Primitive[ T ](),
+            fn,
+            desc,
+            vs,
+        )
+    }
+
+    def fromSchema[ NewS ]( implicit schema : Schema.Aux[ T, NewS ] ) : BuildableFieldDescriptionBuilder[ T, N, NewS ] = {
+        BuildableFieldDescriptionBuilder[ T, N, NewS ](
+            schema,
+            fn,
+            desc,
+            vs,
+        )
+    }
+
+    def buildSchema[ Rt, NewS ]( builder : SchemaBuilder[ T ] => Schema.Aux[ T, NewS ] ) : BuildableFieldDescriptionBuilder[ T, N, NewS ] = {
+        fromSchema[ NewS ]( builder( SchemaBuilder[ T ] ) )
+    }
+
    def build : FieldDescription.Aux[ T, N, S ] = {
        FieldDescriptionCase[ T, N, S ]( fn, sch, desc, vs )
    }
@@ -117,4 +139,13 @@ case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
 
 object FieldDescriptionBuilder {
    def apply[ T ] : FieldDescriptionBuilderWithoutSchemaOrName[ T ] = FieldDescriptionBuilderWithoutSchemaOrName[ T ]()
+
+   def from[ T ]( fieldDescription: FieldDescription[ T ] ) : BuildableFieldDescriptionBuilder[ T, fieldDescription.Name, fieldDescription.Shape ] = {
+       BuildableFieldDescriptionBuilder[ T, fieldDescription.Name, fieldDescription.Shape ](
+           fieldDescription.schema,
+           fieldDescription.fieldName,
+           fieldDescription.description,
+           fieldDescription.validators,
+       )
+   }
 }

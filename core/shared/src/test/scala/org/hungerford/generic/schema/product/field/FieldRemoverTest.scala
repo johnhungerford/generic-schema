@@ -27,13 +27,13 @@ class FieldRemoverTest extends AnyFlatSpecLike with Matchers {
 
           res1.size shouldBe 2
           res1.head.fieldName shouldBe "int"
-//          res1.tail.head.fieldName shouldBe "bool"
+          res1.tail.head.fieldName shouldBe "bool"
 
           val res2 = FieldRemover.remove( "bool", fields )
 
           res2.size shouldBe 2
           res2.head.fieldName shouldBe "int"
-//          res2.tail.head.fieldName shouldBe "str"
+          res2.tail.head.fieldName shouldBe "str"
      }
 
 }

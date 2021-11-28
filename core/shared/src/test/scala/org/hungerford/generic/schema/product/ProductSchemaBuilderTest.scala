@@ -74,20 +74,39 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
          .build
    }
 
-//    it should "be able to rebuild" in {
-//        SchemaBuilder[ TestCase ]
-//          .product
-//          .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
-//          .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
-//          .construct( (tup, _) => {
-//              val (int, str) = tup
-//              TestCase( int, str )
-//          } )
-//          .deconstruct( ( value : TestCase ) => {
-//              ((value.int, value.str), Map.empty)
-//          } )
-//          .build
+   it should "be able to remove field descriptions" in {
+       SchemaBuilder[ TestCase ]
+         .product
+         .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
+         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
+         .addField( FieldDescriptionBuilder[ Boolean ].primitive.fieldName( "bool" ).build )
+         .removeField( "bool" )
+         .construct( (tup, _) => {
+             val (int, str) = tup
+             TestCase( int, str )
+         } )
+         .deconstruct( ( value : TestCase ) => {
+             ((value.int, value.str), Map.empty)
+         } )
+         .build
 
-//    }
+       SchemaBuilder[ TestCase ]
+         .product
+         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
+         .addField( FieldDescriptionBuilder[ Boolean ].primitive.fieldName( "bool" ).build )
+         .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
+         .removeField( "bool" )
+         .removeField( "str" )
+         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
+         .construct( (tup, _) => {
+             val (int, str) = tup
+             TestCase( int, str )
+         } )
+         .deconstruct( ( value : TestCase ) => {
+             ((value.int, value.str), Map.empty)
+         } )
+         .build
+   }
+
 
 }

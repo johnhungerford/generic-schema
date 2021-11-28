@@ -12,19 +12,19 @@ trait LowPriorityFieldRemovers {
     type Aux[ N <: FieldName, R <: Tuple, O <: Tuple ] =
         FieldRemover[ N, R ] { type Out = O }
 
-    given nextFieldRemover[ N <: FieldName, Head, Tail <: Tuple ](
+    given nextFieldRemover[ N <: FieldName, Head, Tail <: Tuple, Next <: Tuple ](
         using
-        next : FieldRemover[ N, Tail ],
-    ) : FieldRemover[ N, Head *: Tail ] with {
-        type Out = Head *: next.Out
+        next : FieldRemover.Aux[ N, Tail, Next ],
+    ) : FieldRemover.Aux[ N, Head *: Tail, Head *: Next ] = new FieldRemover[ N, Head *: Tail ] {
+        type Out = Head *: Next
 
-        def remove( fields : Head *: Tail ) : Head *: next.Out =
+        def remove( fields : Head *: Tail ) : Head *: Next =
             fields.head *: next.remove( fields.tail )
     }
 }
 
 object FieldRemover extends LowPriorityFieldRemovers {
-    given fieldRemover[ T, N <: FieldName, S, Tail <: Tuple ] : FieldRemover[ N, FieldDescription.Aux[ T, N, S ] *: Tail ] with {
+    given fieldRemover[ T, N <: FieldName, S, Tail <: Tuple ] : FieldRemover.Aux[ N, FieldDescription.Aux[ T, N, S ] *: Tail, Tail ] = new FieldRemover[ N, FieldDescription.Aux[ T, N, S ] *: Tail ] {
         type Out = Tail
 
         def remove( fields : FieldDescription.Aux[ T, N, S ] *: Tail ) : Tail = fields.tail

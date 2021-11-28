@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldName, UniqueFieldNames}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldName, UniqueFieldNames, FieldRemover}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder}
 import org.hungerford.generic.schema.validator.Validator
 
@@ -25,11 +25,24 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
    )(
         using
         fc : => CtxWrapTuplesConstraint[ FieldDescription, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
-        uniq : UniqueFieldNames[ Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ] ]
+        uniq : UniqueFieldNames[ Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ] ],
    ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS ] = {
        val newFieldDescs = fieldDescs ++ (fd *: EmptyTuple)
        copy[ T, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS ]( desc, vals, aftSch, newFieldDescs )
    }
+
+    def removeField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple ](
+        fieldName : N,
+    )(
+        using
+        rm : FieldRemover.Aux[ N, R, NewR ],
+        fc : => CtxWrapTuplesConstraint[ FieldDescription, NewR, NewRV ],
+    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ] = {
+        val newFields = rm.remove( fieldDescs )
+        copy[ T, NewR, NewRV, AF, AFS ](
+            fieldDescs = newFields,
+        )
+    }
 
    def additionalFields[ F ] : AdditionalFieldsBuilder[ T, R, RV, F ] =
        AdditionalFieldsBuilder[ T, R, RV, F ](

@@ -87,3 +87,46 @@ object FieldReplacer extends LowPriorityFieldReplacers {
         replacer : FieldReplacer[ N, R, NewT, NewN, NewS ],
     ) : replacer.Out = replacer.replace( from, withField )
 }
+
+trait FieldRetriever[ N <: FieldName, R <: Tuple ] {
+    type Field
+
+    def retrieve( from : R ) : Field
+}
+
+trait LowPriorityFieldRetrievers {
+    given [ N <: FieldName, Head, Tail <: Tuple ](
+        using
+        next : FieldRetriever[ N, Tail ],
+    ) : FieldRetriever.Aux[ N, Head *: Tail, next.Field ] = {
+        new FieldRetriever[ N, Head *: Tail ] {
+            type Field = next.Field
+
+            override def retrieve( from : Head *: Tail ) : next.Field =
+                next.retrieve( from.tail )
+        }
+    }
+}
+
+object FieldRetriever extends LowPriorityFieldRetrievers {
+    type Aux[ N <: FieldName, R <: Tuple, F ] =
+        FieldRetriever[ N, R ] { type Field = F }
+
+    given [ N <: FieldName, T, S, Tail <: Tuple ] :
+      FieldRetriever.Aux[ N, FieldDescription.Aux[ T, N, S ] *: Tail, FieldDescription.Aux[ T, N, S ] ] = {
+        new FieldRetriever[ N, FieldDescription.Aux[ T, N, S ] *: Tail ] {
+            type Field = FieldDescription.Aux[ T, N, S ]
+
+            override def retrieve( from : FieldDescription.Aux[ T, N, S ] *: Tail ) : FieldDescription.Aux[ T, N, S ] =
+                from.head
+        }
+    }
+
+    def retrieve[ N <: FieldName, R <: Tuple ](
+        fieldName : N,
+        fields : R,
+    )(
+        using
+        fr : FieldRetriever[ N, R ],
+    ) : fr.Field = fr.retrieve( fields )
+}

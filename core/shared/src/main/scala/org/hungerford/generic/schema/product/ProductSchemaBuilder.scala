@@ -1,9 +1,11 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, FieldName, FieldRemover, FieldReplacer, FieldRetriever, UniqueFieldNames, BuildableFieldDescriptionBuilder}
+import org.hungerford.generic.schema.product.field.{BuildableFieldDescriptionBuilder, FieldDescription, FieldDescriptionBuilder, FieldName, FieldRemover, FieldReplacer, FieldRetriever, UniqueFieldNames}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder}
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
+
+import scala.collection.immutable.NewVectorIterator
 
 case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
    private[ product ] val desc : Option[ String ] = None,
@@ -47,11 +49,26 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
        )
    }
 
+   def updateField[ N <: FieldName, F, S ](
+       fieldName : N,
+   )(
+       using
+       fr : FieldRetriever.Aux[ N, R, FieldDescription.Aux[ F, N, S ] ]
+   ) : FieldUpdater[F, N, S, T, R, RV, AF, AFS, C, DC ] = FieldUpdater[F, N, S, T, R, RV, AF, AFS, C, DC ](
+      fr.retrieve( fieldDescs ),
+      desc,
+      vals,
+      aftSch,
+      fieldDescs,
+      constr,
+      decons,
+    )
+
    def additionalFields[ F ](
        using
-       afChoice : AFChooser[ AF, F, C, DC ],
-   ) : AdditionalFieldsBuilder[ T, R, RV, AF, F, C, DC ] =
-       AdditionalFieldsBuilder[ T, R, RV, AF, F, C, DC ](
+       afChoice : ConstrUpdateChoice[ RV, RV, AF, F, C, DC ],
+   ) : AdditionalFieldsBuilder[ T, R, RV, AF, F, C, DC, afChoice.Constr, afChoice.Deconstr ] =
+       AdditionalFieldsBuilder[ T, R, RV, AF, F, C, DC, afChoice.Constr, afChoice.Deconstr ](
            desc,
            vals,
            fieldDescs,
@@ -84,7 +101,7 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
             constr,
        )
    }
-    
+
     def build(
        using
        lengther : TupleIntLength[ R ],
@@ -108,16 +125,7 @@ trait ConstructorChooser[ T, RV, AF ] {
     type Constr
 }
 
-trait LowestPriorityConstructorChoosers {
-    given singleField[ T, F, AF ] : ConstructorChooser.Aux[
-        T,
-        F *: EmptyTuple,
-        AF,
-        (F, Map[ String, AF]) => T,
-    ] = new ConstructorChooser[ T, F *: EmptyTuple, AF ] {
-        type Constr = (F, Map[ String, AF]) => T
-    }
-
+trait EvenLowerestPriorityConstructorChoosers {
     given multiField[ T, RV <: Tuple, AF ] : ConstructorChooser.Aux[
         T,
         RV,
@@ -126,6 +134,17 @@ trait LowestPriorityConstructorChoosers {
     ] = new ConstructorChooser[ T, RV, AF ] {
         type Constr =
             (RV, Map[ String, AF ]) => T
+    }
+}
+
+trait LowestPriorityConstructorChoosers extends EvenLowerestPriorityConstructorChoosers {
+    given singleField[ T, F, AF ] : ConstructorChooser.Aux[
+        T,
+        F *: EmptyTuple,
+        AF,
+        (F, Map[ String, AF]) => T,
+    ] = new ConstructorChooser[ T, F *: EmptyTuple, AF ] {
+        type Constr = (F, Map[ String, AF]) => T
     }
 }
 
@@ -209,6 +228,15 @@ trait LowPriorityDeconstructorChoosers extends LowestPriorityDeconstructorChoose
     ] = new DeconstructorChooser[ T, RV, Nothing ] {
         type Deconstr = T => RV
     }
+
+    given singleField[ T, F, AF ] : DeconstructorChooser.Aux[
+        T,
+        F *: EmptyTuple,
+        AF,
+        T => (F, Map[ String, AF ]),
+    ] = new DeconstructorChooser[ T, F *: EmptyTuple, AF ] {
+        type Deconstr = T => (F, Map[ String, AF ])
+    }
 }
 
 object DeconstructorChooser extends LowPriorityDeconstructorChoosers {
@@ -247,7 +275,7 @@ case class DeconstructorBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
     }
 }
 
-trait AFChooser[ AF, NewAF, C, DC ] {
+trait ConstrUpdateChoice[ RV <: Tuple, NewRV <: Tuple, AF, NewAF, C, DC ] {
     type Constr
     type Deconstr
 
@@ -255,8 +283,8 @@ trait AFChooser[ AF, NewAF, C, DC ] {
     def deconstructor( original : DC ) : Deconstr
 }
 
-trait LowPriorityAFChoosers {
-    given [ AF, NewAF, C, DC ] : AFChooser[ AF, NewAF, C, DC ] with {
+trait LowPriorityCUCs {
+    given [ RV <: Tuple, NewRV <: Tuple, AF, NewAF, C, DC ] : ConstrUpdateChoice[ RV, NewRV, AF, NewAF, C, DC ] with {
         type Constr = Unit
         type Deconstr = Unit
 
@@ -265,8 +293,13 @@ trait LowPriorityAFChoosers {
     }
 }
 
-object AFChooser extends LowPriorityAFChoosers {
-    given[ AF, C, DC ] : AFChooser[ AF, AF, C, DC ] with {
+object ConstrUpdateChoice extends LowPriorityCUCs {
+    type Aux[ RV <: Tuple, NewRV <: Tuple, AF, NewAF, C, DC, NewC, NewDC ] = ConstrUpdateChoice[ RV, NewRV, AF, NewAF, C, DC ] {
+        type Constr = NewC
+        type Deconstr = NewDC
+    }
+
+    given[ RV <: Tuple, AF, C, DC ] : ConstrUpdateChoice[ RV, RV, AF, AF, C, DC ] with {
         type Constr = C
         type Deconstr = DC
 
@@ -275,7 +308,7 @@ object AFChooser extends LowPriorityAFChoosers {
     }
 }
 
-case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, NewAF, C, DC ](
+case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, NewAF, C, DC, NewC, NewDC ](
    private[ product ] val desc : Option[ String ] = None,
    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
    private[ product ] val fieldDescs : R,
@@ -284,15 +317,12 @@ case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, NewAF, C, DC
 )(
    using
    fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
-   val afChoice : AFChooser[ AF, NewAF, C, DC ],
+   val afChoice : ConstrUpdateChoice.Aux[ RV, RV, AF, NewAF, C, DC, NewC, NewDC ],
 ) {
-    type Constr = afChoice.Constr
-    type Deconstr = afChoice.Deconstr
-
     def fromSchema[ S ](
         implicit schema : Schema.Aux[ NewAF, S ],
-    ) : ProductSchemaBuilder[ T, R, RV, NewAF, S, Constr, Deconstr ] = {
-        ProductSchemaBuilder[ T, R, RV, NewAF, S, Constr, Deconstr ](
+    ) : ProductSchemaBuilder[ T, R, RV, NewAF, S, NewC, NewDC ] = {
+        ProductSchemaBuilder[ T, R, RV, NewAF, S, NewC, NewDC ](
             desc,
             vals,
             schema,
@@ -304,8 +334,39 @@ case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, NewAF, C, DC
 
     def buildSchema[ S ](
         builder : SchemaBuilder[ NewAF ] => Schema.Aux[ NewAF, S ],
-    ) : ProductSchemaBuilder[ T, R, RV, NewAF, S, Constr, Deconstr ] = {
+    ) : ProductSchemaBuilder[ T, R, RV, NewAF, S, NewC, NewDC ] = {
         fromSchema( builder( SchemaBuilder[ NewAF ] ) )
+    }
+}
+
+case class FieldUpdater[ F, N <: FieldName, S, T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
+    private[ product ] val field : FieldDescription.Aux[ F, N, S ],
+    private[ product ] val desc : Option[ String ] = None,
+    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
+    private[ product ] val fieldDescs : R,
+    private[ product ] val constr : C,
+    private[ product ] val decons : DC,
+) {
+    def apply[ NewN <: FieldName, NewS, NewR <: Tuple ](
+        builder: BuildableFieldDescriptionBuilder[ F, N, S ] => FieldDescription.Aux[ F, NewN, NewS ],
+    )(
+        using
+        fr : FieldReplacer.Aux[ N, R, F, NewN, NewS, NewR ],
+        ctx : CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
+    ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ] = {
+        val startingBuilder = FieldDescriptionBuilder.from( field )
+        val newField = builder( startingBuilder )
+        val newFieldDescriptions = fr.replace( fieldDescs, newField )
+
+        ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescriptions,
+            constr,
+            decons,
+        )
     }
 }
 

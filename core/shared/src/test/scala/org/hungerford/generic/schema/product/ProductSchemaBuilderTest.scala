@@ -106,13 +106,63 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
     }
 
-//    it should "be able to update fields without replacing them and losing constructor/deconstructor" in {
-//        val schema = SchemaBuilder[ TestCase ]
-//          .caseClass
-//          .updateField( "int" )( _.fieldName( "int_field" ).build )
-//          .build
-//
-//        schema.shape.fieldDescriptions.head.fieldName shouldBe "int_field"
-//    }
+    it should "be able to add fields after adding constructor/deconstructor, but require that you rebuild the constructor/deconstructor" in {
+      val builder = SchemaBuilder[ TestCase ]
+        .product
+        .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
+        .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
+        .construct( (int, str) => TestCase( int, str ) )
+        .deconstruct( v => (v.int, v.str) )
+      
+      assertCompiles( """builder.build""" )
+
+      val newBuilder = builder.addField( FieldDescriptionBuilder[ Boolean ].primitive.fieldName( "bool" ).build )
+
+      assertDoesNotCompile( """newBuilder.build""")
+
+      newBuilder
+        .construct( (int, str, _) => TestCase( int, str ) )
+        .deconstruct( v => (v.int, v.str, false) )
+        .build
+    }
+
+    it should "preserve constructor/deconstructor when updating additional fields to same type, but does not preserve when additional fields type is changed" in {
+        case class TC( int : Int, fields : Map[ String, String ] )
+
+        val builder = SchemaBuilder[ TC ]
+          .product
+          .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
+          .additionalFields[ String ].buildSchema( _.primitive.build )
+          .construct( (int, af) => TC( int, af ) )
+          .deconstruct( v => (v.int, v.fields) )
+        
+        assertCompiles( """builder.build""" )
+
+        import org.hungerford.generic.schema.primitives.Primitives.given
+
+        val newBuilder = builder
+          .additionalFields[ String ].fromSchema
+
+        assertCompiles( """newBuilder.build""" )
+
+        val lastBuilder = builder
+          .additionalFields[ Double ].fromSchema
+        
+        assertDoesNotCompile( """lastBuilder.build""")
+
+        lastBuilder
+          .construct( (int, af) => TC( int, af.mapValues( _.toString ).toMap ) )
+          .deconstruct( v => (v.int, v.fields.mapValues( _.toDouble ).toMap ) )
+          .build
+    }
+
+    it should "be able to rebuild a field, selected by name" in {
+        val sch = SchemaBuilder[ TestCase ]
+          .caseClass
+          .updateField( "int" )( _.fieldName( "int_field" ).build )
+          .build
+
+        sch.shape.fieldDescriptions.head.fieldName shouldBe "int_field"
+    }
 
 }

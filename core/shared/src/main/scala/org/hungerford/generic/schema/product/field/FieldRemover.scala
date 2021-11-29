@@ -40,10 +40,10 @@ object FieldRemover extends LowPriorityFieldRemovers {
     ) : rm.Out = rm.remove( from )
 }
 
-trait FieldReplacer[ N <: FieldName, R <: Tuple, T, NewN <: FieldName, S ] {
+trait FieldReplacer[ N <: FieldName, R <: Tuple, NewT, NewN <: FieldName, NewS ] {
     type Out <: Tuple
 
-    def replace( fields : R, withField : FieldDescription.Aux[ T, NewN, S ] ) : Out
+    def replace( fields : R, withField : FieldDescription.Aux[ NewT, NewN, NewS ] ) : Out
 }
 
 trait LowPriorityFieldReplacers {

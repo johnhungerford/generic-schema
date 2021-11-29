@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.product.field.FieldDescription
-import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, TupleIntLength, ProductDeriver, ProductShape, ProductSchemaBuilder}
+import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, ProductDeriver, ProductSchemaBuilder, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.validator.Validator
 
 case class SchemaBuilder[ T ](
@@ -59,4 +59,57 @@ object SchemaBuilder {
    def apply[ T ] : SchemaBuilder[ T ] = SchemaBuilder[ T ]()
 
    def none : Schema.Aux[ Nothing, Unit ] = NoSchema
+
+   def from[ T, S ](
+       schema : Schema.Aux[ T, S ],
+   )(
+       using
+       rb : SchemaRebuilder[ T, S ],
+   ) : rb.Builder = rb.rebuild( schema )
+}
+
+trait SchemaRebuilder[ T, S ] {
+    type Builder
+
+    def rebuild( schema : Schema.Aux[ T, S ] ) : Builder
+}
+
+object SchemaRebuilder {
+    type Aux[ T, S, B ] = SchemaRebuilder[ T, S ] { type Builder = B }
+
+    given productRebuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
+        using
+        ctx : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
+    ) : SchemaRebuilder.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ], ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] ] = {
+        new SchemaRebuilder[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ] {
+            type Builder = ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ]
+
+            def rebuild( schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ]) : Builder = {
+                ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ](
+                    schema.genericDescription,
+                    schema.genericValidators,
+                    schema.shape.additionalFieldsSchema,
+                    schema.shape.fieldDescriptions,
+                    schema.shape.constructor,
+                    schema.shape.deconstructor,
+                )
+            }
+        }
+    }
+
+    import org.hungerford.generic.schema.product.field.Ineq
+
+    given primitiveRebuilder[ T ](
+        using
+        ev : Ineq[ T, Nothing ]
+    ) : SchemaRebuilder.Aux[ T, Unit, PrimitiveSchemaBuilder[ T ] ] = new SchemaRebuilder[ T, Unit ] {
+        type Builder = PrimitiveSchemaBuilder[ T ]
+
+        def rebuild( schema : Schema.Aux[ T, Unit ] ) : Builder = {
+            PrimitiveSchemaBuilder[ T ](
+                schema.genericDescription,
+                schema.genericValidators,
+            )
+        }
+    }
 }

@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{Primitive, Schema, SchemaBuilder}
+import org.hungerford.generic.schema.{Primitive, Schema, SchemaBuilder, SchemaRebuilder}
 
 
 case class FieldDescriptionBuilderWithoutSchemaOrName[ T ](
@@ -131,6 +131,13 @@ case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
     def buildSchema[ Rt, NewS ]( builder : SchemaBuilder[ T ] => Schema.Aux[ T, NewS ] ) : BuildableFieldDescriptionBuilder[ T, N, NewS ] = {
         fromSchema[ NewS ]( builder( SchemaBuilder[ T ] ) )
     }
+
+    def rebuildSchema[ Rt, Builder, NewS ](
+        builder : Builder => Schema.Aux[ T, NewS ],
+    )(
+        using
+        srb : SchemaRebuilder.Aux[ T, S, Builder ],
+    ) : Schema.Aux[ T, NewS ] = builder( srb.rebuild( sch ) )
 
    def build : FieldDescription.Aux[ T, N, S ] = {
        FieldDescriptionCase[ T, N, S ]( fn, sch, desc, vs )

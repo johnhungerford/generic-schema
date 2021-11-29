@@ -1,6 +1,7 @@
 package org.hungerford.generic.schema.product.constructor
 
 import org.hungerford.generic.schema.types.Last
+import org.hungerford.generic.schema.product.LowestPriorityDeconstructorChoosers
 
 trait ProductConstructor[ C, R <: Tuple, AF, T ] {
     def convert( from : C ) : (R, Map[ String, AF ]) => T
@@ -13,9 +14,17 @@ trait ProductConstructor[ C, R <: Tuple, AF, T ] {
     ) : T = convert( from )( fields, additionalFields )
 }
 
-trait LowPriorityProductConstructors {
+trait LowestPriorityProductConstructors {
     given standard[ R <: Tuple, AF, T ] : ProductConstructor[ (R, Map[ String, AF ]) => T, R, AF, T ] with {
         override def convert( from : (R, Map[ String, AF ]) => T ) : (R, Map[ String, AF ]) => T = from
+    }
+}
+
+trait LowPriorityProductConstructors extends LowestPriorityProductConstructors {
+    given singleField[ F, T, AF ] : ProductConstructor[ (F, Map[ String, AF ]) => T, F *: EmptyTuple, AF, T ] with {
+        override def convert( from : (F, Map[ String, AF ]) => T ) : (F *: EmptyTuple, Map[ String, AF ]) => T = {
+            ( fields : F *: EmptyTuple, additionalFields : Map[ String, AF ] ) => from( fields.head, additionalFields )
+        }
     }
 }
 
@@ -41,11 +50,22 @@ trait ProductDeconstructor[ DC, R <: Tuple, AF, T ] {
     ) : (R, Map[ String, AF ]) = convert( from )( value )
 }
 
-trait LowPriorityProductDeconstructors {
+trait LowestPriorityProductDeconstructors {
     given standard[ T, R <: Tuple, AF ] :
         ProductDeconstructor[ T => (R, Map[ String, AF ]), R, AF, T ] with {
         def convert( from : T => (R, Map[ String, AF ]) ) :
             T => (R, Map[ String, AF ]) = from
+    }
+}
+
+trait LowPriorityProductDeconstructors extends LowestPriorityProductDeconstructors {
+    given singleField[ F, T, AF ] : ProductDeconstructor[ T => (F, Map[ String, AF ]), F *: EmptyTuple, AF, T ] with {
+        def convert( from : T => (F, Map[ String, AF ]) ) : T => (F *: EmptyTuple, Map[ String, AF ]) = {
+            ( value : T ) => {
+                val (field, additionalFields) = from( value )
+                (field *: EmptyTuple, additionalFields)
+            }
+        }
     }
 }
 

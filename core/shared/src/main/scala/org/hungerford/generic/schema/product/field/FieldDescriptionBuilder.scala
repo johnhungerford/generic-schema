@@ -132,12 +132,17 @@ case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
         fromSchema[ NewS ]( builder( SchemaBuilder[ T ] ) )
     }
 
-    def rebuildSchema[ Rt, Builder, NewS ](
-        builder : Builder => Schema.Aux[ T, NewS ],
-    )(
+    def rebuildSchema(
         using
-        srb : SchemaRebuilder.Aux[ T, S, Builder ],
-    ) : Schema.Aux[ T, NewS ] = builder( srb.rebuild( sch ) )
+        srb : SchemaRebuilder[ T, S ],
+    ) : BuildableFieldSchemaRebuilder[ T, N, srb.Builder ] = {
+        BuildableFieldSchemaRebuilder[ T, N, srb.Builder ](
+            srb.rebuild( sch ),
+            fn,
+            desc,
+            vs,
+        )
+    }
 
    def build : FieldDescription.Aux[ T, N, S ] = {
        FieldDescriptionCase[ T, N, S ]( fn, sch, desc, vs )
@@ -155,4 +160,22 @@ object FieldDescriptionBuilder {
            fieldDescription.validators,
        )
    }
+}
+
+case class BuildableFieldSchemaRebuilder[ T, N <: FieldName, Builder ](
+    private val builder : Builder,
+    private val fn : N,
+    private val desc : Option[ String ] = None,
+    private val vs : Set[ Validator[ T ] ],
+) {
+    def apply[ S ](
+        build : Builder => Schema.Aux[ T, S ],
+    ) : BuildableFieldDescriptionBuilder[ T, N, S ] = {
+        BuildableFieldDescriptionBuilder[ T, N, S ](
+            build( builder ),
+            fn,
+            desc,
+            vs,
+        )
+    }
 }

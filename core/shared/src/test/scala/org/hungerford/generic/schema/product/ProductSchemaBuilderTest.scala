@@ -165,4 +165,40 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
         sch.shape.fieldDescriptions.head.fieldName shouldBe "int_field"
     }
 
+    it should "be able to rebuild nested fields" in {
+        case class Core( int : Int, str : String, bool : Boolean )
+        case class InnerClass( core : Core )
+        case class OuterClass( inner : InnerClass )
+
+        val sch = SchemaBuilder[ OuterClass ]
+          .caseClass
+          .updateField( "inner" )(
+              _.fieldName( "inner_field" )
+                .rebuildSchema(
+                    _.updateField( "core" )(
+                        _.fieldName( "core_field" )
+                          .rebuildSchema(
+                              _.updateField( "str" )(
+                                  _.fieldName( "string_field" ).build
+                              ).build
+                          ).build
+                    ).build
+                ).build
+          )
+          .build
+
+        val outerFd = sch.shape.fieldDescriptions
+        val innerFd = outerFd.head.schema.shape.fieldDescriptions
+        val coreFd = innerFd.head.schema.shape.fieldDescriptions
+
+        outerFd.size shouldBe 1
+        outerFd.head.fieldName shouldBe "inner_field"
+        innerFd.size shouldBe 1
+        innerFd.head.fieldName shouldBe "core_field"
+        coreFd.size shouldBe 3
+        coreFd.head.fieldName shouldBe "int"
+        coreFd.tail.head.fieldName shouldBe "string_field"
+        coreFd.tail.tail.head.fieldName shouldBe "bool"
+    }
+
 }

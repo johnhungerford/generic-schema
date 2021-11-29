@@ -17,7 +17,7 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
 
         val product = ProductDeriver[ Test ].derive
 
-        product.construct( Tuple1( 5 ), Map.empty[ String, Nothing ] ) shouldBe Test( 5 )
+        product.construct( Tuple1( 5 ) ) shouldBe Test( 5 )
 
         product.size shouldBe 1
 

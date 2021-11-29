@@ -3,6 +3,7 @@ package org.hungerford.generic.schema.product
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, FieldName, FieldRemover, FieldReplacer, FieldRetriever, UniqueFieldNames, BuildableFieldDescriptionBuilder}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder}
 import org.hungerford.generic.schema.validator.Validator
+import org.hungerford.generic.schema.product.constructor.ProductConstructor
 
 //case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
 //    private[ product ] val desc : Option[ String ] = None,
@@ -482,9 +483,9 @@ case class BuildableProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
        using
        lengther : TupleIntLength[ R ],
        uniq : => UniqueFieldNames[ R ],
-   ) : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS ] ] =
+   ) : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, (RV, Map[ String, AF]) => T ] ] =
        ComplexSchema(
-           ProductShape[ T, R, RV, AF, AFS ](
+           ProductShape[ T, R, RV, AF, AFS, (RV, Map[ String, AF]) => T ](
                fieldDescriptions = fieldDescs,
                additionalFieldsSchema = aftSch,
                constructor = constr,
@@ -516,6 +517,9 @@ case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF ](
 
    def buildSchema[ S ](
        builder : SchemaBuilder[ AF ] => Schema.Aux[ AF, S ],
+   )(
+       using
+       prodConstr : ProductConstructor[ (RV, Map[ String, AF]) => T, RV, AF, T ],
    ) : ProductSchemaBuilder[ T, R, RV, AF, S ] = {
        fromSchema( builder( SchemaBuilder[ AF ] ) )
    }
@@ -524,18 +528,19 @@ case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF ](
 
 
 object ProductSchemaBuilder {
-   def from[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
-       schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS ] ],
+   def from[ T, R <: Tuple, RV <: Tuple, AF, AFS, C ](
+       schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C ] ],
    )(
        using
        fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
+       prodConstr : ProductConstructor[ C, RV, AF, T ],
    ) : BuildableProductSchemaBuilder[ T, R, RV, AF, AFS ] = {
        BuildableProductSchemaBuilder(
            schema.genericDescription,
            schema.genericValidators,
            schema.shape.additionalFieldsSchema,
            schema.shape.fieldDescriptions,
-           schema.shape.constructor,
+           prodConstr.convert( schema.shape.constructor ),
            schema.shape.deconstructor
        )
    }

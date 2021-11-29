@@ -38,13 +38,13 @@ object ProductDeriver {
         valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
         uniq : UniqueFieldNames[ Rt ],
     ) : ProductDeriver[ T ] with {
-            override type Out = ProductShape[ T, Rt, RVt, Nothing, Unit ]
+            override type Out = ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T ]
 
-            override def derive : ProductShape[ T, Rt, RVt, Nothing, Unit ] = {
-                ProductShape[ T, Rt, RVt, Nothing, Unit ](
+            override def derive : ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T ] = {
+                ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T ](
                     fieldDescriptions = fieldDeriver.derive,
                     additionalFieldsSchema = NoSchema,
-                    (rv, _) => mirror.fromProduct( rv ),
+                    rv => mirror.fromProduct( rv ),
                     ( value : T ) => (Tuple.fromProductTyped[ T ]( value )( using mirror ), Map.empty),
                 )
             }

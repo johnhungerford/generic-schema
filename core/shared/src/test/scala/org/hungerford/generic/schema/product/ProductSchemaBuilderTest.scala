@@ -136,13 +136,13 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
     }
 
-    it should "be able to update fields without replacing them and losing constructor/deconstructor" in {
-        val schema = SchemaBuilder[ TestCase ]
-          .caseClass
-          .updateField( "int" )( _.fieldName( "int_field" ).build )
-          .build
-
-        schema.shape.fieldDescriptions.head.fieldName shouldBe "int_field"
-    }
+//    it should "be able to update fields without replacing them and losing constructor/deconstructor" in {
+//        val schema = SchemaBuilder[ TestCase ]
+//          .caseClass
+//          .updateField( "int" )( _.fieldName( "int_field" ).build )
+//          .build
+//
+//        schema.shape.fieldDescriptions.head.fieldName shouldBe "int_field"
+//    }
 
 }

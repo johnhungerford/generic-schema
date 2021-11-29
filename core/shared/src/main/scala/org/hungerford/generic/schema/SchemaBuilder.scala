@@ -29,10 +29,10 @@ case class SchemaBuilder[ T ](
 
    def caseClass[ R <: Tuple, Rt <: Tuple, RVt <: Tuple ](
        implicit
-       deriver : SchemaDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit ] ],
+       deriver : SchemaDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T ] ],
        fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
    ) : BuildableProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit ] = {
-       ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, Unit ]( deriver.derive )
+       ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, Unit, RVt => T ]( deriver.derive )
    }
 }
 

@@ -1,17 +1,17 @@
 package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.{TranslatedFieldDescription, TranslatedFieldInjector, FieldTupleTranslator, FieldTranslator, FieldName}
+import org.hungerford.generic.schema.product.field.{FieldName, FieldTranslator, FieldTupleTranslator, TranslatedFieldDescription, TranslatedFieldInjector}
 import org.hungerford.generic.schema.types.{Extractor, Injector, SimpleExtractor}
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema}
 
 import scala.language.higherKinds
-
 import scala.compiletime.{erasedValue, summonInline}
 import javax.print.attribute.standard.MediaSize.Other
 import org.hungerford.generic.schema.product.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.product.field.FieldDescription
 import org.hungerford.generic.schema.SchemaBuilder
+import org.hungerford.generic.schema.product.constructor.ProductConstructor
 
 trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
 
@@ -154,26 +154,26 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
     
     type Ctx = [X] =>> TranslatedFieldDescription[ X, OtherSchema ]
 
-    given encoderWithoutAF[ T, Rt <: Tuple, RVt <: Tuple, FDL <: Tuple ](
+    given encoderWithoutAF[ T, Rt <: Tuple, RVt <: Tuple, FDL <: Tuple, C ](
         using
         ctx : CtxWrapTuplesConstraint[ Ctx, FDL, RVt ],
         inj : BiMapTupleInjector[ RVt, Rt ],
-    ) : Encoder[ T, ProductShape[ T, Rt, RVt, Nothing, Unit ], MapVal ] with {
-        def encode( value : T, product : ProductShape[ T, Rt, RVt, Nothing, Unit ] ): MapVal = {
+    ) : Encoder[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, C ], MapVal ] with {
+        def encode( value : T, product : ProductShape[ T, Rt, RVt, Nothing, Unit, C ] ): MapVal = {
             val (fields, _) = product.deconstructor( value )
             val buildMapWithFields : BuildMapVal = inj.inject( fields, initMapVal, product.fieldDescriptions )
             buildMapVal( buildMapWithFields )
         }
     }
 
-    given encoderWithAF[ T, Rt <: Tuple, RVt <: Tuple, FDL <: Tuple, AFt, AFSt ](
+    given encoderWithAF[ T, Rt <: Tuple, RVt <: Tuple, FDL <: Tuple, AFt, AFSt, C ](
         using
         ctx : CtxWrapTuplesConstraint[ Ctx, FDL, RVt ],
         inj : BiMapTupleInjector[ RVt, Rt ],
         afInjector : Injector.Aux[ Map[ String, AFt ], BuildMapVal, OtherSchema[ AFt ], BuildMapVal ],
         afTranslator : SchemaTranslator[ AFt, AFSt, OtherSchema ],
-    ) : Encoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ], MapVal ] with {
-        def encode( value : T, product : ProductShape[ T, Rt, RVt, AFt, AFSt ] ): MapVal = {
+    ) : Encoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ], MapVal ] with {
+        def encode( value : T, product : ProductShape[ T, Rt, RVt, AFt, AFSt, C ] ): MapVal = {
             val (fields, additionalFields) = product.deconstructor( value )
             val additionalFieldsCorrected = additionalFields -- product.fieldNames
             val buildMapWithFields : BuildMapVal = inj.inject( fields, initMapVal, product.fieldDescriptions )
@@ -183,37 +183,44 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
         }
     }
 
-    given decoderWithAF[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
+    given decoderWithAF[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C ](
         using
         ex : BiMapTupleExtractor.Aux[ Rt, RVt ],
         afExtractor : SimpleExtractor.Aux[ MapVal, OtherSchema[ AFt ], Map[ String, AFt ] ],
         afTranslator : SchemaTranslator[ AFt, AFSt, OtherSchema ],
-    ) : Decoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ], MapVal ] with {
-        def decode( value : MapVal, product : ProductShape[ T, Rt, RVt, AFt, AFSt ] ) : T = {
+        prodConstr : ProductConstructor[ C, RVt, AFt, T ],
+    ) : Decoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ], MapVal ] with {
+        def decode( value : MapVal, product : ProductShape[ T, Rt, RVt, AFt, AFSt, C ] ) : T = {
             val fieldValues = ex.extract( value, product.fieldDescriptions )
             val afSchema = afTranslator.translate( product.additionalFieldsSchema )
             val additionalFieldValues = afExtractor.extract( value, afSchema )
-            product.construct( fieldValues, additionalFieldValues )
+            prodConstr.construct(
+                product.constructor,
+            )(
+                fieldValues,
+                additionalFieldValues,
+            )
         }
     }
 
-    given decoderWithoutAF[ T, Rt <: Tuple, RVt <: Tuple ](
+    given decoderWithoutAF[ T, Rt <: Tuple, RVt <: Tuple, C ](
         using
         ex : BiMapTupleExtractor.Aux[ Rt, RVt ],
-    ) : Decoder[ T, ProductShape[ T, Rt, RVt, Nothing, Unit ], MapVal ] with {
-        def decode( value : MapVal, product : ProductShape[ T, Rt, RVt, Nothing, Unit ] ) : T = {
+        prodConstr : ProductConstructor[ C, RVt, Nothing, T ],
+    ) : Decoder[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, C ], MapVal ] with {
+        def decode( value : MapVal, product : ProductShape[ T, Rt, RVt, Nothing, Unit, C ] ) : T = {
             val fieldValues = ex.extract( value, product.fieldDescriptions )
-            product.construct( fieldValues )
+            prodConstr.construct( product.constructor )( fieldValues )
         }
     }
 
-    inline given productTranslation[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
+    inline given productTranslation[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C ](
         using
-        enc : Encoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ], MapVal ],
-        dec : Decoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ], MapVal ],
-    ) : SchemaTranslator[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ], OtherSchema ] = {
-            new SchemaTranslator[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ], OtherSchema ] {
-                def translate( schema : Schema.Aux[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ] ] ) : OtherSchema[ T ] = {
+        enc : Encoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ], MapVal ],
+        dec : Decoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ], MapVal ],
+    ) : SchemaTranslator[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ], OtherSchema ] = {
+            new SchemaTranslator[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ], OtherSchema ] {
+                def translate( schema : Schema.Aux[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ] ] ) : OtherSchema[ T ] = {
                     val writer : T => MapVal = ( value : T ) => enc.encode( value, schema.shape )
                     val reader : MapVal => T = ( value : MapVal ) => dec.decode( value, schema.shape )
                     schemaFromBimap( writer, reader )                    
@@ -221,11 +228,11 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
             }
         }
 
-    def translate[ T, Rt <: Tuple, RVt <: Tuple, FDL <: Tuple, AFt, AFSt ]( 
-        schema : Schema.Aux[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ] ],
+    def translate[ T, Rt <: Tuple, RVt <: Tuple, FDL <: Tuple, AFt, AFSt, C ](
+        schema : Schema.Aux[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ] ],
     )(
         using
-        tr : SchemaTranslator[ T, ProductShape[ T, Rt, RVt, AFt, AFSt ], OtherSchema ],
+        tr : SchemaTranslator[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C ], OtherSchema ],
     ) : OtherSchema[ T ] = tr.translate( schema )
 
 }

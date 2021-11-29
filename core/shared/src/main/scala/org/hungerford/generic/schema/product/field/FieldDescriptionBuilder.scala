@@ -91,10 +91,22 @@ case class FieldDescriptionBuilderWithSchemaWithoutName[ T, S ](
        fromSchema( builder( SchemaBuilder[ T ] ) )
    }
 
-   def fieldName[ N <: FieldName ]( name : N ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
+    def rebuildSchema(
+        using
+        srb : SchemaRebuilder[ T, S ],
+    ) : NamelessFieldSchemaRebuilder[ T, srb.Builder ] = {
+        NamelessFieldSchemaRebuilder[ T, srb.Builder ](
+            srb.rebuild( sch ),
+            desc,
+            vs,
+        )
+    }
+
+    def fieldName[ N <: FieldName ]( name : N ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
         BuildableFieldDescriptionBuilder[ T, N, S ]( sch, name, desc, vs )
-   def description( description : String ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( desc = Some( description ) )
-   def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( vs = validators.toSet )
+
+    def description( description : String ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( desc = Some( description ) )
+    def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( vs = validators.toSet )
 }
 
 case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
@@ -160,6 +172,22 @@ object FieldDescriptionBuilder {
            fieldDescription.validators,
        )
    }
+}
+
+case class NamelessFieldSchemaRebuilder[ T, Builder ](
+    private val builder : Builder,
+    private val desc : Option[ String ] = None,
+    private val vs : Set[ Validator[ T ] ],
+) {
+    def apply[ S ](
+        build : Builder => Schema.Aux[ T, S ],
+    ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = {
+        FieldDescriptionBuilderWithSchemaWithoutName[ T, S ](
+            build( builder ),
+            desc,
+            vs,
+        )
+    }
 }
 
 case class BuildableFieldSchemaRebuilder[ T, N <: FieldName, Builder ](

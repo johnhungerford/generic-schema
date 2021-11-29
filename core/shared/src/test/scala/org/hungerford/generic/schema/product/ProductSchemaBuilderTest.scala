@@ -43,10 +43,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .product
           .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
-          .construct( ( tup, _ ) => {
-              val (int, str) = tup
-              TestCase( int, str )
-          } )
+          .construct( (int, str) => TestCase( int, str ) )
     }
 
     it should "be able to add deconstructor" in {
@@ -54,9 +51,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .product
           .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
-          .deconstruct( ( value : TestCase ) => {
-              ((value.int, value.str), Map.empty)
-          } )
+          .deconstruct( ( value : TestCase ) => (value.int, value.str) )
     }
 
     it should "be able to build schema if constructor and deconstructor are provided" in {
@@ -64,13 +59,8 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .product
           .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
-          .construct( ( tup, _ ) => {
-              val (int, str) = tup
-              TestCase( int, str )
-          } )
-          .deconstruct( ( value : TestCase ) => {
-              ((value.int, value.str), Map.empty)
-          } )
+          .construct( (int, str) => TestCase( int, str ) )
+          .deconstruct( ( value : TestCase ) => (value.int, value.str) )
           .build
     }
 
@@ -81,13 +71,8 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
           .addField( FieldDescriptionBuilder[ Boolean ].primitive.fieldName( "bool" ).build )
           .removeField( "bool" )
-          .construct( ( tup, _ ) => {
-              val (int, str) = tup
-              TestCase( int, str )
-          } )
-          .deconstruct( ( value : TestCase ) => {
-              ((value.int, value.str), Map.empty)
-          } )
+          .construct( (int, str) => TestCase( int, str ) )
+          .deconstruct( ( value : TestCase ) => (value.int, value.str) )
           .build
 
         SchemaBuilder[ TestCase ]
@@ -98,13 +83,8 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .removeField( "bool" )
           .removeField( "str" )
           .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
-          .construct( ( tup, _ ) => {
-              val (int, str) = tup
-              TestCase( int, str )
-          } )
-          .deconstruct( ( value : TestCase ) => {
-              ((value.int, value.str), Map.empty)
-          } )
+          .construct( (int, str) => TestCase( int, str ) )
+          .deconstruct( ( value : TestCase ) => (value.int, value.str) )
           .build
     }
 
@@ -113,25 +93,15 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .product
           .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str" ).build )
-          .construct( ( tup, _ ) => {
-              val (int, str) = tup
-              TestCase( int, str )
-          } )
-          .deconstruct( ( value : TestCase ) => {
-              ((value.int, value.str), Map.empty)
-          } )
+          .construct( (int, str) => TestCase( int, str ) )
+          .deconstruct( ( value : TestCase ) => (value.int, value.str) )
           .build
 
         ProductSchemaBuilder.from( schema )
           .removeField( "str" )
           .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "string" ).build )
-          .construct( ( tup, _ ) => {
-              val (int, str) = tup
-              TestCase( int, str )
-          } )
-          .deconstruct( ( value : TestCase ) => {
-              ((value.int, value.str), Map.empty)
-          } )
+          .construct( (int, str) => TestCase( int, str ) )
+          .deconstruct( ( value : TestCase ) => (value.int, value.str) )
           .build
 
     }

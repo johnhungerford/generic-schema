@@ -158,7 +158,7 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
         using
         ctx : CtxWrapTuplesConstraint[ Ctx, FDL, RVt ],
         inj : BiMapTupleInjector[ RVt, Rt ],
-        prodDeconstr : ProductDeconstructor[ T, RVt, Nothing, DC ]
+        prodDeconstr : ProductDeconstructor[ DC, RVt, Nothing, T ]
     ) : Encoder[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, C, DC ], MapVal ] with {
         def encode( value : T, product : ProductShape[ T, Rt, RVt, Nothing, Unit, C, DC ] ): MapVal = {
             val (fields, _) = prodDeconstr.deconstruct( product.deconstructor )( value )
@@ -173,7 +173,7 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
         inj : BiMapTupleInjector[ RVt, Rt ],
         afInjector : Injector.Aux[ Map[ String, AFt ], BuildMapVal, OtherSchema[ AFt ], BuildMapVal ],
         afTranslator : SchemaTranslator[ AFt, AFSt, OtherSchema ],
-        prodDeconstr : ProductDeconstructor[ T, RVt, AFt, DC ],
+        prodDeconstr : ProductDeconstructor[ DC, RVt, AFt, T ],
     ) : Encoder[ T, ProductShape[ T, Rt, RVt, AFt, AFSt, C, DC ], MapVal ] with {
         def encode( value : T, product : ProductShape[ T, Rt, RVt, AFt, AFSt, C, DC ] ): MapVal = {
             val (fields, additionalFields) = prodDeconstr.deconstruct( product.deconstructor )( value )

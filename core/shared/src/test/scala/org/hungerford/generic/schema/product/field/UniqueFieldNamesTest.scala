@@ -28,8 +28,8 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
             .addField( FieldDescriptionBuilder[ Int ].fieldName( "name" ).primitive.build )
             .addField( FieldDescriptionBuilder[ String ].fieldName( "is" ).primitive.build )
             .addField( FieldDescriptionBuilder[ Double ].fieldName( "other" ).primitive.build )
-            .construct( (tup, _) => tup )
-            .deconstruct( v => (v, Map.empty) )
+            .construct( v => v )
+            .deconstruct( v => v )
             .build
             .shape
 
@@ -40,8 +40,8 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
             .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "name" ).build )
             .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "is" ).build )
             .addField( FieldDescriptionBuilder[ Double ].primitive.fieldName( "other" ).build )
-            .construct( (tup, _) => tup )
-            .deconstruct( v => (v, Map.empty) )
+            .construct( v => v )
+            .deconstruct( v => v )
             .build
             .shape
 
@@ -65,8 +65,8 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
                   .fieldName( "some other" )
                   .build
             )
-            .construct( (tup, _) => tup )
-            .deconstruct( v => (v, Map.empty) )
+            .construct( v => v )
+            .deconstruct( v => v )
             .build
             .shape
 
@@ -82,11 +82,10 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
          .product
          .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int_field" ).build )
          .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
-         .construct( (tup, _) => {
-             val (int, str) = tup
+         .construct( (int, str) => {
              NoAF( int, str )
          } )
-         .deconstruct( value => ((value.intField, value.strField), Map.empty) )
+         .deconstruct( value => (value.intField, value.strField) )
          .build
 
          val shape = testSchema1.shape

@@ -13,14 +13,14 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
     fieldDescriptions : Rt,
     additionalFieldsSchema : Schema.Aux[ AFt, AFSt ],
     private[ schema ] val constructor : C,
-    private[ schema ] val deconstructor : T => DC,
+    private[ schema ] val deconstructor : DC,
 )(
     using
     fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
     uniqueFields : UniqueFieldNames[ Rt ],
     lengther : TupleIntLength[ Rt ],
     prodConst : ProductConstructor[ C, RVt, AFt, T ],
-    prodDeconst : ProductDeconstructor[ T, RVt, AFt, DC ],
+    prodDeconst : ProductDeconstructor[ DC, RVt, AFt, T ],
 ) {
 
     // Field descriptions
@@ -38,9 +38,7 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
 
     def construct : C = constructor
 
-    def deconstruct( value : T ) : DC = {
-        deconstructor( value )
-    }
+    def deconstruct : DC = deconstructor
 
     lazy val size : Int = fieldDescriptions.size
 

@@ -13,45 +13,45 @@ trait ProductConstructor[ C, R <: Tuple, AF, T ] {
     ) : T = convert( from )( fields, additionalFields )
 }
 
-object ProductConstructor {
+trait LowPriorityProductConstructors {
     given standard[ R <: Tuple, AF, T ] : ProductConstructor[ (R, Map[ String, AF ]) => T, R, AF, T ] with {
         override def convert( from : (R, Map[ String, AF ]) => T ) : (R, Map[ String, AF ]) => T = from
     }
+}
 
+object ProductConstructor extends LowPriorityProductConstructors {
     given standardWithoutAF[ R <: Tuple, T ] : ProductConstructor[ R => T, R, Nothing, T ] with {
         override def convert( from : R => T ) : (R, Map[ String, Nothing ]) => T = {
             ( fields : R, _ : Map[ String, Nothing ] ) => from( fields )
         }
     }
 
-    given tupled[ R <: Tuple , AF, T ] :
-      ProductConstructor[ Tuple.Concat[ R, Map[ String, AF ] *: EmptyTuple ] => T, R, AF, T ] with {
-        def convert( from : Tuple.Concat[ R, Map[ String, AF ] *: EmptyTuple ] => T ) : (R, Map[ String, AF ]) => T = {
-            ( fields : R, additionalFields : Map[ String, AF ] ) => {
-                val tupledParameters = fields ++ (additionalFields *: EmptyTuple)
-                from( tupledParameters )
-            }
+    given singleFieldWithoutAF[ F, T ] : ProductConstructor[ F => T, F *: EmptyTuple, Nothing, T ] with {
+        override def convert( from : F => T ) : (F *: EmptyTuple, Map[ String, Nothing ]) => T = {
+            ( fields : F *: EmptyTuple, _ : Map[ String, Nothing ] ) => from( fields.head )
         }
     }
-
 }
 
-trait ProductDeconstructor[ T, R <: Tuple, AF, Res ] {
-    def convert( from : T => Res ) : T => (R, Map[ String, AF ])
+trait ProductDeconstructor[ DC, R <: Tuple, AF, T ] {
+    def convert( from : DC ) : T => (R, Map[ String, AF ])
 
-    def deconstruct( from : T => Res )(
+    def deconstruct( from : DC )(
         value : T,
     ) : (R, Map[ String, AF ]) = convert( from )( value )
 }
 
-object ProductDeconstructor {
+trait LowPriorityProductDeconstructors {
     given standard[ T, R <: Tuple, AF ] :
-        ProductDeconstructor[ T, R, AF, (R, Map[ String, AF ]) ] with {
+        ProductDeconstructor[ T => (R, Map[ String, AF ]), R, AF, T ] with {
         def convert( from : T => (R, Map[ String, AF ]) ) :
             T => (R, Map[ String, AF ]) = from
     }
+}
 
-    given noAF[ T, R <: Tuple ] : ProductDeconstructor[ T, R, Nothing, R ] with {
+object ProductDeconstructor extends LowPriorityProductDeconstructors {
+
+    given noAF[ T, R <: Tuple ] : ProductDeconstructor[ T => R, R, Nothing, T ] with {
         def convert( from : T => R ) : T => (R, Map[ String, Nothing ]) = {
             ( value : T ) => {
                 val res : R = from( value )
@@ -63,11 +63,19 @@ object ProductDeconstructor {
     given tupled[ T, R <: Tuple, AF, Res <: Tuple ](
         using
         ls : Last.Aux[ Res, R, Map[ String, AF ] ],
-    ) : ProductDeconstructor[ T, R, AF, Res ] with {
+    ) : ProductDeconstructor[ T => Res, R, AF, T ] with {
         def convert( from : T => Res ) : T => (R, Map[ String, AF ]) = {
             ( value : T ) => {
                 val res : Res = from( value )
                 ls.last( res )
+            }
+        }
+    }
+
+    given singleFieldNoAF[ F, T ] : ProductDeconstructor[ T => F, F *: EmptyTuple, Nothing, T ] with {
+        def convert( from : T => F ) : T => (F *: EmptyTuple, Map[ String, Nothing ]) = {
+            ( value : T ) => {
+                (from( value ) *: EmptyTuple, Map.empty[ String, Nothing ])
             }
         }
     }

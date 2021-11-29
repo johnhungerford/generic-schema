@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.product.field.FieldDescription
-import org.hungerford.generic.schema.product.{BuildableProductSchemaBuilder, CtxWrapTuplesConstraint, TupleIntLength, ProductDeriver, ProductShape, ProductSchemaBuilder}
+import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, TupleIntLength, ProductDeriver, ProductShape, ProductSchemaBuilder}
 import org.hungerford.generic.schema.validator.Validator
 
 case class SchemaBuilder[ T ](
@@ -19,20 +19,22 @@ case class SchemaBuilder[ T ](
 
    def buildPrimitive : Primitive[ T ] = Primitive[ T ]( desc, vals )
 
-   def product : ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit ] =
-       ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit ](
+   def product : ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ] =
+       ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ](
            desc,
            vals,
            NoSchema,
            EmptyTuple,
+           (),
+           (),
        )
 
    def caseClass[ R <: Tuple, Rt <: Tuple, RVt <: Tuple ](
        implicit
-       deriver : SchemaDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, RVt ] ],
+       deriver : SchemaDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ] ],
        fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
-   ) : BuildableProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit ] = {
-       ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, Unit, RVt => T, RVt ]( deriver.derive )
+   ) : ProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ] = {
+       ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ]( deriver.derive )
    }
 }
 

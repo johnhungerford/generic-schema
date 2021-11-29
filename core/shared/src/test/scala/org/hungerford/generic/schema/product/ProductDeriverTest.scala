@@ -26,8 +26,8 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
        val manualProduct = SchemaBuilder[ Test ]
          .product
          .addField( FieldDescriptionBuilder[ Int ].fieldName( "int" ).fromSchema.build )
-         .construct( (t, _) => Test(t.head) )
-         .deconstruct( v => (Tuple1(v.int), Map.empty))
+         .construct( v => Test( v ) )
+         .deconstruct( v => v.int )
          .build
          .shape
 
@@ -46,8 +46,8 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
        val manualProduct = SchemaBuilder[ Test ]
          .product
          .addField( FieldDescriptionBuilder[ Int ].fieldName( "int" ).primitive.build )
-         .construct( (t, _) => Test(t.head) )
-         .deconstruct( v => (Tuple1(v.int), Map.empty))
+         .construct( t => Test(t ) )
+         .deconstruct( v => v.int )
          .build
          .shape
 

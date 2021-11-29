@@ -44,8 +44,8 @@ class FieldDescriptionBuilderTest extends AnyFlatSpecLike with Matchers {
             .description( "generic-description" )
             .addField( FieldDescriptionBuilder[ Int ].fieldName( "int" ).primitive.build )
             .addField( FieldDescriptionBuilder[ String ].fieldName( "str" ).primitive.build )
-            .construct( (tup, _) => { val (int, str) = tup; TestClass( int, str ) } )
-            .deconstruct( value => ((value.intField, value.strField), Map.empty) )
+            .construct( (int, str) => TestClass( int, str ) )
+            .deconstruct( value => (value.intField, value.strField) )
             .build
           )
           .description( "test-description" )

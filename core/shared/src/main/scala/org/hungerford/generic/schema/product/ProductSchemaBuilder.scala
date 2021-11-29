@@ -1,10 +1,72 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, FieldName, FieldRemover, UniqueFieldNames}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, FieldName, FieldRemover, FieldReplacer, FieldRetriever, UniqueFieldNames, BuildableFieldDescriptionBuilder}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder}
 import org.hungerford.generic.schema.validator.Validator
 
-
+//case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
+//    private[ product ] val desc : Option[ String ] = None,
+//    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+//    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
+//    private[ product ] val fieldDescs : R,
+//    private[ product ] val constr : C,
+//    private[ product ] val decons : DC,
+//)(
+//    using
+//    fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
+//) {
+//    def description( description : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] = copy( desc = Some( description ) )
+//    def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] =
+//        validate ( validator +: otherValidators )
+//    def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] = copy( vals = validators.toSet )
+//
+//    def addField[ F, N <: FieldName, S ](
+//        fd : FieldDescription.Aux[ F, N, S ],
+//    )(
+//        using
+//        fc : => CtxWrapTuplesConstraint[ FieldDescription, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
+//        uniq : UniqueFieldNames[ Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ] ],
+//    ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, Unit, Unit ] = {
+//        val newFieldDescs = fieldDescs ++ (fd *: EmptyTuple)
+//        copy[ T, Tuple.Concat[ R, FieldDescription.Aux[ F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, Unit, Unit ]( desc, vals, aftSch, newFieldDescs, (), () )
+//    }
+//
+//    def removeField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple ](
+//        fieldName : N,
+//    )(
+//        using
+//        rm : FieldRemover.Aux[ N, R, NewR ],
+//        fc : => CtxWrapTuplesConstraint[ FieldDescription, NewR, NewRV ],
+//    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, Unit, Unit ] = {
+//        val newFields = rm.remove( fieldDescs )
+//        copy[ T, NewR, NewRV, AF, AFS ](
+//            fieldDescs = newFields,
+//            constr = (),
+//            decons = (),
+//        )
+//    }
+//
+//    def additionalFields[ F ] : AdditionalFieldsBuilder[ T, R, RV, F ] =
+//        AdditionalFieldsBuilder[ T, R, RV, F ](
+//            desc,
+//            vals,
+//            fieldDescs,
+//        )
+//
+//    def construct(
+//        constructor : ( RV, Map[ String, AF ] ) => T,
+//    ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, (RV, Map[ String, AF ]) => T, DC ] =
+//        copy[ T, R, RV, AF, AFS, (RV, Map[ String, AF ]) => T, DC ](
+//            constr = constructor,
+//            ProductSchemaBuilder)
+//
+//    def deconstruct(
+//        deconstructor : T => (RV, Map[ String, AF ]),
+//    ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, T => (RV, Map[ String, AF ] ] =
+//        copy[ T, R, RV, AF, AFS, C, T => (RV, Map[ String, AF ] ](
+//            decons = deconstructor,
+//        )
+//}
 
 case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
    private[ product ] val desc : Option[ String ] = None,
@@ -41,6 +103,45 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
         val newFields = rm.remove( fieldDescs )
         copy[ T, NewR, NewRV, AF, AFS ](
             fieldDescs = newFields,
+        )
+    }
+
+    def replaceField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple, F, NewN <: FieldName, S ](
+        fieldName : N,
+    )(
+        newField : FieldDescription.Aux[ F, NewN, S ],
+    )(
+        using
+        fr : FieldReplacer.Aux[ N, R, F, NewN, S, NewR ],
+        ctx : => CtxWrapTuplesConstraint[ FieldDescription, NewR, NewRV ],
+    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ] = {
+        val newFieldDescs = fr.replace( fieldDescs, newField )
+        ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescs,
+        )
+    }
+
+    def updateField[ F, OldN <: FieldName, OldS, NewN <: FieldName, NewS, NewR <: Tuple ](
+        fieldName : OldN,
+        buildField : BuildableFieldDescriptionBuilder[ F, OldN, OldS ] => FieldDescription.Aux[ F, NewN, NewS ],
+    )(
+        using
+        frt : FieldRetriever.Aux[ OldN, R, FieldDescription.Aux[ F, OldN, OldS ] ],
+        frp : FieldReplacer.Aux[ OldN, R, F, NewN, NewS, NewR ],
+        ctx : => CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
+    ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS ] = {
+        val oldField = frt.retrieve( fieldDescs )
+        val fieldBuilder = FieldDescriptionBuilder.from( oldField )
+        val newField = buildField( fieldBuilder )
+        val newFieldDescs = frp.replace( fieldDescs, newField )
+        ProductSchemaBuilder[ T, NewR, RV, AF, AFS ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescs,
         )
     }
 
@@ -123,6 +224,45 @@ case class ProductSchemaBuilderWithConstructor[ T, R <: Tuple, RV <: Tuple, AF, 
         )
     }
 
+    def replaceField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple, F, NewN <: FieldName, S ](
+        fieldName : N,
+        newField : FieldDescription.Aux[ F, NewN, S ],
+    )(
+        using
+        fr : FieldReplacer.Aux[ N, R, F, NewN, S, NewR ],
+        ctx : => CtxWrapTuplesConstraint[ FieldDescription, NewR, NewRV ],
+    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ] = {
+        val newFieldDescs = fr.replace( fieldDescs, newField )
+        ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescs,
+        )
+    }
+
+    def updateField[ F, OldN <: FieldName, OldS, NewN <: FieldName, NewS, NewR <: Tuple ](
+        fieldName : OldN,
+        buildField : BuildableFieldDescriptionBuilder[ F, OldN, OldS ] => FieldDescription.Aux[ F, NewN, NewS ],
+    )(
+        using
+        frt : FieldRetriever.Aux[ OldN, R, FieldDescription.Aux[ F, OldN, OldS ] ],
+        frp : FieldReplacer.Aux[ OldN, R, F, NewN, NewS, NewR ],
+        ctx : => CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
+    ) : ProductSchemaBuilderWithConstructor[ T, NewR, RV, AF, AFS ] = {
+        val oldField = frt.retrieve( fieldDescs )
+        val fieldBuilder = FieldDescriptionBuilder.from( oldField )
+        val newField = buildField( fieldBuilder )
+        val newFieldDescs = frp.replace( fieldDescs, newField )
+        ProductSchemaBuilderWithConstructor[ T, NewR, RV, AF, AFS ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescs,
+            constr,
+        )
+    }
+
    def construct(
        constructor : (RV, Map[ String, AF ]) => T,
    ) : ProductSchemaBuilderWithConstructor[ T, R, RV, AF, AFS ] =
@@ -187,6 +327,45 @@ case class ProductSchemaBuilderWithDeconstructor[ T, R <: Tuple, RV <: Tuple, AF
             vals,
             aftSch,
             newFieldDescs,
+        )
+    }
+
+    def replaceField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple, F, NewN <: FieldName, S ](
+        fieldName : N,
+        newField : FieldDescription.Aux[ F, NewN, S ],
+    )(
+        using
+        fr : FieldReplacer.Aux[ N, R, F, NewN, S, NewR ],
+        ctx : => CtxWrapTuplesConstraint[ FieldDescription, NewR, NewRV ],
+    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ] = {
+        val newFieldDescs = fr.replace( fieldDescs, newField )
+        ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescs,
+        )
+    }
+
+    def updateField[ F, OldN <: FieldName, OldS, NewN <: FieldName, NewS, NewR <: Tuple ](
+        fieldName : OldN,
+        buildField : BuildableFieldDescriptionBuilder[ F, OldN, OldS ] => FieldDescription.Aux[ F, NewN, NewS ],
+    )(
+        using
+        frt : FieldRetriever.Aux[ OldN, R, FieldDescription.Aux[ F, OldN, OldS ] ],
+        frp : FieldReplacer.Aux[ OldN, R, F, NewN, NewS, NewR ],
+        ctx : => CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
+    ) : ProductSchemaBuilderWithDeconstructor[ T, NewR, RV, AF, AFS ] = {
+        val oldField = frt.retrieve( fieldDescs )
+        val fieldBuilder = FieldDescriptionBuilder.from( oldField )
+        val newField = buildField( fieldBuilder )
+        val newFieldDescs = frp.replace( fieldDescs, newField )
+        ProductSchemaBuilderWithDeconstructor[ T, NewR, RV, AF, AFS ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescs,
+            deconstr,
         )
     }
 
@@ -258,6 +437,47 @@ case class BuildableProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS ](
         )
     }
 
+    def replaceField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple, F, NewN <: FieldName, S ](
+        fieldName : N,
+        newField : FieldDescription.Aux[ F, NewN, S ],
+    )(
+        using
+        fr : FieldReplacer.Aux[ N, R, F, NewN, S, NewR ],
+        ctx : => CtxWrapTuplesConstraint[ FieldDescription, NewR, NewRV ],
+    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ] = {
+        val newFieldDescs = fr.replace( fieldDescs, newField )
+        ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescs,
+        )
+    }
+
+    def updateField[ F, OldN <: FieldName, OldS, NewN <: FieldName, NewS, NewR <: Tuple ](
+        fieldName : OldN,
+    )(
+        buildField : BuildableFieldDescriptionBuilder[ F, OldN, OldS ] => FieldDescription.Aux[ F, NewN, NewS ],
+    )(
+        using
+        frt : FieldRetriever.Aux[ OldN, R, FieldDescription.Aux[ F, OldN, OldS ] ],
+        frp : FieldReplacer.Aux[ OldN, R, F, NewN, NewS, NewR ],
+        ctx : => CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
+    ) : BuildableProductSchemaBuilder[ T, NewR, RV, AF, AFS ] = {
+        val oldField = frt.retrieve( fieldDescs )
+        val fieldBuilder = FieldDescriptionBuilder.from( oldField )
+        val newField = buildField( fieldBuilder )
+        val newFieldDescs = frp.replace( fieldDescs, newField )
+        BuildableProductSchemaBuilder[ T, NewR, RV, AF, AFS ](
+            desc,
+            vals,
+            aftSch,
+            newFieldDescs,
+            constr,
+            deconstr,
+        )
+    }
+
    def build(
        using
        lengther : TupleIntLength[ R ],
@@ -300,6 +520,8 @@ case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF ](
        fromSchema( builder( SchemaBuilder[ AF ] ) )
    }
 }
+
+
 
 object ProductSchemaBuilder {
    def from[ T, R <: Tuple, RV <: Tuple, AF, AFS ](

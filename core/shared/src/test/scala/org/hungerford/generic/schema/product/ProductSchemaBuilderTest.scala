@@ -10,6 +10,8 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
     behavior of "ProductSchemaBuilder"
 
+    case class TestCase( int : Int, str : String )
+
     it should "be able to add fields" in {
         SchemaBuilder[ Int ]
           .product
@@ -35,8 +37,6 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
                 .build
           )
     }
-
-    case class TestCase( int : Int, str : String )
 
     it should "be able to add constructor" in {
         SchemaBuilder[ TestCase ]
@@ -134,6 +134,15 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           } )
           .build
 
+    }
+
+    it should "be able to update fields without replacing them and losing constructor/deconstructor" in {
+        val schema = SchemaBuilder[ TestCase ]
+          .caseClass
+          .updateField( "int" )( _.fieldName( "int_field" ).build )
+          .build
+
+        schema.shape.fieldDescriptions.head.fieldName shouldBe "int_field"
     }
 
 }

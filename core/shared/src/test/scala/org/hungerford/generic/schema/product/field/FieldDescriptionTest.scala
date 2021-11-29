@@ -30,4 +30,26 @@ class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
         res shouldBe intTfd *: strTfd *: boolTfd *: EmptyTuple
     }
 
+    behavior of "FieldDescriptionBuilder"
+
+    it should "be able to rebuild a schema before field name has been set" in {
+        case class Inner( int : Int )
+        case class Outer( inner : Inner )
+
+        val fd = FieldDescriptionBuilder[ Outer ]
+          .buildSchema( _.caseClass.build )
+          .rebuildSchema(
+              _.updateField( "inner" )(
+                  _.fieldName( "inner_field" )
+                    .build
+              ).build
+          )
+          .fieldName( "outer_field" )
+          .build
+
+        fd.fieldName shouldBe "outer_field"
+        fd.schema.shape.fieldDescriptions.size shouldBe 1
+        fd.schema.shape.fieldDescriptions.head.fieldName shouldBe "inner_field"
+    }
+
 }

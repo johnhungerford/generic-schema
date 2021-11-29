@@ -1,6 +1,7 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.product.field.{FieldDescription, UniqueFieldNames}
 import org.hungerford.generic.schema.validator.Validator
 
@@ -8,16 +9,18 @@ import scala.language.higherKinds
 import org.hungerford.generic.schema.product.field.FieldDescriptionCase
 
 
-case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
+case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
     fieldDescriptions : Rt,
     additionalFieldsSchema : Schema.Aux[ AFt, AFSt ],
-    private[ schema ] val constructor : (RVt, Map[ String, AFt ]) => T,
-    private[ schema ] val deconstructor : T => (RVt, Map[ String, AFt ])
+    private[ schema ] val constructor : C,
+    private[ schema ] val deconstructor : DC,
 )(
     using
     fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
     uniqueFields : UniqueFieldNames[ Rt ],
     lengther : TupleIntLength[ Rt ],
+    prodConst : ProductConstructor[ C, RVt, AFt, T ],
+    prodDeconst : ProductDeconstructor[ DC, RVt, AFt, T ],
 ) {
 
     // Field descriptions
@@ -29,13 +32,13 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt ](
 
     type AFS = AFSt
 
-    def construct( fieldParams : RV, additionalFields : Map[ String, AF ] = Map.empty[ String, AF ] ) : T =
-        constructor( fieldParams, additionalFields )
+    type Cons = C
 
-    def deconstruct( value : T ) : (RV, Map[ String, AF ]) = {
-        deconstructor( value )
-    }
+    type Decons = DC
 
+    def construct : C = constructor
+
+    def deconstruct : DC = deconstructor
 
     lazy val size : Int = fieldDescriptions.size
 

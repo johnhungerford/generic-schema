@@ -31,11 +31,10 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
          .product
          .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int_field" ).build )
          .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
-         .construct( (tup, _) => {
-             val (int, str) = tup
+         .construct( (int, str) => {
              NoAF( int, str )
          } )
-         .deconstruct( value => ((value.intField, value.strField), Map.empty) )
+         .deconstruct( value => (value.intField, value.strField) )
          .build
 
          val intExt = summon[ BiMapExtractor[ Int ] ]
@@ -79,7 +78,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
          .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
          .addField( FieldDescriptionBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
          .additionalFields[ Double ].buildSchema( _.primitive.build )
-         .construct( (tup, af : Map[ String, Double ]) => {
+         .construct( (tup, af) => {
              val (str : String, bool : Boolean) = tup
              HasAF( str, bool, af )
          } )
@@ -105,20 +104,14 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
                .fieldName( "inside_field" )
                .buildSchema( _.product
                  .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
-                 .construct( (tup, _) => {
-                     val Tuple1(str) = tup
-                    Inside( str )
-                  } )
-                 .deconstruct( value => (Tuple1( value.str ), Map.empty) )
+                 .construct( str => Inside( str ) )
+                 .deconstruct( value => value.str )
                  .build
                )
                .build
          )
-         .construct( (tup, _) => {
-             val Tuple1( inside ) = tup
-            Outside( inside ) 
-          } )
-         .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
+         .construct( inside => Outside( inside ) )
+         .deconstruct( value => value.inside )
          .build
 
        val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )
@@ -137,21 +130,19 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
        val insideSchema = SchemaBuilder[ Inside ]
          .product
          .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
-         .construct( (tup, _) => {
-             val Tuple1( str ) = tup
+         .construct( str => {
              Inside( str ) 
           } )
-         .deconstruct( value => (Tuple1( value.str ), Map.empty) )
+         .deconstruct( value => value.str )
          .build
 
        val outsideSch = SchemaBuilder[ Outside ]
          .product
          .addField( FieldDescriptionBuilder[ Inside ].fromSchema( insideSchema ).fieldName( "inside_field" ).build )
-         .construct( (tup, _) => {
-             val Tuple1( inside ) = tup
+         .construct( inside => {
             Outside( inside )
           } )
-         .deconstruct( value => (Tuple1( value.inside ), Map.empty ) )
+         .deconstruct( value => value.inside )
          .build
 
        implicit val outsideRW : OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )

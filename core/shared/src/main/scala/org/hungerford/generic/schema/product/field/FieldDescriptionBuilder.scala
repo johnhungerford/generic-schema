@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{Primitive, Schema, SchemaBuilder}
+import org.hungerford.generic.schema.{Primitive, Schema, SchemaBuilder, SchemaRebuilder}
 
 
 case class FieldDescriptionBuilderWithoutSchemaOrName[ T ](
@@ -91,10 +91,22 @@ case class FieldDescriptionBuilderWithSchemaWithoutName[ T, S ](
        fromSchema( builder( SchemaBuilder[ T ] ) )
    }
 
-   def fieldName[ N <: FieldName ]( name : N ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
+    def rebuildSchema(
+        using
+        srb : SchemaRebuilder[ T, S ],
+    ) : NamelessFieldSchemaRebuilder[ T, srb.Builder ] = {
+        NamelessFieldSchemaRebuilder[ T, srb.Builder ](
+            srb.rebuild( sch ),
+            desc,
+            vs,
+        )
+    }
+
+    def fieldName[ N <: FieldName ]( name : N ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
         BuildableFieldDescriptionBuilder[ T, N, S ]( sch, name, desc, vs )
-   def description( description : String ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( desc = Some( description ) )
-   def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( vs = validators.toSet )
+
+    def description( description : String ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( desc = Some( description ) )
+    def validate( validators : Validator[ T ]* ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = copy( vs = validators.toSet )
 }
 
 case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
@@ -110,6 +122,40 @@ case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
    def validate( validators : Validator[ T ]* ) : BuildableFieldDescriptionBuilder[ T, N, S ] =
        copy( vs = validators.toSet )
 
+    def primitive : BuildableFieldDescriptionBuilder[ T, N, Unit ] = {
+        BuildableFieldDescriptionBuilder[ T, N, Unit ](
+            Primitive[ T ](),
+            fn,
+            desc,
+            vs,
+        )
+    }
+
+    def fromSchema[ NewS ]( implicit schema : Schema.Aux[ T, NewS ] ) : BuildableFieldDescriptionBuilder[ T, N, NewS ] = {
+        BuildableFieldDescriptionBuilder[ T, N, NewS ](
+            schema,
+            fn,
+            desc,
+            vs,
+        )
+    }
+
+    def buildSchema[ Rt, NewS ]( builder : SchemaBuilder[ T ] => Schema.Aux[ T, NewS ] ) : BuildableFieldDescriptionBuilder[ T, N, NewS ] = {
+        fromSchema[ NewS ]( builder( SchemaBuilder[ T ] ) )
+    }
+
+    def rebuildSchema(
+        using
+        srb : SchemaRebuilder[ T, S ],
+    ) : BuildableFieldSchemaRebuilder[ T, N, srb.Builder ] = {
+        BuildableFieldSchemaRebuilder[ T, N, srb.Builder ](
+            srb.rebuild( sch ),
+            fn,
+            desc,
+            vs,
+        )
+    }
+
    def build : FieldDescription.Aux[ T, N, S ] = {
        FieldDescriptionCase[ T, N, S ]( fn, sch, desc, vs )
    }
@@ -117,4 +163,47 @@ case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
 
 object FieldDescriptionBuilder {
    def apply[ T ] : FieldDescriptionBuilderWithoutSchemaOrName[ T ] = FieldDescriptionBuilderWithoutSchemaOrName[ T ]()
+
+   def from[ T ]( fieldDescription: FieldDescription[ T ] ) : BuildableFieldDescriptionBuilder[ T, fieldDescription.Name, fieldDescription.Shape ] = {
+       BuildableFieldDescriptionBuilder[ T, fieldDescription.Name, fieldDescription.Shape ](
+           fieldDescription.schema,
+           fieldDescription.fieldName,
+           fieldDescription.description,
+           fieldDescription.validators,
+       )
+   }
+}
+
+case class NamelessFieldSchemaRebuilder[ T, Builder ](
+    private val builder : Builder,
+    private val desc : Option[ String ] = None,
+    private val vs : Set[ Validator[ T ] ],
+) {
+    def apply[ S ](
+        build : Builder => Schema.Aux[ T, S ],
+    ) : FieldDescriptionBuilderWithSchemaWithoutName[ T, S ] = {
+        FieldDescriptionBuilderWithSchemaWithoutName[ T, S ](
+            build( builder ),
+            desc,
+            vs,
+        )
+    }
+}
+
+case class BuildableFieldSchemaRebuilder[ T, N <: FieldName, Builder ](
+    private val builder : Builder,
+    private val fn : N,
+    private val desc : Option[ String ] = None,
+    private val vs : Set[ Validator[ T ] ],
+) {
+    def apply[ S ](
+        build : Builder => Schema.Aux[ T, S ],
+    ) : BuildableFieldDescriptionBuilder[ T, N, S ] = {
+        BuildableFieldDescriptionBuilder[ T, N, S ](
+            build( builder ),
+            fn,
+            desc,
+            vs,
+        )
+    }
 }

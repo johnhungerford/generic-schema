@@ -8,6 +8,8 @@ import scala.compiletime.constValue
 
 import scala.deriving.Mirror
 import org.hungerford.generic.schema.product.field.UniqueFieldNames
+import org.hungerford.generic.schema.product.constructor.ProductConstructor
+import org.hungerford.generic.schema.product.constructor.ProductDeconstructor
 
 
 trait ProductDeriver[ T ] extends Deriver[ T ] {
@@ -18,6 +20,9 @@ trait ProductDeriver[ T ] extends Deriver[ T ] {
 
 object ProductDeriver {
     type Aux[ T, Out0 ] = ProductDeriver[ T ] { type Out = Out0 }
+
+    type DerivedPShape[ T, R <: Tuple, RV <: Tuple ] =
+        ProductShape[ T, R, RV, Nothing, Unit, RV => T, T => RV ]
 
     def apply[ T ](
         using
@@ -37,15 +42,17 @@ object ProductDeriver {
         lengther : TupleIntLength[ Rt ],
         valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
         uniq : UniqueFieldNames[ Rt ],
+        cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
+        dcType : ProductDeconstructor[ T => RVt, RVt, Nothing, T ],
     ) : ProductDeriver[ T ] with {
-            override type Out = ProductShape[ T, Rt, RVt, Nothing, Unit ]
+            override type Out = DerivedPShape[ T, Rt, RVt ]
 
-            override def derive : ProductShape[ T, Rt, RVt, Nothing, Unit ] = {
-                ProductShape[ T, Rt, RVt, Nothing, Unit ](
+            override def derive : DerivedPShape[ T, Rt, RVt ] = {
+                ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ](
                     fieldDescriptions = fieldDeriver.derive,
                     additionalFieldsSchema = NoSchema,
-                    (rv, _) => mirror.fromProduct( rv ),
-                    ( value : T ) => (Tuple.fromProductTyped[ T ]( value )( using mirror ), Map.empty),
+                    rv => mirror.fromProduct( rv ),
+                    ( value : T ) => Tuple.fromProductTyped[ T ]( value )( using mirror ),
                 )
             }
     }

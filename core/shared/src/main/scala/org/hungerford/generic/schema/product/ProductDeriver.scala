@@ -19,6 +19,9 @@ trait ProductDeriver[ T ] extends Deriver[ T ] {
 object ProductDeriver {
     type Aux[ T, Out0 ] = ProductDeriver[ T ] { type Out = Out0 }
 
+    type DerivedPShape[ T, R <: Tuple, RV <: Tuple ] =
+        ProductShape[ T, R, RV, Nothing, Unit, RV => T, RV ]
+
     def apply[ T ](
         using
         prd : ProductDeriver[ T ],
@@ -38,9 +41,9 @@ object ProductDeriver {
         valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
         uniq : UniqueFieldNames[ Rt ],
     ) : ProductDeriver[ T ] with {
-            override type Out = ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, RVt ]
+            override type Out = DerivedPShape[ T, Rt, RVt ]
 
-            override def derive : ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, RVt ] = {
+            override def derive : DerivedPShape[ T, Rt, RVt ] = {
                 ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, RVt ](
                     fieldDescriptions = fieldDeriver.derive,
                     additionalFieldsSchema = NoSchema,

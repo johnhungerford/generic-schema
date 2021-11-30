@@ -9,7 +9,8 @@ import sttp.tapir.FieldName
 
 type TapirFields[ X ] = List[ SProductField[ X ] ]
 
-object TapirSchemaProductTranslation extends FieldBuildingProductSchemaTranslation[ TapirSchema, TapirFields ] {
+trait TapirSchemaProductTranslation
+  extends FieldBuildingProductSchemaTranslation[ TapirSchema, TapirFields ] {
 
     override def fieldsInit[ T ] : TapirFields[ T ] = List.empty[ SProductField[ T ] ]
 
@@ -41,4 +42,5 @@ object TapirSchemaProductTranslation extends FieldBuildingProductSchemaTranslati
 
 }
 
-//object TapirSchemaProductTranslation extends TapirSchemaProductTranslation
+object TapirSchemaProductTranslation
+  extends TapirSchemaProductTranslation

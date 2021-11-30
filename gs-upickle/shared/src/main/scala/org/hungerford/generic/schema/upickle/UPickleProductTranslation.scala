@@ -1,9 +1,9 @@
 package org.hungerford.generic.schema.upickle
 
 import org.hungerford.generic.schema.product.field.TranslatedFieldDescription
-import org.hungerford.generic.schema.translation.BiMapProductTranslation
+import org.hungerford.generic.schema.product.translation.BiMapProductTranslation
 import ujson.Value
-import upickle.default._
+import upickle.default.*
 
 import scala.collection.immutable.ListMap
 import scala.util.Try

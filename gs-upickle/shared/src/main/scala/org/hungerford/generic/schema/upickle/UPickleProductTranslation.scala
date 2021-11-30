@@ -8,7 +8,8 @@ import upickle.default.*
 import scala.collection.immutable.ListMap
 import scala.util.Try
 
-trait UPickleProductTranslation extends BiMapProductTranslation[ ReadWriter, Value.Value, ListMap[ String, Value.Value ] ] {
+trait UPickleProductTranslation
+  extends BiMapProductTranslation[ ReadWriter, Value.Value, ListMap[ String, Value.Value ] ] {
 
    /**
     * Construct a schema from the two parts of a bimap.

@@ -6,6 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import sttp.tapir.Schema
+import sttp.tapir.SchemaType.{SProductField, SProduct}
 
 class TapirSchemaProductTranslationTest
   extends AnyFlatSpecLike
@@ -16,10 +17,19 @@ class TapirSchemaProductTranslationTest
 
     case class TestCase( int : Int, str : String, bool : Boolean )
 
-    it should "translate a product schema" in {
-        val sch = SchemaBuilder[ TestCase ].caseClass.build
+    it should "translate a product schema into an SProduct schema type with the correct field names and the correct description" in {
+        val sch = SchemaBuilder[ TestCase ].caseClass.description( "test-case-description" ).build
 
-        assertCompiles( """val tapirSchema : Schema[ TestCase ] = SchemaTranslator.translate( sch )""" )
+        val tapirSchema : Schema[ TestCase ] = SchemaTranslator.translate( sch )
+
+        tapirSchema.schemaType match {
+            case SProduct( fields : List[ SProductField[ TestCase ] ] ) =>
+                fields.size shouldBe 3
+                fields.map( _.name.name ).toSet shouldBe Set( "int", "str", "bool" )
+            case _ => fail( "Product schema did not generate an SProduct tapir schema type" )
+        }
+
+        tapirSchema.description should contain( "test-case-description" )
     }
 
 }

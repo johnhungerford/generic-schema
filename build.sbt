@@ -82,13 +82,13 @@ lazy val disableBuild = Seq(
 )
 
 lazy val buildSettings = Seq(
-    assemblyMergeStrategy in assembly := {
+    assembly / assemblyMergeStrategy := {
         case PathList( "META-INF", "MANIFEST.MF" ) => MergeStrategy.discard
         case PathList( "reference.conf" ) => MergeStrategy.concat
         case x => MergeStrategy.last
     },
-    test in assembly := {},
-    mainClass in( Compile, run ) := Some( "Main" ),
+    assembly / test := {},
+    Compile / run / mainClass := Some( "Main" ),
     dockerBaseImage := "openjdk:8",
     dockerUpdateLatest := true,
     dockerUsername := Some( "johnhungerford" ),
@@ -109,6 +109,8 @@ lazy val root = ( project in file( "." ) )
       core.projects( JSPlatform ),
       gsUPickle.projects( JVMPlatform ),
       gsUPickle.projects( JSPlatform ),
+      gsTapir.projects( JVMPlatform ),
+      gsTapir.projects( JSPlatform ),
   )
   .settings(
       name := "generic-schema",

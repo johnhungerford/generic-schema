@@ -33,7 +33,7 @@ lazy val commonSettings =
         javacOptions ++= Seq( "-source", "1.8", "-target", "1.8" ),
         scalacOptions += "-target:jvm-1.8",
         useCoursier := false,
-        libraryDependencies ++= scalaTest,
+        libraryDependencies ++= scalaTest.value,
         // `sbt test` should skip tests tagged IntegrationTest
         Test / testOptions := Seq( Tests.Argument( "-l", "org.hungerford.generic.schema.test.tags.IntegrationTest" ) ),
         // `sbt integration:test` should run only tests tagged IntegrationTest
@@ -131,9 +131,21 @@ lazy val gsUPickle = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-upic
   .dependsOn( core % "compile->compile;test->test" )
   .disablePlugins( sbtassembly.AssemblyPlugin )
   .settings(
-      name := "gsUPickle",
+      name := "gs-upickle",
       commonSettings,
       publishSettings,
       disableBuild,
-      libraryDependencies ++= upickle,
+      libraryDependencies ++= upickle.value,
+  )
+
+lazy val gsTapir = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-tapir" ) )
+  .configs( IntegrationConfig, WipConfig )
+  .dependsOn( core % "compile->compile;test->test" )
+  .disablePlugins( sbtassembly.AssemblyPlugin )
+  .settings(
+      name := "gs-tapir",
+      commonSettings,
+      publishSettings,
+      disableBuild,
+      libraryDependencies ++= tapir.value,
   )

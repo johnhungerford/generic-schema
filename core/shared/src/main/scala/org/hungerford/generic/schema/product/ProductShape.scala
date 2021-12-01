@@ -2,11 +2,10 @@ package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
-import org.hungerford.generic.schema.product.field.{FieldDescription, UniqueFieldNames}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase, FieldGetter, UniqueFieldNames, FieldName}
 import org.hungerford.generic.schema.validator.Validator
 
 import scala.language.higherKinds
-import org.hungerford.generic.schema.product.field.FieldDescriptionCase
 
 
 case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
@@ -52,6 +51,14 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
         }
         getFieldNames( fieldDescriptions, Set.empty )
     }
+
+    def getField[ N <: FieldName ](
+        fieldName : N,
+        from : T,
+    )(
+        using
+        fg : FieldGetter[ N, R, RV ],
+    ) : fg.Out = fg.get( prodDeconst.deconstruct( deconstructor )( from )._1 )
 }
 
 

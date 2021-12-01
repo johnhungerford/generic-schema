@@ -5,6 +5,7 @@ import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldDescription.AuxS
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
 import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, UniqueFieldNames}
+import org.hungerford.generic.schema.product.translation.BiMapProductTranslation
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 

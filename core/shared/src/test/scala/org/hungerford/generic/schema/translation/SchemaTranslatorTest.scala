@@ -6,7 +6,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.language.higherKinds
 
-class SchemaTranslatorTest[ OtherSchema[ _ ] ](
+abstract class SchemaTranslatorTest[ OtherSchema[ _ ] ](
    implicit
    intSchema : OtherSchema[ Int ],
 ) extends AnyFlatSpecLike with Matchers {

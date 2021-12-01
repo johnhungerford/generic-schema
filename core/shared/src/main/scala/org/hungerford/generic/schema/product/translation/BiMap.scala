@@ -1,4 +1,4 @@
-package org.hungerford.generic.schema.translation
+package org.hungerford.generic.schema.product.translation
 
 trait Encoder[ T, InformedBy, Encoded ] {
     def encode( value : T, informedBy : InformedBy ) : Encoded

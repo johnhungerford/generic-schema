@@ -1,4 +1,5 @@
 import sbt._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
 
@@ -7,7 +8,7 @@ object Dependencies {
 
     val betterFilesVersion = "3.9.1"
 
-    val tapirVersion = "0.18.3"
+    val tapirVersion = "0.19.0"
     val circeVersion = "0.13.0"
 
     val upickleVersion = "1.4.2"
@@ -21,19 +22,19 @@ object Dependencies {
 
     val betterFiles = Seq( "com.github.pathikrit" %% "better-files" % betterFilesVersion )
 
-    val scalaTest = Seq( "org.scalatest" %% "scalatest" % scalaTestVersion % "test" )
+    val scalaTest = Def.setting( Seq( "org.scalatest" %%% "scalatest" % scalaTestVersion % "test" ) )
 
     val scalaMock = Seq( "org.scalamock" %% "scalamock" % scalaMockVersion % "test" )
 
-    val tapir = Seq( "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
-                     "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion  exclude("com.typesafe.akka", "akka-stream_2.12")  exclude("com.typesafe.akka", "akka-http_2.12"),
-                     "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
-                     "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
-                     "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % tapirVersion)
+    val tapir = Def.setting( Seq( "com.softwaremill.sttp.tapir" %%% "tapir-core" % tapirVersion ) )
+//                     "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion  exclude("com.typesafe.akka", "akka-stream_3")  exclude("com.typesafe.akka", "akka-http_3"),
+//                     "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
+//                     "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
+//                     "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % tapirVersion)
 
     val circe = Seq( "io.circe" %% "circe-core" % circeVersion,
         "io.circe" %% "circe-generic" % circeVersion )
 
-    val upickle = Seq( "com.lihaoyi" %% "upickle" % upickleVersion )
+    val upickle = Def.setting( Seq( "com.lihaoyi" %%% "upickle" % upickleVersion ) )
 
 }

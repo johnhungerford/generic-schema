@@ -2,101 +2,136 @@ package org.hungerford.generic.schema.product.translation
 
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.{FieldTranslator, TranslatedFieldDescription, FieldName, FieldDescription}
+import org.hungerford.generic.schema.product.field.{FieldDescription, FieldGetter, FieldName, FieldTranslator, TranslatedFieldDescription}
 import org.hungerford.generic.schema.translation.SchemaTranslator
 
 trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
 
     def fieldsInit[ T ] : Fields[ T ]
 
-    def addTranslatedField[ T, F ](
-        field : TranslatedFieldDescription[ F, OtherSchema ],
+    def addTranslatedField[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
+        field : FieldDescription.Aux[ F, N, S ],
+        fieldSchema : OtherSchema[ F ],
         to : Fields[ T ],
+        informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
+    )(
+        using
+        fg : FieldGetter.Aux[ N, R, RV, F ],
     ) : Fields[ T ]
 
-    def addAdditionalFields[ T, AF ](
-        additionalFields : Schema[ AF ],
+    def addAdditionalFields[ T, AF, AFS, R <: Tuple, RV <: Tuple, C, DC ](
+        additionalFields : Schema.Aux[ AF, AFS ],
         additionalFieldsTranslated : OtherSchema[ AF ],
         to : Fields[ T ],
+        informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
     ) : Fields[ T ]
 
     def build[ T ]( fields : Fields[ T ], schema : Schema[ T ] ) : OtherSchema[ T ]
 
-    trait FieldBuilder[ T, F, N <: FieldName, S ] {
+    trait FieldBuilder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] {
         def addField(
             field : FieldDescription.Aux[ F, N, S ],
             to : Fields[ T ],
+            informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
         ) : Fields[ T ]
     }
 
     object FieldBuilder {
-        given[ T, F, N <: FieldName, S ] (
+        given[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] (
             using
             tr : FieldTranslator[ F, N, S, OtherSchema ],
-        ) : FieldBuilder[ T, F, N, S ] with {
+            fg : FieldGetter.Aux[ N, R, RV, F ],
+        ) : FieldBuilder[ T, F, N, S, R, RV, AF, AFS, C, DC ] with {
             override def addField(
                 field : FieldDescription.Aux[ F, N, S ],
                 to : Fields[ T ],
+                informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
             ) = {
-                val translatedFieldDescription = tr.translate( field )
-                addTranslatedField[ T, F ]( translatedFieldDescription, to )
+                val fieldSchema = tr.translate( field ).schema
+                addTranslatedField[ T, F, N, S, R, RV, AF, AFS, C, DC ]( field, fieldSchema, to, informedBy )
             }
         }
     }
 
-    trait FieldTupleBuilder[ T, R <: Tuple ] {
+    trait FieldTupleBuilder[ T, FL <: Tuple, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] {
         def addFields(
-            fields : R,
+            fields : FL,
             to : Fields[ T ],
+            informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
         ) : Fields[ T ]
     }
 
     object FieldTupleBuilder {
-        given[ T ] : FieldTupleBuilder[ T, EmptyTuple ] with {
-            def addFields( fields : EmptyTuple, to : Fields[ T ] ) : Fields[ T ] = to
+        given[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] : FieldTupleBuilder[ T, EmptyTuple, R, RV, AF, AFS, C, DC ] with {
+            def addFields(
+                fields : EmptyTuple,
+                to : Fields[ T ],
+                informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
+            ) : Fields[ T ] = to
         }
 
-        given[ T, F, N <: FieldName, S, Tail <: Tuple ] (
+        given[ T, F, N <: FieldName, S, Tail <: Tuple, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] (
             using
-            fb : FieldBuilder[ T, F, N, S ],
-            nb : FieldTupleBuilder[ T, Tail ],
-        ) : FieldTupleBuilder[ T, FieldDescription.Aux[ F, N, S ] *: Tail ] with {
-            def addFields( fields : FieldDescription.Aux[ F, N, S ] *: Tail, to : Fields[ T ] ) : Fields[ T ] = {
-                val withThisField = fb.addField( fields.head, to )
-                nb.addFields( fields.tail, withThisField )
+            fb : FieldBuilder[ T, F, N, S, R, RV, AF, AFS, C, DC ],
+            nb : FieldTupleBuilder[ T, Tail, R, RV, AF, AFS, C, DC ],
+        ) : FieldTupleBuilder[ T, FieldDescription.Aux[ F, N, S ] *: Tail, R, RV, AF, AFS, C, DC ] with {
+            def addFields(
+                fields : FieldDescription.Aux[ F, N, S ] *: Tail,
+                to : Fields[ T ],
+                informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
+            ) : Fields[ T ] = {
+                val withThisField = fb.addField( fields.head, to, informedBy )
+                nb.addFields( fields.tail, withThisField, informedBy )
             }
         }
     }
 
-    trait AdditionalFieldsBuilder[ T, AF, S ] {
-        def addFields( additionalFields : Schema.Aux[ AF, S ], to : Fields[ T ] ) : Fields[ T ]
+    trait AdditionalFieldsBuilder[ T, AF, AFS, R <: Tuple, RV <: Tuple, C, DC ] {
+        def addFields(
+            additionalFields : Schema.Aux[ AF, AFS ],
+            to : Fields[ T ],
+            informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
+        ) : Fields[ T ]
     }
 
     object AdditionalFieldsBuilder {
-        given noAF[ T ] : AdditionalFieldsBuilder[ T, Nothing, Unit ] with {
-            override def addFields( additionalFields : Schema.Aux[ Nothing, Unit ], to : Fields[ T ] ) : Fields[ T ] = to
+        given noAF[ T, R <: Tuple, RV <: Tuple, C, DC ] : AdditionalFieldsBuilder[ T, Nothing, Unit, R, RV, C, DC ] with {
+            override def addFields(
+                additionalFields : Schema.Aux[ Nothing, Unit ],
+                to : Fields[ T ],
+                informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, Nothing, Unit, C, DC] ],
+            ) : Fields[ T ] = to
         }
 
-        given[ T, AF, S ] (
+        given[ T, AF, AFS, R <: Tuple, RV <: Tuple, C, DC ] (
             using
-            tr : SchemaTranslator[ AF, S, OtherSchema ],
-        ) : AdditionalFieldsBuilder[ T, AF, S ] with {
-            override def addFields( additionalFields : Schema.Aux[ AF, S ], to : Fields[ T ] ) : Fields[ T ] = {
+            tr : SchemaTranslator[ AF, AFS, OtherSchema ],
+        ) : AdditionalFieldsBuilder[ T, AF, AFS, R, RV, C, DC ] with {
+            override def addFields(
+                additionalFields : Schema.Aux[ AF, AFS ],
+                to : Fields[ T ],
+                informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
+            ) : Fields[ T ] = {
                 val translatedSchema = tr.translate( additionalFields )
-                addAdditionalFields[ T, AF ]( additionalFields, translatedSchema, to )
+                addAdditionalFields[ T, AF, AFS, R, RV, C, DC ](
+                    additionalFields,
+                    translatedSchema,
+                    to,
+                    informedBy,
+                )
             }
         }
     }
 
     given fieldBuildingProductTranslation[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] (
         using
-        ftb : FieldTupleBuilder[ T, R ],
-        afb : AdditionalFieldsBuilder[ T, AF, AFS ],
+        ftb : FieldTupleBuilder[ T, R, R, RV, AF, AFS, C, DC ],
+        afb : AdditionalFieldsBuilder[ T, AF, AFS, R, RV, C, DC ],
     ) : SchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ], OtherSchema ] with {
         def translate( schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ] ) : OtherSchema[ T ] = {
             val initialFields = fieldsInit[ T ]
-            val fieldsWithFieldDescriptions = ftb.addFields( schema.shape.fieldDescriptions, initialFields )
-            val allFields = afb.addFields( schema.shape.additionalFieldsSchema, fieldsWithFieldDescriptions )
+            val fieldsWithFieldDescriptions = ftb.addFields( schema.shape.fieldDescriptions, initialFields, schema )
+            val allFields = afb.addFields( schema.shape.additionalFieldsSchema, fieldsWithFieldDescriptions, schema )
             build[ T ]( allFields, schema )
         }
     }

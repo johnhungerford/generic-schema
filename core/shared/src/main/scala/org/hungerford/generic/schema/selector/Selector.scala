@@ -16,6 +16,7 @@ class Selector[ R <: Tuple ] {
 
 trait FieldSelector[ N <: FieldName ]
 trait SubTypeSelector[ N <: FieldName ]
+trait AmbigSelector[  N <: FieldName ]
 
 object Selector {
 
@@ -25,6 +26,16 @@ object Selector {
 
     def /~[ N <: FieldName ]( subtype : N ) : Selector[ SubTypeSelector[ N ] *: EmptyTuple ] = {
         new Selector[ SubTypeSelector[ N ] *: EmptyTuple ]
+    }
+
+    extension [ N1 <: FieldName ]( selection : N1 ) def /[ N2 <: FieldName ]( field : N2 ) :
+        Selector[ AmbigSelector[ N1 ] *: FieldSelector[ N2 ] *: EmptyTuple ] = {
+        new Selector[ AmbigSelector[N1] *: FieldSelector[N2] *: EmptyTuple ]
+    }
+
+    extension [ N1 <: FieldName ]( selection : N1 ) def /~[ N2 <: FieldName ]( subtype : N2 ) :
+        Selector[ AmbigSelector[ N1 ] *: SubTypeSelector[ N2 ] *: EmptyTuple ] = {
+        new Selector[ AmbigSelector[N1] *: SubTypeSelector[N2] *: EmptyTuple ]
     }
 
 }

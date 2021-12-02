@@ -24,4 +24,12 @@ class SelectorTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Ma
         assertCompiles( """summon[ something.type <:< Selector[ FieldSelector[ "field one" ] *: SubTypeSelector[ "subtype one" ] *: FieldSelector[ "field two" ] *: SubTypeSelector[ "subtype two" ] *: SubTypeSelector[ "subtype three" ] *: FieldSelector[ "field three" ] *: EmptyTuple ] ]""" )
     }
 
+    it should "build a selector from a string using AmbigSelector" in {
+        import Selector.*
+
+        val something = "ambiguous" /~ "subtype" / "field"
+
+        assertCompiles( """summon[ something.type <:< Selector[ AmbigSelector[ "ambiguous" ] *: SubTypeSelector[ "subtype" ] *: FieldSelector[ "field" ] *: EmptyTuple ] ]""" )
+    }
+
 }

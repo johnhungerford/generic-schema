@@ -211,7 +211,9 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
         val sch = SchemaBuilder[ OuterClass ]
           .caseClass
-          .updateComponent( "inner" / "core" / "str" )( v => FieldDescriptionBuilder.from( v ).fieldName( "string_field" ).build )
+          .updateComponent( "inner" / "core" / "str" )(
+              v => FieldDescriptionBuilder.from( v ).fieldName( "string_field" ).build,
+          )
           .build
 
         val outerFd = sch.shape.fieldDescriptions

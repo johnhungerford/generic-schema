@@ -66,7 +66,7 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
     )
 
     def updateComponent[ Sel <: Tuple, F, N <: FieldName, FS, Inner ](
-        selector : Selector[ Sel ] = Selector[ EmptyTuple ],
+        selector : Selector[ Sel ],
     )(
         using
         cr : ComponentRetriever.Aux[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], Sel, Inner ],

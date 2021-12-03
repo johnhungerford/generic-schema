@@ -5,7 +5,11 @@ import org.hungerford.generic.schema.product.field.FieldName
 type Append[ R <: Tuple, T ] = Tuple.Concat[ R, T *: EmptyTuple ]
 
 class Selector[ R <: Tuple ] {
-    def /[ N <: FieldName ]( field : N ) : Selector[ Append[ R, FieldSelector[ N ] ] ] = {
+    def /[ N <: FieldName ]( field : N ) : Selector[ Append[ R, AmbigSelector[ N ] ] ] = {
+        new Selector[ Append[ R, AmbigSelector[ N ] ] ]
+    }
+
+    def /-[ N <: FieldName ]( field : N ) : Selector[ Append[ R, FieldSelector[ N ] ] ] = {
         new Selector[ Append[ R, FieldSelector[ N ] ] ]
     }
 
@@ -20,6 +24,10 @@ trait AmbigSelector[  N <: FieldName ]
 
 object Selector {
 
+    def apply[ N <: FieldName ]( field : N ) : Selector[ AmbigSelector[ N ] *: EmptyTuple ] = {
+        new Selector[ AmbigSelector[ N ] *: EmptyTuple ]
+    }
+
     def field[ N <: FieldName ]( field : N ) : Selector[ FieldSelector[ N ] *: EmptyTuple ] = {
         new Selector[ FieldSelector[ N ] *: EmptyTuple ]
     }
@@ -29,6 +37,11 @@ object Selector {
     }
 
     extension [ N1 <: FieldName ]( selection : N1 ) def /[ N2 <: FieldName ]( field : N2 ) :
+        Selector[ AmbigSelector[ N1 ] *: AmbigSelector[ N2 ] *: EmptyTuple ] = {
+        new Selector[ AmbigSelector[N1] *: AmbigSelector[N2] *: EmptyTuple ]
+    }
+
+    extension [ N1 <: FieldName ]( selection : N1 ) def /-[ N2 <: FieldName ]( field : N2 ) :
         Selector[ AmbigSelector[ N1 ] *: FieldSelector[ N2 ] *: EmptyTuple ] = {
         new Selector[ AmbigSelector[N1] *: FieldSelector[N2] *: EmptyTuple ]
     }

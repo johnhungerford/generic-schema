@@ -64,6 +64,28 @@ object ComponentUpdater {
         }
     }
 
+    given fromProductSchemaBuilder[ T, R <: Tuple, NewR <: Tuple, RV <: Tuple, AF, AFS, C, DC, N <: FieldName, F, FS, NewN <: FieldName, NewFS ](
+        using
+        frt : FieldRetriever.Aux[ N, R, FieldDescription.Aux[ F, N, FS ] ],
+        frp : FieldReplacer.Aux[ N, R, F, NewN, NewFS, NewR ],
+        ctx : CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
+    ) : ComponentUpdater.Aux[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], FieldSelector[ N ], FieldDescription.Aux[ F, N, FS ], FieldDescription.Aux[ F, NewN, NewFS ], ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ] ] = {
+        new ComponentUpdater[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], FieldSelector[ N ], FieldDescription.Aux[ F, N, FS ], FieldDescription.Aux[ F, NewN, NewFS ] ] {
+            override type NewOuter = ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ]
+
+            override def update(
+                outer : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ],
+            )(
+                updater : FieldDescription.Aux[ F, N, FS ] => FieldDescription.Aux[ F, NewN, NewFS ],
+            ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ] = {
+                val field = frt.retrieve( outer.fieldDescs )
+                val newField = updater( field )
+                val newFields = frp.replace( outer.fieldDescs, newField )
+                outer.copy[ T, NewR, RV, AF, AFS, C, DC ]( fieldDescs = newFields )
+            }
+        }
+    }
+
     given fromFieldDesc[ T, N <: FieldName, S, SelN <: FieldName, F, FS, NewN <: FieldName, NewFS, NewS ](
         using
         scu : ComponentUpdater.Aux[ Schema.Aux[ T, S ], FieldSelector[ SelN ], FieldDescription.Aux[ F, SelN, FS ], FieldDescription.Aux[ F, NewN, NewFS ], Schema.Aux[ T, NewS ] ],
@@ -76,22 +98,22 @@ object ComponentUpdater {
         }
     }
 
-    given fieldAmbig[ Outer, N <: FieldName, Inner, NewInner, NO ](
+    given ambigFieldUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
         using
         fcu : ComponentUpdater.Aux[ Outer, FieldSelector[ N ], Inner, NewInner, NO ],
     ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
-        override type NewOuter = fcu.NewOuter
+        type NewOuter = NO
 
-        override def update( outer : Outer )( updater : Inner => NewInner ) : fcu.NewOuter = fcu.update( outer )( updater )
+        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
     }
 
-    given subtypeAmbig[ Outer, N <: FieldName, Inner, NewInner, NO ](
+    given ambigSubTypeUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
         using
-        stcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
+        fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
     ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
-        override type NewOuter = stcu.NewOuter
+        type NewOuter = NO
 
-        override def update( outer : Outer )( updater : Inner => NewInner ) : stcu.NewOuter = stcu.update( outer )( updater )
+        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
     }
 
 

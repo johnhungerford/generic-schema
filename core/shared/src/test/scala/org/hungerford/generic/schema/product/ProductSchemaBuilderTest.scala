@@ -5,6 +5,7 @@ import org.hungerford.generic.schema.types.Provider
 import org.hungerford.generic.schema.{Schema, Primitive, SchemaBuilder, SchemaProvider}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
+import org.hungerford.generic.schema.selector.Selector
 
 class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
@@ -199,6 +200,27 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
         coreFd.head.fieldName shouldBe "int"
         coreFd.tail.head.fieldName shouldBe "string_field"
         coreFd.tail.tail.head.fieldName shouldBe "bool"
+    }
+
+    it should "be able to update nested fields using a selector" in {
+        case class Core( int : Int, str : String, bool : Boolean )
+        case class InnerClass( core : Core )
+        case class OuterClass( inner : InnerClass )
+
+        import org.hungerford.generic.schema.selector.Selector.*
+
+        val sch = SchemaBuilder[ OuterClass ]
+          .caseClass
+          .updateComponent( "inner" / "core" / "str" )(
+              v => FieldDescriptionBuilder.from( v ).fieldName( "string_field" ).build,
+          )
+          .build
+
+        val outerFd = sch.shape.fieldDescriptions
+        val innerFd = outerFd.head.schema.shape.fieldDescriptions
+        val coreFd = innerFd.head.schema.shape.fieldDescriptions
+
+        coreFd.tail.head.fieldName shouldBe "string_field"
     }
 
 }

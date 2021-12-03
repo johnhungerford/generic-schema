@@ -164,8 +164,8 @@ case class BuildableFieldDescriptionBuilder[ T, N <: FieldName, S ](
 object FieldDescriptionBuilder {
    def apply[ T ] : FieldDescriptionBuilderWithoutSchemaOrName[ T ] = FieldDescriptionBuilderWithoutSchemaOrName[ T ]()
 
-   def from[ T ]( fieldDescription: FieldDescription[ T ] ) : BuildableFieldDescriptionBuilder[ T, fieldDescription.Name, fieldDescription.Shape ] = {
-       BuildableFieldDescriptionBuilder[ T, fieldDescription.Name, fieldDescription.Shape ](
+   def from[ T, N <: FieldName, S ]( fieldDescription: FieldDescription.Aux[ T, N, S ] ) : BuildableFieldDescriptionBuilder[ T, N, S ] = {
+       BuildableFieldDescriptionBuilder[ T, N, S ](
            fieldDescription.schema,
            fieldDescription.fieldName,
            fieldDescription.description,

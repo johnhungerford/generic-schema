@@ -20,11 +20,11 @@ trait AmbigSelector[  N <: FieldName ]
 
 object Selector {
 
-    def /[ N <: FieldName ]( field : N ) : Selector[ FieldSelector[ N ] *: EmptyTuple ] = {
+    def field[ N <: FieldName ]( field : N ) : Selector[ FieldSelector[ N ] *: EmptyTuple ] = {
         new Selector[ FieldSelector[ N ] *: EmptyTuple ]
     }
 
-    def /~[ N <: FieldName ]( subtype : N ) : Selector[ SubTypeSelector[ N ] *: EmptyTuple ] = {
+    def subtype[ N <: FieldName ]( subtype : N ) : Selector[ SubTypeSelector[ N ] *: EmptyTuple ] = {
         new Selector[ SubTypeSelector[ N ] *: EmptyTuple ]
     }
 

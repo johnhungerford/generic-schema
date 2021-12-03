@@ -4,6 +4,7 @@ import org.hungerford.generic.schema.product.field.{BuildableFieldDescriptionBui
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder}
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
+import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, FieldSelector, Selector}
 
 import scala.collection.immutable.NewVectorIterator
 
@@ -62,6 +63,22 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
       fieldDescs,
       constr,
       decons,
+    )
+
+    def updateComponent[ N <: FieldName, Sel <: Tuple, F, FS ](
+        selector : Selector[ FieldSelector[ N ] *: Sel ],
+    )(
+        using
+        fr : FieldRetriever.Aux[ N, R, FieldDescription.Aux[ F, N, FS ] ],
+        cr : ComponentRetriever[ FieldDescription.Aux[ F, N, FS ], Sel ],
+    ) : FieldComponentUpdater[ T, R, RV, AF, AFS, C, DC, F, N, FS, Sel, cr.Inner ] = FieldComponentUpdater[ T, R, RV, AF, AFS, C, DC, F, N, FS, Sel, cr.Inner ](
+        fr.retrieve( fieldDescs ),
+        desc,
+        vals,
+        aftSch,
+        fieldDescs,
+        constr,
+        decons,
     )
 
    def additionalFields[ F ](
@@ -364,6 +381,36 @@ case class FieldUpdater[ F, N <: FieldName, S, T, R <: Tuple, RV <: Tuple, AF, A
             vals,
             aftSch,
             newFieldDescriptions,
+            constr,
+            decons,
+        )
+    }
+}
+
+case class FieldComponentUpdater[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC, F, N <: FieldName, FS, Sel <: Tuple, Inner ](
+    private[ product ] val field : FieldDescription.Aux[ F, N, FS ],
+    private[ product ] val desc : Option[ String ] = None,
+    private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+    private[ product ] val aftSch : Schema.Aux[ AF, AFS ],
+    private[ product ] val fieldDescs : R,
+    private[ product ] val constr : C,
+    private[ product ] val decons : DC,
+) {
+    def apply[ NewInner, NewN <: FieldName, NewFS, NewR <: Tuple ](
+        updater : Inner => NewInner,
+    )(
+        using
+        cu : ComponentUpdater.Aux[ FieldDescription.Aux[ F, N, FS ], Sel, Inner, NewInner, FieldDescription.Aux[ F, NewN, NewFS ] ],
+        fu : FieldReplacer.Aux[ N, R, F, NewN, NewFS, NewR ],
+        ctx : CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
+    ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ] = {
+        val newField = cu.update( field )( updater )
+        val newFields = fu.replace( fieldDescs, newField )
+        ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ](
+            desc,
+            vals,
+            aftSch,
+            newFields,
             constr,
             decons,
         )

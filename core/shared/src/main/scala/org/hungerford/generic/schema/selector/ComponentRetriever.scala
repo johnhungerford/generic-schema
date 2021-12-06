@@ -42,17 +42,6 @@ object ComponentRetriever {
         }
     }
 
-//    given fromProductFieldDescriptionAmbigSelector[ T, N <: FieldName, R <: Tuple, RV <: Tuple, AF, AFS, C, DC, SelN <: FieldName, F, S ](
-//        using
-//        fr : FieldRetriever.Aux[ SelN, R, FieldDescription.Aux[ F, SelN, S ] ],
-//    ) : ComponentRetriever[ FieldDescription.Aux[ T, N, ProductShape[ T, R, RV, AF, AFS, C, DC ] ], AmbigSelector[ SelN ] ] with {
-//        override type Inner = FieldDescription.Aux[ F, SelN, S ]
-//
-//        override def retrieve( from : FieldDescription.Aux[ T, N, ProductShape[ T, R, RV, AF, AFS, C, DC ] ] ) : FieldDescription.Aux[ F, SelN, S ] = {
-//            fr.retrieve( from.schema.shape.fieldDescriptions )
-//        }
-//    }
-
     given fromProductSchema[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC, SelN <: FieldName, F, S ](
         using
         fr : FieldRetriever.Aux[ SelN, R, FieldDescription.Aux[ F, SelN, S ] ],
@@ -64,17 +53,6 @@ object ComponentRetriever {
         }
     }
 
-//    given fromProductSchemaAmbigSelector[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC, SelN <: FieldName, F, S ](
-//        using
-//        fr : FieldRetriever.Aux[ SelN, R, FieldDescription.Aux[ F, SelN, S ] ],
-//    ) : ComponentRetriever[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ], AmbigSelector[ SelN ] ] with {
-//        override type Inner = FieldDescription.Aux[ F, SelN, S ]
-//
-//        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ] ) : FieldDescription.Aux[ F, SelN, S ] = {
-//            fr.retrieve( from.shape.fieldDescriptions )
-//        }
-//    }
-
     given fromProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC, SelN <: FieldName, F, S ](
         using
         fr : FieldRetriever.Aux[ SelN, R, FieldDescription.Aux[ F, SelN, S ] ],
@@ -85,17 +63,6 @@ object ComponentRetriever {
             fr.retrieve( from.fieldDescs )
         }
     }
-
-//    given fromProductSchemaBuilderAmbig[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC, SelN <: FieldName, F, S ](
-//        using
-//        fr : FieldRetriever.Aux[ SelN, R, FieldDescription.Aux[ F, SelN, S ] ],
-//    ) : ComponentRetriever[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], AmbigSelector[ SelN ] ] with {
-//        override type Inner = FieldDescription.Aux[ F, SelN, S ]
-//
-//        override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] ) : FieldDescription.Aux[ F, SelN, S ] = {
-//            fr.retrieve( from.fieldDescs )
-//        }
-//    }
 
     given ambigFieldRetriever[ Outer, N <: FieldName, I ](
         using

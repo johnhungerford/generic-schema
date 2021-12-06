@@ -1,5 +1,6 @@
 package org.hungerford.generic.schema
 
+import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 
 import scala.language.higherKinds
@@ -85,5 +86,23 @@ object Schema {
 }
 
 trait SchemaDsl {
+
+    extension [ T, S ]( schema : Schema.Aux[ T, S ] )
+        def rebuild( using srb : SchemaRebuilder[ T, S ] ) : srb.Builder = srb.rebuild( schema )
+
+    extension ( sch : Schema.type )
+        def buildProduct[ T ] : ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ] =
+            ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ](
+                aftSch = NoSchema,
+                fieldDescs = EmptyTuple,
+                constr = (),
+                decons = (),
+            )
+
+    extension ( sch : Schema.type )
+        def buildPrimitive[ T ] : PrimitiveSchemaBuilder[ T ] = PrimitiveSchemaBuilder[ T ]()
+
+    extension ( sch : Schema.type )
+        def buildDerived[ T ]( using bldDeriv : SchemaBuildDeriver[ T ] ) : bldDeriv.Builder = bldDeriv.derive
 
 }

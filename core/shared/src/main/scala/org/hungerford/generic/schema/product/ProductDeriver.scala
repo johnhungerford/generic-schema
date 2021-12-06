@@ -58,6 +58,54 @@ object ProductDeriver {
     }
 }
 
+trait ProductBuildDeriver[ T ] {
+    type Builder
+
+    def derive : Builder
+}
+
+object ProductBuildDeriver {
+    type Aux[ T, B ] = ProductBuildDeriver[ T ] { type Builder = B }
+
+    type DerivedBuilder[ T, R <: Tuple, RV <: Tuple ] =
+        ProductSchemaBuilder[ T, R, RV, Nothing, Unit, RV => T, T => RV ]
+
+    def apply[ T ](
+        using
+        prd : ProductBuildDeriver[ T ],
+    ) : ProductBuildDeriver.Aux[ T, prd.Builder ] = prd
+
+    type MirrorProduct[ T, Elems <: Tuple, ElemLabels <: Tuple ] = Mirror.ProductOf[ T ] {
+        type MirroredElemTypes = Elems
+        type MirroredElemLabels = ElemLabels
+    }
+
+    inline given [ T <: Product, L <: Tuple, RVt <: Tuple, LRV <: Tuple, Rt <: Tuple ](
+        using
+        mirror : MirrorProduct[ T, RVt, L ],
+        zip : Zipper.Aux[ L, RVt, LRV ],
+        fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
+//        lengther : TupleIntLength[ Rt ],
+        valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+//        uniq : UniqueFieldNames[ Rt ],
+//        cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
+//        dcType : ProductDeconstructor[ T => RVt, RVt, Nothing, T ],
+    ) : ProductBuildDeriver[ T ] with {
+        override type Builder = DerivedBuilder[ T, Rt, RVt ]
+
+        override def derive : DerivedBuilder[ T, Rt, RVt ] = {
+            ProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ](
+                None,
+                Set.empty[ Validator[ T ] ],
+                NoSchema,
+                fieldDeriver.derive,
+                rv => mirror.fromProduct( rv ),
+                ( value : T ) => Tuple.fromProductTyped[ T ]( value )( using mirror ),
+            )
+        }
+    }
+}
+
 trait FieldDeriver[ T ] extends Deriver[ T ]
 
 object FieldDeriver {

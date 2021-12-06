@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.product.field.FieldDescription
-import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, TupleIntLength, ProductDeriver, ProductShape}
+import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, TupleIntLength, ProductDeriver, ProductShape, ProductBuildDeriver}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
 
@@ -31,5 +31,33 @@ object SchemaDeriver {
     def schema[ T ](
         implicit schemaDeriver : SchemaDeriver[ T ],
     ) : Schema.Aux[ T, schemaDeriver.Shape ] = schemaDeriver.derive
+
+}
+
+trait SchemaBuildDeriver[ T ] {
+    type Builder
+
+    def derive : Builder
+}
+
+object SchemaBuildDeriver {
+    type Aux[ T, B ] = SchemaBuildDeriver[ T ] { type Builder = B }
+
+    def apply[ T ](
+        implicit sd : SchemaBuildDeriver[ T ],
+    ) : SchemaBuildDeriver.Aux[ T, sd.Builder ] = sd
+
+
+    implicit def productSchemaBuildDeriver[ T ](
+        implicit prd : ProductBuildDeriver[ T ],
+    ) : SchemaBuildDeriver.Aux[ T, prd.Builder ] = new SchemaBuildDeriver[ T ] {
+        override type Builder = prd.Builder
+
+        override def derive : Builder = prd.derive
+    }
+
+    def builder[ T ](
+        implicit schemaBuildDeriver : SchemaBuildDeriver[ T ],
+    ) : schemaBuildDeriver.Builder = schemaBuildDeriver.derive
 
 }

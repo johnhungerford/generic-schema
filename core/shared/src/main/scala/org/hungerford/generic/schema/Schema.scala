@@ -84,4 +84,6 @@ object Schema {
     def apply[ T ]( implicit schema : Schema[ T ] ) : Schema[ T ] = schema
 }
 
+trait SchemaDsl {
 
+}

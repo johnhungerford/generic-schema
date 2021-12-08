@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase, FieldName}
+import org.hungerford.generic.schema.product.field.{Field, FieldCase, FieldName}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider}
@@ -40,7 +40,7 @@ object ProductDeriver {
         zip : Zipper.Aux[ L, RVt, LRV ],
         fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
         lengther : TupleIntLength[ Rt ],
-        valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+        valEv : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
         uniq : UniqueFieldNames[ Rt ],
         cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
         dcType : ProductDeconstructor[ T => RVt, RVt, Nothing, T ],
@@ -58,6 +58,54 @@ object ProductDeriver {
     }
 }
 
+trait ProductBuildDeriver[ T ] {
+    type Builder
+
+    def derive : Builder
+}
+
+object ProductBuildDeriver {
+    type Aux[ T, B ] = ProductBuildDeriver[ T ] { type Builder = B }
+
+    type DerivedBuilder[ T, R <: Tuple, RV <: Tuple ] =
+        ProductSchemaBuilder[ T, R, RV, Nothing, Unit, RV => T, T => RV ]
+
+    def apply[ T ](
+        using
+        prd : ProductBuildDeriver[ T ],
+    ) : ProductBuildDeriver.Aux[ T, prd.Builder ] = prd
+
+    type MirrorProduct[ T, Elems <: Tuple, ElemLabels <: Tuple ] = Mirror.ProductOf[ T ] {
+        type MirroredElemTypes = Elems
+        type MirroredElemLabels = ElemLabels
+    }
+
+    inline given [ T <: Product, L <: Tuple, RVt <: Tuple, LRV <: Tuple, Rt <: Tuple ](
+        using
+        mirror : MirrorProduct[ T, RVt, L ],
+        zip : Zipper.Aux[ L, RVt, LRV ],
+        fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
+//        lengther : TupleIntLength[ Rt ],
+        valEv : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
+//        uniq : UniqueFieldNames[ Rt ],
+//        cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
+//        dcType : ProductDeconstructor[ T => RVt, RVt, Nothing, T ],
+    ) : ProductBuildDeriver[ T ] with {
+        override type Builder = DerivedBuilder[ T, Rt, RVt ]
+
+        override def derive : DerivedBuilder[ T, Rt, RVt ] = {
+            ProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ](
+                None,
+                Set.empty[ Validator[ T ] ],
+                NoSchema,
+                fieldDeriver.derive,
+                rv => mirror.fromProduct( rv ),
+                ( value : T ) => Tuple.fromProductTyped[ T ]( value )( using mirror ),
+            )
+        }
+    }
+}
+
 trait FieldDeriver[ T ] extends Deriver[ T ]
 
 object FieldDeriver {
@@ -66,12 +114,12 @@ object FieldDeriver {
     inline given fd[ T, N <: FieldName, S ](
         using
         provider : SchemaProvider.Aux[ T, S ],
-    ) : FieldDeriver.Aux[ (N, T), FieldDescription.Aux[ T, N, S ] ] = new FieldDeriver[ (N, T) ] {
-            override type Out = FieldDescription.Aux[ T, N, S ]
+    ) : FieldDeriver.Aux[ (N, T), Field.Aux[ T, N, S ] ] = new FieldDeriver[ (N, T) ] {
+            override type Out = Field.Aux[ T, N, S ]
 
             override def derive : Out = {
                 val fn = constValue[ N ]
-                FieldDescriptionCase[ T, N, S ]( fn, provider.provide )
+                FieldCase[ T, N, S ]( fn, provider.provide )
             }
     }
 
@@ -83,14 +131,14 @@ object FieldDeriver {
 
     inline given hlistFDFieldDeriver[ N <: FieldName, T, S, TTail <: Tuple, Res <: Tuple ](
         using
-        fdFieldDeriver : FieldDeriver.Aux[ (N, T), FieldDescription.Aux[ T, N, S ] ],
+        fdFieldDeriver : FieldDeriver.Aux[ (N, T), Field.Aux[ T, N, S ] ],
         next : FieldDeriver.Aux[ TTail, Res ],
-    ) : FieldDeriver.Aux[ (N, T) *: TTail, FieldDescription.Aux[ T, N, S ] *: Res ] = {
+    ) : FieldDeriver.Aux[ (N, T) *: TTail, Field.Aux[ T, N, S ] *: Res ] = {
         new FieldDeriver[ (N, T) *: TTail ] {
-            override type Out = FieldDescription.Aux[ T, N, S ] *: Res
+            override type Out = Field.Aux[ T, N, S ] *: Res
 
-            override def derive : FieldDescription.Aux[ T, N, S ] *: Res = {
-                val headRes : FieldDescription.Aux[ T, N, S ] = fdFieldDeriver.derive
+            override def derive : Field.Aux[ T, N, S ] *: Res = {
+                val headRes : Field.Aux[ T, N, S ] = fdFieldDeriver.derive
                 headRes *: next.derive
             }
         }

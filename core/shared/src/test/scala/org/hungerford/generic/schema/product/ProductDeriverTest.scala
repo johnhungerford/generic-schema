@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.{SchemaBuilder, NoSchema, Primitive, Schema, SchemaProvider}
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, UniqueFieldNames}
+import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, UniqueFieldNames}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
@@ -25,7 +25,7 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
 
        val manualProduct = SchemaBuilder[ Test ]
          .product
-         .addField( FieldDescriptionBuilder[ Int ].fieldName( "int" ).fromSchema.build )
+         .addField( FieldBuilder[ Int ].fieldName( "int" ).fromSchema.build )
          .construct( v => Test( v ) )
          .deconstruct( v => v.int )
          .build
@@ -45,7 +45,7 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
 
        val manualProduct = SchemaBuilder[ Test ]
          .product
-         .addField( FieldDescriptionBuilder[ Int ].fieldName( "int" ).primitive.build )
+         .addField( FieldBuilder[ Int ].fieldName( "int" ).primitive.build )
          .construct( t => Test(t ) )
          .deconstruct( v => v.int )
          .build

@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.product.translation
 
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldGetter, FieldName, FieldTranslator, TranslatedFieldDescription}
+import org.hungerford.generic.schema.product.field.{Field, FieldGetter, FieldName, FieldTranslator, TranslatedFieldDescription}
 import org.hungerford.generic.schema.translation.SchemaTranslator
 
 trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
@@ -10,7 +10,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
     def fieldsInit[ T ] : Fields[ T ]
 
     def addTranslatedField[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
-        field : FieldDescription.Aux[ F, N, S ],
+        field : Field.Aux[ F, N, S ],
         fieldSchema : OtherSchema[ F ],
         to : Fields[ T ],
         informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
@@ -30,7 +30,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
 
     trait FieldBuilder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] {
         def addField(
-            field : FieldDescription.Aux[ F, N, S ],
+            field : Field.Aux[ F, N, S ],
             to : Fields[ T ],
             informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
         ) : Fields[ T ]
@@ -43,7 +43,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
             fg : FieldGetter.Aux[ N, R, RV, F ],
         ) : FieldBuilder[ T, F, N, S, R, RV, AF, AFS, C, DC ] with {
             override def addField(
-                field : FieldDescription.Aux[ F, N, S ],
+                field : Field.Aux[ F, N, S ],
                 to : Fields[ T ],
                 informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
             ) = {
@@ -74,9 +74,9 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
             using
             fb : FieldBuilder[ T, F, N, S, R, RV, AF, AFS, C, DC ],
             nb : FieldTupleBuilder[ T, Tail, R, RV, AF, AFS, C, DC ],
-        ) : FieldTupleBuilder[ T, FieldDescription.Aux[ F, N, S ] *: Tail, R, RV, AF, AFS, C, DC ] with {
+        ) : FieldTupleBuilder[ T, Field.Aux[ F, N, S ] *: Tail, R, RV, AF, AFS, C, DC ] with {
             def addFields(
-                fields : FieldDescription.Aux[ F, N, S ] *: Tail,
+                fields : Field.Aux[ F, N, S ] *: Tail,
                 to : Fields[ T ],
                 informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
             ) : Fields[ T ] = {

@@ -3,7 +3,7 @@ package org.hungerford.generic.schema.product.field
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.FieldDescription.Aux
+import org.hungerford.generic.schema.product.field.Field.Aux
 import org.hungerford.generic.schema.validator.Validator
 
 import scala.language.higherKinds
@@ -20,7 +20,7 @@ case class TranslatedFieldDescription[ T, OtherSchema[ _ ] ](
 )
 
 trait FieldTranslator[ T, N <: FieldName, S, OtherSchema[ _ ] ] {
-    def translate( fd : FieldDescription.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, OtherSchema ]
+    def translate( fd : Field.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, OtherSchema ]
 }
 
 object FieldTranslator {
@@ -33,7 +33,7 @@ object FieldTranslator {
         using
         osc : OtherSchema[ T ],
     ) : FieldTranslator[ T, N, S, OtherSchema ] = new FieldTranslator[ T, N, S, OtherSchema ] {
-        def translate( fd : FieldDescription.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, OtherSchema ] = {
+        def translate( fd : Field.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, OtherSchema ] = {
             TranslatedFieldDescription(
                 fd.fieldName,
                 osc,
@@ -47,7 +47,7 @@ object FieldTranslator {
         using
         schTrans : SchemaTranslator[ T, S, OtherSchema ],
     ) : FieldTranslator[ T, N, S, OtherSchema ] with
-        def translate( fd : FieldDescription.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, OtherSchema ] = {
+        def translate( fd : Field.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, OtherSchema ] = {
             genericFieldTranslator[ T, N, S, OtherSchema ]( using schTrans.translate( fd.schema ) ).translate( fd )
         }
 
@@ -70,10 +70,10 @@ object FieldTupleTranslator {
         using
         ft : => FieldTranslator[ T, N, S, OtherSchema ],
         nt : FieldTupleTranslator.Aux[ FTail, OtherSchema, TFTail ],
-    ) : FieldTupleTranslator[ FieldDescription.Aux[ T, N, S ] *: FTail, OtherSchema ] with
+    ) : FieldTupleTranslator[ Field.Aux[ T, N, S ] *: FTail, OtherSchema ] with
         type TFS = TranslatedFieldDescription[ T, OtherSchema ] *: TFTail
 
-        def translate( fields : FieldDescription.Aux[ T, N, S ] *: FTail ) : TranslatedFieldDescription[ T, OtherSchema ] *: TFTail = {
+        def translate( fields : Field.Aux[ T, N, S ] *: FTail ) : TranslatedFieldDescription[ T, OtherSchema ] *: TFTail = {
             val translatedHead = ft.translate( fields.head )
             val translatedTail = nt.translate( fields.tail )
             translatedHead *: translatedTail

@@ -22,20 +22,7 @@ trait FieldSelector[ N <: FieldName ]
 trait SubTypeSelector[ N <: FieldName ]
 trait AmbigSelector[  N <: FieldName ]
 
-object Selector {
-
-    def apply[ N <: FieldName ]( field : N ) : Selector[ AmbigSelector[ N ] *: EmptyTuple ] = {
-        new Selector[ AmbigSelector[ N ] *: EmptyTuple ]
-    }
-
-    def field[ N <: FieldName ]( field : N ) : Selector[ FieldSelector[ N ] *: EmptyTuple ] = {
-        new Selector[ FieldSelector[ N ] *: EmptyTuple ]
-    }
-
-    def subtype[ N <: FieldName ]( subtype : N ) : Selector[ SubTypeSelector[ N ] *: EmptyTuple ] = {
-        new Selector[ SubTypeSelector[ N ] *: EmptyTuple ]
-    }
-
+trait SelectorDsl {
     extension [ N1 <: FieldName ]( selection : N1 ) def /[ N2 <: FieldName ]( field : N2 ) :
         Selector[ AmbigSelector[ N1 ] *: AmbigSelector[ N2 ] *: EmptyTuple ] = {
         new Selector[ AmbigSelector[N1] *: AmbigSelector[N2] *: EmptyTuple ]
@@ -49,6 +36,25 @@ object Selector {
     extension [ N1 <: FieldName ]( selection : N1 ) def /~[ N2 <: FieldName ]( subtype : N2 ) :
         Selector[ AmbigSelector[ N1 ] *: SubTypeSelector[ N2 ] *: EmptyTuple ] = {
         new Selector[ AmbigSelector[N1] *: SubTypeSelector[N2] *: EmptyTuple ]
+    }
+
+    given [ N <: FieldName ] : Conversion[ N, Selector[ AmbigSelector[ N ] *: EmptyTuple ] ] with
+        def apply( selector : N ) : Selector[ AmbigSelector[ N ] *: EmptyTuple ] =
+            new Selector[ AmbigSelector[ N ] *: EmptyTuple ]
+}
+
+object Selector extends SelectorDsl {
+
+    def apply[ N <: FieldName ]( field : N ) : Selector[ AmbigSelector[ N ] *: EmptyTuple ] = {
+        new Selector[ AmbigSelector[ N ] *: EmptyTuple ]
+    }
+
+    def field[ N <: FieldName ]( field : N ) : Selector[ FieldSelector[ N ] *: EmptyTuple ] = {
+        new Selector[ FieldSelector[ N ] *: EmptyTuple ]
+    }
+
+    def subtype[ N <: FieldName ]( subtype : N ) : Selector[ SubTypeSelector[ N ] *: EmptyTuple ] = {
+        new Selector[ SubTypeSelector[ N ] *: EmptyTuple ]
     }
 
 }

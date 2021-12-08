@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.tapir
 
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.{FieldDescription, TranslatedFieldDescription, FieldGetter, FieldName}
+import org.hungerford.generic.schema.product.field.{Field, TranslatedFieldDescription, FieldGetter, FieldName}
 import org.hungerford.generic.schema.product.translation.FieldBuildingProductSchemaTranslation
 import sttp.tapir.Schema as TapirSchema
 import sttp.tapir.SchemaType.{SProduct, SProductField}
@@ -16,7 +16,7 @@ trait TapirSchemaProductTranslation
     override def fieldsInit[ T ] : TapirFields[ T ] = List.empty[ SProductField[ T ] ]
 
     override def addTranslatedField[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
-        field : FieldDescription.Aux[ F, N, S ],
+        field : Field.Aux[ F, N, S ],
         fieldSchema : TapirSchema[ F ],
         to : TapirFields[ T ],
         informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ],

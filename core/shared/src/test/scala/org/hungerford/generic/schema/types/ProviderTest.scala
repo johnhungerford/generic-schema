@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.types
 
-import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
+import org.hungerford.generic.schema.product.field.FieldBuilder
 import org.hungerford.generic.schema.{Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers

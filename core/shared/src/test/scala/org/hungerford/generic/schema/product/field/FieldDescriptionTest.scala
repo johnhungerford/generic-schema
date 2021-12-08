@@ -10,9 +10,9 @@ class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
     it should "translate a tuple of field descriptions" in {
         case class ID[ T ]()
 
-        val intFd = FieldDescriptionBuilder[ Int ].fieldName( "int" ).primitive.build
-        val strFd = FieldDescriptionBuilder[ String ].fieldName( "str" ).primitive.build
-        val boolFd = FieldDescriptionBuilder[ Boolean ].fieldName( "bool" ).primitive.build
+        val intFd = FieldBuilder[ Int ].fieldName( "int" ).primitive.build
+        val strFd = FieldBuilder[ String ].fieldName( "str" ).primitive.build
+        val boolFd = FieldBuilder[ Boolean ].fieldName( "bool" ).primitive.build
 
         val intTfd = TranslatedFieldDescription[ Int, ID ]( intFd.fieldName, new ID[ Int ](), intFd.description, intFd.validators )
         val strTfd = TranslatedFieldDescription[ String, ID ]( strFd.fieldName, new ID[ String ](), strFd.description, strFd.validators )
@@ -22,7 +22,7 @@ class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
 
 
         given idFt[ T, N <: FieldName, S ] : FieldTranslator[ T, N, S, ID ] = new FieldTranslator[ T, N, S, ID ] {
-            def translate( description : FieldDescription.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, ID ] =
+            def translate( description : Field.Aux[ T, N, S ] ) : TranslatedFieldDescription[ T, ID ] =
                 TranslatedFieldDescription[ T, ID ]( description.fieldName, new ID[ T ](), description.description, description.validators )
         }
 
@@ -36,10 +36,10 @@ class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
         case class Inner( int : Int )
         case class Outer( inner : Inner )
 
-        val fd = FieldDescriptionBuilder[ Outer ]
+        val fd = FieldBuilder[ Outer ]
           .buildSchema( _.caseClass.build )
           .rebuildSchema(
-              _.updateField( "inner" )(
+              _.rebuildField( "inner" )(
                   _.fieldName( "inner_field" )
                     .build
               ).build

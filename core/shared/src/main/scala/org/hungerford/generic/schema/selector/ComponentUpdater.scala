@@ -3,7 +3,7 @@ package org.hungerford.generic.schema.selector
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder, SchemaRebuilder}
 import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, ProductSchemaBuilder, ProductShape, TupleIntLength}
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, FieldDescriptionCase, FieldName, FieldReplacer, FieldRetriever, UniqueFieldNames}
+import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldCase, FieldName, FieldReplacer, FieldRetriever, UniqueFieldNames}
 
 trait ComponentUpdater[ Outer, Sel, Inner, NewInner ] {
     type NewOuter
@@ -33,23 +33,23 @@ object ComponentUpdater {
         }
     }
 
-    given fromSchema[ T, R <: Tuple, NewR <: Tuple, RV <: Tuple, AF, AFS, C, DC, N <: FieldName, F, FS, NewN <: FieldName, NewFS ](
+    given fromProductSchema[ T, R <: Tuple, NewR <: Tuple, RV <: Tuple, AF, AFS, C, DC, N <: FieldName, F, FS, NewN <: FieldName, NewFS ](
         using
-        frt : FieldRetriever.Aux[ N, R, FieldDescription.Aux[ F, N, FS ] ],
+        frt : FieldRetriever.Aux[ N, R, Field.Aux[ F, N, FS ] ],
         frp : FieldReplacer.Aux[ N, R, F, NewN, NewFS, NewR ],
         unq : UniqueFieldNames[ NewR ],
-        ctx : CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
+        ctx : CtxWrapTuplesConstraint[ Field, NewR, RV ],
         il : TupleIntLength[ NewR ],
         pc : ProductConstructor[ C, RV, AF, T ],
         pdc : ProductDeconstructor[ DC, RV, AF, T ],
-    ) : ComponentUpdater.Aux[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ], FieldSelector[ N ], FieldDescription.Aux[ F, N, FS ], FieldDescription.Aux[ F, NewN, NewFS ], Schema.Aux[ T, ProductShape[ T, NewR, RV, AF, AFS, C, DC ] ] ] = {
-        new ComponentUpdater[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ], FieldSelector[ N ], FieldDescription.Aux[ F, N, FS ], FieldDescription.Aux[ F, NewN, NewFS ] ] {
+    ) : ComponentUpdater.Aux[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ], FieldSelector[ N ], Field.Aux[ F, N, FS ], Field.Aux[ F, NewN, NewFS ], Schema.Aux[ T, ProductShape[ T, NewR, RV, AF, AFS, C, DC ] ] ] = {
+        new ComponentUpdater[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ], FieldSelector[ N ], Field.Aux[ F, N, FS ], Field.Aux[ F, NewN, NewFS ] ] {
             override type NewOuter = Schema.Aux[ T, ProductShape[ T, NewR, RV, AF, AFS, C, DC ] ]
 
             override def update(
                 outer : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ],
             )(
-                updater : FieldDescription.Aux[ F, N, FS ] => FieldDescription.Aux[ F, NewN, NewFS ],
+                updater : Field.Aux[ F, N, FS ] => Field.Aux[ F, NewN, NewFS ],
             ) : Schema.Aux[ T, ProductShape[ T, NewR, RV, AF, AFS, C, DC ] ] = {
                 val field = frt.retrieve( outer.shape.fieldDescriptions )
                 val newField = updater( field )
@@ -66,17 +66,17 @@ object ComponentUpdater {
 
     given fromProductSchemaBuilder[ T, R <: Tuple, NewR <: Tuple, RV <: Tuple, AF, AFS, C, DC, N <: FieldName, F, FS, NewN <: FieldName, NewFS ](
         using
-        frt : FieldRetriever.Aux[ N, R, FieldDescription.Aux[ F, N, FS ] ],
+        frt : FieldRetriever.Aux[ N, R, Field.Aux[ F, N, FS ] ],
         frp : FieldReplacer.Aux[ N, R, F, NewN, NewFS, NewR ],
-        ctx : CtxWrapTuplesConstraint[ FieldDescription, NewR, RV ],
-    ) : ComponentUpdater.Aux[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], FieldSelector[ N ], FieldDescription.Aux[ F, N, FS ], FieldDescription.Aux[ F, NewN, NewFS ], ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ] ] = {
-        new ComponentUpdater[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], FieldSelector[ N ], FieldDescription.Aux[ F, N, FS ], FieldDescription.Aux[ F, NewN, NewFS ] ] {
+        ctx : CtxWrapTuplesConstraint[ Field, NewR, RV ],
+    ) : ComponentUpdater.Aux[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], FieldSelector[ N ], Field.Aux[ F, N, FS ], Field.Aux[ F, NewN, NewFS ], ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ] ] = {
+        new ComponentUpdater[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], FieldSelector[ N ], Field.Aux[ F, N, FS ], Field.Aux[ F, NewN, NewFS ] ] {
             override type NewOuter = ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ]
 
             override def update(
                 outer : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ],
             )(
-                updater : FieldDescription.Aux[ F, N, FS ] => FieldDescription.Aux[ F, NewN, NewFS ],
+                updater : Field.Aux[ F, N, FS ] => Field.Aux[ F, NewN, NewFS ],
             ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, C, DC ] = {
                 val field = frt.retrieve( outer.fieldDescs )
                 val newField = updater( field )
@@ -88,13 +88,13 @@ object ComponentUpdater {
 
     given fromFieldDesc[ T, N <: FieldName, S, SelN <: FieldName, F, FS, NewN <: FieldName, NewFS, NewS ](
         using
-        scu : ComponentUpdater.Aux[ Schema.Aux[ T, S ], FieldSelector[ SelN ], FieldDescription.Aux[ F, SelN, FS ], FieldDescription.Aux[ F, NewN, NewFS ], Schema.Aux[ T, NewS ] ],
-    ) : ComponentUpdater.Aux[ FieldDescription.Aux[ T, N, S ], FieldSelector[ SelN ], FieldDescription.Aux[ F, SelN, FS ], FieldDescription.Aux[ F, NewN, NewFS ], FieldDescription.Aux[ T, N, NewS ] ] = {
-        new ComponentUpdater[ FieldDescription.Aux[ T, N, S ], FieldSelector[ SelN ], FieldDescription.Aux[ F, SelN, FS ], FieldDescription.Aux[ F, NewN, NewFS ] ] {
-            override type NewOuter = FieldDescription.Aux[ T, N, NewS ]
+        scu : ComponentUpdater.Aux[ Schema.Aux[ T, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ], Schema.Aux[ T, NewS ] ],
+    ) : ComponentUpdater.Aux[ Field.Aux[ T, N, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ], Field.Aux[ T, N, NewS ] ] = {
+        new ComponentUpdater[ Field.Aux[ T, N, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ] ] {
+            override type NewOuter = Field.Aux[ T, N, NewS ]
 
-            override def update( outer : FieldDescription.Aux[ T, N, S ] )( updater : FieldDescription.Aux[ F, SelN, FS ] => FieldDescription.Aux[ F, NewN, NewFS ] ) : FieldDescription.Aux[ T, N, NewS ] =
-                FieldDescriptionBuilder.from( outer ).fromSchema( scu.update( outer.schema )( updater ) ).build
+            override def update( outer : Field.Aux[ T, N, S ] )( updater : Field.Aux[ F, SelN, FS ] => Field.Aux[ F, NewN, NewFS ] ) : Field.Aux[ T, N, NewS ] =
+                FieldBuilder.from( outer ).fromSchema( scu.update( outer.schema )( updater ) ).build
         }
     }
 
@@ -121,13 +121,13 @@ object ComponentUpdater {
         outer : Schema.Aux[ T, S ],
     )(
         using
-        cr : ComponentRetriever.Aux[ Schema.Aux[ T, S ], Sel, FieldDescription.Aux[ F, N, FS ] ],
+        cr : ComponentRetriever.Aux[ Schema.Aux[ T, S ], Sel, Field.Aux[ F, N, FS ] ],
     ) {
         def apply[ NewN <: FieldName, NewFS ](
-            updater : FieldDescription.Aux[ F, N, FS ] => FieldDescription.Aux[ F, NewN, NewFS ],
+            updater : Field.Aux[ F, N, FS ] => Field.Aux[ F, NewN, NewFS ],
         )(
             using
-            cu : ComponentUpdater[ Schema.Aux[ T, S ], Sel, FieldDescription.Aux[ F, N, FS ], FieldDescription.Aux[ F, NewN, NewFS ] ],
+            cu : ComponentUpdater[ Schema.Aux[ T, S ], Sel, Field.Aux[ F, N, FS ], Field.Aux[ F, NewN, NewFS ] ],
         ) : cu.NewOuter = cu.update( outer )( updater )
     }
 
@@ -137,7 +137,7 @@ object ComponentUpdater {
         sel : Selector[ R ],
     )(
         using
-        cr : ComponentRetriever.Aux[ Schema.Aux[ T, S ], R, FieldDescription.Aux[ F, N, FS ] ],
+        cr : ComponentRetriever.Aux[ Schema.Aux[ T, S ], R, Field.Aux[ F, N, FS ] ],
     ) : Updater[ T, S, R, F, N, FS ] = new Updater[ T, S, R, F, N, FS ]( outer )
 
 }

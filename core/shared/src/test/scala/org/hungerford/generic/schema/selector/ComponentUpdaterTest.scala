@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.SchemaBuilder
-import org.hungerford.generic.schema.product.field.FieldDescriptionBuilder
+import org.hungerford.generic.schema.product.field.FieldBuilder
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
@@ -19,7 +19,7 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
 
     it should "update a schema's field using a selector" in {
         val newSch = ComponentUpdater.update( oneSch )( Selector.field( "str" ) ){ field =>
-            FieldDescriptionBuilder.from( field )
+            FieldBuilder.from( field )
               .fieldName( "string_field" )
               .build
         }
@@ -29,7 +29,7 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
 
     it should "update a schema's nested field using a selector" in {
         val newSch = ComponentUpdater.update( twoSch )( Selector.field( "one" ) / "str" ){ field =>
-            FieldDescriptionBuilder.from( field )
+            FieldBuilder.from( field )
               .fieldName( "string_field_2" )
               .build
         }
@@ -40,7 +40,7 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
 
     it should "update a highly nested field using a selector" in {
         val newSch = ComponentUpdater.update( fiveSch )( Selector.field( "four" ) / "three" / "two" / "one" / "str" ) { field =>
-            FieldDescriptionBuilder.from( field )
+            FieldBuilder.from( field )
               .fieldName( "string_field_5" )
               .build
         }
@@ -53,9 +53,9 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     }
 
     it should "update a highly nest field using an ambiguous selector" in {
-        import Selector.*
+        import Selector.given
         val newSch = ComponentUpdater.update( fiveSch )( "four" / "three" / "two" / "one" / "str" ) { field =>
-            FieldDescriptionBuilder.from( field )
+            FieldBuilder.from( field )
               .fieldName( "string_field_5" )
               .build
         }

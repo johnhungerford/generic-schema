@@ -12,3 +12,9 @@ trait GenericSchemaProfile {
         withDsl( dsl )( using configure )
 
 }
+
+trait Default extends GenericSchemaProfile {
+    val configure : SchemaConfiguration = SchemaConfiguration()
+}
+
+object Default extends Default

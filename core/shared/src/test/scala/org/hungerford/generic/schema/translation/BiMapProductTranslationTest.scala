@@ -2,9 +2,9 @@ package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.FieldDescription.AuxS
+import org.hungerford.generic.schema.product.field.Field.AuxS
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaBuilder, SchemaDeriver, SchemaProvider}
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionBuilder, UniqueFieldNames}
+import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, UniqueFieldNames}
 import org.hungerford.generic.schema.product.translation.BiMapProductTranslation
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -30,8 +30,8 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
 
        val testSchema = SchemaBuilder[ NoAF ]
          .product
-         .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int_field" ).build )
-         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
+         .addField( FieldBuilder[ Int ].primitive.fieldName( "int_field" ).build )
+         .addField( FieldBuilder[ String ].primitive.fieldName( "str_field" ).build )
          .construct( (int, str) => {
              NoAF( int, str )
          } )
@@ -54,8 +54,8 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
        val testSchema = SchemaBuilder[ HasAF ]
          .product
          .additionalFields[ Double ].buildSchema( _.primitive.build )
-         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
-         .addField( FieldDescriptionBuilder[ Boolean ].primitive.fieldName( "bool_field" ).build )
+         .addField( FieldBuilder[ String ].primitive.fieldName( "str_field" ).build )
+         .addField( FieldBuilder[ Boolean ].primitive.fieldName( "bool_field" ).build )
          .construct( (tup, af : Map[ String, Double ]) => {
              val (str : String, bool : Boolean) = tup
              HasAF( str, bool, af )
@@ -76,8 +76,8 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
 
         val testSchema = SchemaBuilder[ HasAF ]
          .product
-         .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
-         .addField( FieldDescriptionBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
+         .addField( FieldBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+         .addField( FieldBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
          .additionalFields[ Double ].buildSchema( _.primitive.build )
          .construct( (tup, af) => {
              val (str : String, bool : Boolean) = tup
@@ -101,10 +101,10 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
        val outsideSch = SchemaBuilder[ Outside ]
          .product
          .addField(
-             FieldDescriptionBuilder[ Inside ]
+             FieldBuilder[ Inside ]
                .fieldName( "inside_field" )
                .buildSchema( _.product
-                 .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+                 .addField( FieldBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
                  .construct( str => Inside( str ) )
                  .deconstruct( value => value.str )
                  .build
@@ -130,7 +130,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
 
        val insideSchema = SchemaBuilder[ Inside ]
          .product
-         .addField( FieldDescriptionBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+         .addField( FieldBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
          .construct( str => {
              Inside( str ) 
           } )
@@ -139,7 +139,7 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
 
        val outsideSch = SchemaBuilder[ Outside ]
          .product
-         .addField( FieldDescriptionBuilder[ Inside ].fromSchema( insideSchema ).fieldName( "inside_field" ).build )
+         .addField( FieldBuilder[ Inside ].fromSchema( insideSchema ).fieldName( "inside_field" ).build )
          .construct( inside => {
             Outside( inside )
           } )

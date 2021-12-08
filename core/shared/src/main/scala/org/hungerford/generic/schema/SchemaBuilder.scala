@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema
 
-import org.hungerford.generic.schema.product.field.FieldDescription
+import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, ProductDeriver, ProductSchemaBuilder, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.validator.Validator
 
@@ -32,7 +32,7 @@ case class SchemaBuilder[ T ](
    def caseClass[ R <: Tuple, Rt <: Tuple, RVt <: Tuple ](
        implicit
        deriver : SchemaDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ] ],
-       fieldsConstraint : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+       fieldsConstraint : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
    ) : ProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ] = {
        ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ]( deriver.derive )
    }
@@ -79,7 +79,7 @@ object SchemaRebuilder {
 
     given productRebuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
         using
-        ctx : CtxWrapTuplesConstraint[ FieldDescription, R, RV ],
+        ctx : CtxWrapTuplesConstraint[ Field, R, RV ],
     ) : SchemaRebuilder.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ], ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] ] = {
         new SchemaRebuilder[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ] {
             type Builder = ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ]

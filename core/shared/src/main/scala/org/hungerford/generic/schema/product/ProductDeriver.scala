@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{FieldDescription, FieldDescriptionCase, FieldName}
+import org.hungerford.generic.schema.product.field.{Field, FieldCase, FieldName}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider}
@@ -40,7 +40,7 @@ object ProductDeriver {
         zip : Zipper.Aux[ L, RVt, LRV ],
         fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
         lengther : TupleIntLength[ Rt ],
-        valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+        valEv : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
         uniq : UniqueFieldNames[ Rt ],
         cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
         dcType : ProductDeconstructor[ T => RVt, RVt, Nothing, T ],
@@ -86,7 +86,7 @@ object ProductBuildDeriver {
         zip : Zipper.Aux[ L, RVt, LRV ],
         fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
 //        lengther : TupleIntLength[ Rt ],
-        valEv : CtxWrapTuplesConstraint[ FieldDescription, Rt, RVt ],
+        valEv : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
 //        uniq : UniqueFieldNames[ Rt ],
 //        cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
 //        dcType : ProductDeconstructor[ T => RVt, RVt, Nothing, T ],
@@ -114,12 +114,12 @@ object FieldDeriver {
     inline given fd[ T, N <: FieldName, S ](
         using
         provider : SchemaProvider.Aux[ T, S ],
-    ) : FieldDeriver.Aux[ (N, T), FieldDescription.Aux[ T, N, S ] ] = new FieldDeriver[ (N, T) ] {
-            override type Out = FieldDescription.Aux[ T, N, S ]
+    ) : FieldDeriver.Aux[ (N, T), Field.Aux[ T, N, S ] ] = new FieldDeriver[ (N, T) ] {
+            override type Out = Field.Aux[ T, N, S ]
 
             override def derive : Out = {
                 val fn = constValue[ N ]
-                FieldDescriptionCase[ T, N, S ]( fn, provider.provide )
+                FieldCase[ T, N, S ]( fn, provider.provide )
             }
     }
 
@@ -131,14 +131,14 @@ object FieldDeriver {
 
     inline given hlistFDFieldDeriver[ N <: FieldName, T, S, TTail <: Tuple, Res <: Tuple ](
         using
-        fdFieldDeriver : FieldDeriver.Aux[ (N, T), FieldDescription.Aux[ T, N, S ] ],
+        fdFieldDeriver : FieldDeriver.Aux[ (N, T), Field.Aux[ T, N, S ] ],
         next : FieldDeriver.Aux[ TTail, Res ],
-    ) : FieldDeriver.Aux[ (N, T) *: TTail, FieldDescription.Aux[ T, N, S ] *: Res ] = {
+    ) : FieldDeriver.Aux[ (N, T) *: TTail, Field.Aux[ T, N, S ] *: Res ] = {
         new FieldDeriver[ (N, T) *: TTail ] {
-            override type Out = FieldDescription.Aux[ T, N, S ] *: Res
+            override type Out = Field.Aux[ T, N, S ] *: Res
 
-            override def derive : FieldDescription.Aux[ T, N, S ] *: Res = {
-                val headRes : FieldDescription.Aux[ T, N, S ] = fdFieldDeriver.derive
+            override def derive : Field.Aux[ T, N, S ] *: Res = {
+                val headRes : Field.Aux[ T, N, S ] = fdFieldDeriver.derive
                 headRes *: next.derive
             }
         }

@@ -5,12 +5,12 @@ import org.scalatest.matchers.should.Matchers
 
 import org.hungerford.generic.schema.SchemaBuilder
 
-class FieldDescriptionBuilderTest extends AnyFlatSpecLike with Matchers {
+class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
 
     behavior of "FieldDescriptionBuilder"
 
     it should "be able to build a field description using a primitive" in {
-        val field = FieldDescriptionBuilder[ Int ]
+        val field = FieldBuilder[ Int ]
           .fieldName( "name" )
           .primitive
           .build
@@ -24,7 +24,7 @@ class FieldDescriptionBuilderTest extends AnyFlatSpecLike with Matchers {
     it should "be able to build a field description using given schemas" in {
         import org.hungerford.generic.schema.primitives.Primitives.given
 
-        val field = FieldDescriptionBuilder[ Int ]
+        val field = FieldBuilder[ Int ]
           .fieldName( "name" )
           .fromSchema
           .build
@@ -38,12 +38,12 @@ class FieldDescriptionBuilderTest extends AnyFlatSpecLike with Matchers {
     it should "be able to build a field description by building a schema from scratch" in {
         case class TestClass( intField : Int, strField : String )
 
-        val field = FieldDescriptionBuilder[ TestClass ]
+        val field = FieldBuilder[ TestClass ]
           .fieldName( "test_class" )
           .buildSchema( _.product
             .description( "generic-description" )
-            .addField( FieldDescriptionBuilder[ Int ].fieldName( "int" ).primitive.build )
-            .addField( FieldDescriptionBuilder[ String ].fieldName( "str" ).primitive.build )
+            .addField( FieldBuilder[ Int ].fieldName( "int" ).primitive.build )
+            .addField( FieldBuilder[ String ].fieldName( "str" ).primitive.build )
             .construct( (int, str) => TestClass( int, str ) )
             .deconstruct( value => (value.intField, value.strField) )
             .build
@@ -61,7 +61,7 @@ class FieldDescriptionBuilderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be able to rebuild a field description and update data without erasing" in {
-        val originalField = FieldDescriptionBuilder[ Int ]
+        val originalField = FieldBuilder[ Int ]
           .fieldName( "name" )
           .primitive
           .description( "old-description" )
@@ -69,7 +69,7 @@ class FieldDescriptionBuilderTest extends AnyFlatSpecLike with Matchers {
 
         import org.hungerford.generic.schema.primitives.Primitives.given
 
-        val newField = FieldDescriptionBuilder.from( originalField )
+        val newField = FieldBuilder.from( originalField )
           .fieldName( "new_name" )
           .fromSchema
           .build

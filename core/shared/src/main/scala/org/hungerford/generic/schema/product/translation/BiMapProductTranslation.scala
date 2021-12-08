@@ -3,7 +3,7 @@ package org.hungerford.generic.schema.product.translation
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.{ProductShape, CtxWrapTuplesConstraint}
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
-import org.hungerford.generic.schema.product.field.{FieldName, FieldDescription, FieldTranslator, TranslatedFieldDescription, TranslatedFieldInjector}
+import org.hungerford.generic.schema.product.field.{FieldName, Field, FieldTranslator, TranslatedFieldDescription, TranslatedFieldInjector}
 import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.hungerford.generic.schema.types.{Injector, SimpleExtractor}
 
@@ -70,8 +70,8 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
             trans : FieldTranslator[ T, N, S, OtherSchema ],
             headInjector : BiMapInjector[ T ],
             tailInjector : BiMapTupleInjector[ RVTail, RTail ],
-        ) : BiMapTupleInjector[ T *: RVTail, FieldDescription.Aux[ T, N, S ] *: RTail ] with {
-            def inject( value : T *: RVTail, into : BuildMapVal, informedBy : FieldDescription.Aux[ T, N, S ] *: RTail ) : BuildMapVal = {
+        ) : BiMapTupleInjector[ T *: RVTail, Field.Aux[ T, N, S ] *: RTail ] with {
+            def inject( value : T *: RVTail, into : BuildMapVal, informedBy : Field.Aux[ T, N, S ] *: RTail ) : BuildMapVal = {
                 val transHead = trans.translate( informedBy.head )
                 val headInjected = headInjector.inject( value.head, into, transHead )
                 tailInjector.inject( value.tail, headInjected, informedBy.tail )
@@ -113,11 +113,11 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
             headExtr : BiMapExtractor[ T ],
             tailExtr : BiMapTupleExtractor.Aux[ Tail, TailRes ],
 
-        ) : BiMapTupleExtractor.Aux[ FieldDescription.Aux[ T, N, S ] *: Tail, T *: TailRes ] =
-            new BiMapTupleExtractor[ FieldDescription.Aux[ T, N, S ] *: Tail ] {
+        ) : BiMapTupleExtractor.Aux[ Field.Aux[ T, N, S ] *: Tail, T *: TailRes ] =
+            new BiMapTupleExtractor[ Field.Aux[ T, N, S ] *: Tail ] {
                 type Out = T *: TailRes
 
-                def extract( from : MapVal, informedBy : FieldDescription.Aux[ T, N, S ] *: Tail ) : T *: tailExtr.Out = {
+                def extract( from : MapVal, informedBy : Field.Aux[ T, N, S ] *: Tail ) : T *: tailExtr.Out = {
                     val translatedHead = trans.translate( informedBy.head )
                     headExtr.extract( from, translatedHead ) *: tailExtr.extract( from, informedBy.tail )
                 }

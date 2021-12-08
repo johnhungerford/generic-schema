@@ -18,7 +18,7 @@ class FieldReplacerTest extends AnyFlatSpecLike with Matchers {
       .fieldDescriptions
 
     it should "replace the first field in a tuple of field descriptions" in {
-        val newField = FieldDescriptionBuilder[ Char ]
+        val newField = FieldBuilder[ Char ]
           .fieldName( "integer" )
           .primitive
           .build
@@ -32,7 +32,7 @@ class FieldReplacerTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "replace the second field in a tuple of field descriptions" in {
-        val newField = FieldDescriptionBuilder[ Char ]
+        val newField = FieldBuilder[ Char ]
           .fieldName( "string" )
           .primitive
           .build
@@ -46,7 +46,7 @@ class FieldReplacerTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "replace the last field in a tuple of field descriptions" in {
-        val newField = FieldDescriptionBuilder[ Char ]
+        val newField = FieldBuilder[ Char ]
           .fieldName( "boolean" )
           .primitive
           .build

@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.product.field.FieldDescription.Aux
+import org.hungerford.generic.schema.product.field.Field.Aux
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.hungerford.generic.schema.SchemaBuilder
@@ -11,11 +11,11 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
     behavior of "UniqueFieldNames"
 
     it should "be summoned for a tuple of one FieldDescription" in {
-        summon[ UniqueFieldNames[ FieldDescription.Aux[ Int, "hello", Unit ] *: EmptyTuple ] ]
+        summon[ UniqueFieldNames[ Field.Aux[ Int, "hello", Unit ] *: EmptyTuple ] ]
     }
 
     it should "be summoned for a tuple of two unique FieldDescriptions" in {
-        summon[ UniqueFieldNames[ FieldDescription.Aux[ Int, "hello", Unit ] *: FieldDescription.Aux[ Int, "there", Unit ] *: EmptyTuple ] ]
+        summon[ UniqueFieldNames[ Field.Aux[ Int, "hello", Unit ] *: Field.Aux[ Int, "there", Unit ] *: EmptyTuple ] ]
     }
 
     it should "not be summoned for a tuple of two FieldDescriptions with the same field name" in {
@@ -25,9 +25,9 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
     it should "be summoned for field descriptions built in a schema" in {
         val sch = SchemaBuilder[ (Int, String, Double) ]
             .product
-            .addField( FieldDescriptionBuilder[ Int ].fieldName( "name" ).primitive.build )
-            .addField( FieldDescriptionBuilder[ String ].fieldName( "is" ).primitive.build )
-            .addField( FieldDescriptionBuilder[ Double ].fieldName( "other" ).primitive.build )
+            .addField( FieldBuilder[ Int ].fieldName( "name" ).primitive.build )
+            .addField( FieldBuilder[ String ].fieldName( "is" ).primitive.build )
+            .addField( FieldBuilder[ Double ].fieldName( "other" ).primitive.build )
             .construct( v => v )
             .deconstruct( v => v )
             .build
@@ -37,9 +37,9 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
 
         val sch2 = SchemaBuilder[ (Int, String, Double) ]
             .product
-            .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "name" ).build )
-            .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "is" ).build )
-            .addField( FieldDescriptionBuilder[ Double ].primitive.fieldName( "other" ).build )
+            .addField( FieldBuilder[ Int ].primitive.fieldName( "name" ).build )
+            .addField( FieldBuilder[ String ].primitive.fieldName( "is" ).build )
+            .addField( FieldBuilder[ Double ].primitive.fieldName( "other" ).build )
             .construct( v => v )
             .deconstruct( v => v )
             .build
@@ -50,17 +50,17 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
         val sch3 = SchemaBuilder[ (Int, String, Double) ]
             .product
             .addField(
-             FieldDescriptionBuilder[ Int ].buildSchema( _.buildPrimitive )
+             FieldBuilder[ Int ].buildSchema( _.buildPrimitive )
                .fieldName( "some name" )
                .build
             )
             .addField(
-                FieldDescriptionBuilder[ String ].buildSchema( _.buildPrimitive )
+                FieldBuilder[ String ].buildSchema( _.buildPrimitive )
                   .fieldName( "some other name" )
                   .build
             )
             .addField(
-                FieldDescriptionBuilder[ Double ].buildSchema( _.buildPrimitive )
+                FieldBuilder[ Double ].buildSchema( _.buildPrimitive )
                   .description( "test description" )
                   .fieldName( "some other" )
                   .build
@@ -80,8 +80,8 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
 
        val testSchema1 = SchemaBuilder[ NoAF ]
          .product
-         .addField( FieldDescriptionBuilder[ Int ].primitive.fieldName( "int_field" ).build )
-         .addField( FieldDescriptionBuilder[ String ].primitive.fieldName( "str_field" ).build )
+         .addField( FieldBuilder[ Int ].primitive.fieldName( "int_field" ).build )
+         .addField( FieldBuilder[ String ].primitive.fieldName( "str_field" ).build )
          .construct( (int, str) => {
              NoAF( int, str )
          } )

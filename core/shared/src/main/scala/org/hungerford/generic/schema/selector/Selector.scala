@@ -37,6 +37,10 @@ trait SelectorDsl {
         Selector[ AmbigSelector[ N1 ] *: SubTypeSelector[ N2 ] *: EmptyTuple ] = {
         new Selector[ AmbigSelector[N1] *: SubTypeSelector[N2] *: EmptyTuple ]
     }
+
+    given [ N <: FieldName ] : Conversion[ N, Selector[ AmbigSelector[ N ] *: EmptyTuple ] ] with
+        def apply( selector : N ) : Selector[ AmbigSelector[ N ] *: EmptyTuple ] =
+            new Selector[ AmbigSelector[ N ] *: EmptyTuple ]
 }
 
 object Selector extends SelectorDsl {

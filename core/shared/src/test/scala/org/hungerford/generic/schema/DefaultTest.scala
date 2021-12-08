@@ -23,7 +23,7 @@ class DefaultTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Mat
           .deconstruct( v => v.inner )
           .build
 
-        sch1.modifyComponent( Selector.field( "inner" ) )(
+        sch1.modifyComponent( "inner" )(
             _.withName( "inner_field" )
               .modifySchema(
                   _.modifyComponent( Selector.field( "core" ) )(

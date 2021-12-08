@@ -53,7 +53,7 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     }
 
     it should "update a highly nest field using an ambiguous selector" in {
-        import Selector.*
+        import Selector.given
         val newSch = ComponentUpdater.update( fiveSch )( "four" / "three" / "two" / "one" / "str" ) { field =>
             FieldBuilder.from( field )
               .fieldName( "string_field_5" )

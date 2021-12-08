@@ -20,7 +20,7 @@ class DefaultTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Mat
         Schema.productBuilder[ Outer ]
           .addField( Field.fromSchema[ Inner ]( "inner_field" )( using Schema.derived[ Inner ] ) )
           .construct( Outer.apply )
-          .deconstruct( v => v.inner )
+          .deconstruct( _.inner )
           .build
 
         val updated = sch1.modifyComponent( "inner" )(

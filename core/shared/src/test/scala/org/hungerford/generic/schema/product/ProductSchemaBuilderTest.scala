@@ -185,8 +185,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
                           ).build
                     ).build
                 ).build
-          )
-          .build
+          ).build
 
         val outerFd = sch.shape.fieldDescriptions
         val innerFd = outerFd.head.schema.shape.fieldDescriptions

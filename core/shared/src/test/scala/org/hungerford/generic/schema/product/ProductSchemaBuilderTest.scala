@@ -160,7 +160,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
     it should "be able to rebuild a field, selected by name" in {
         val sch = SchemaBuilder[ TestCase ]
           .caseClass
-          .updateField( "int" )( _.fieldName( "int_field" ).build )
+          .rebuildField( "int" )( _.fieldName( "int_field" ).build )
           .build
 
         sch.shape.fieldDescriptions.head.fieldName shouldBe "int_field"
@@ -173,13 +173,13 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
         val sch = SchemaBuilder[ OuterClass ]
           .caseClass
-          .updateField( "inner" )(
+          .rebuildField( "inner" )(
               _.fieldName( "inner_field" )
                 .rebuildSchema(
-                    _.updateField( "core" )(
+                    _.rebuildField( "core" )(
                         _.fieldName( "core_field" )
                           .rebuildSchema(
-                              _.updateField( "str" )(
+                              _.rebuildField( "str" )(
                                   _.fieldName( "string_field" ).build
                               ).build
                           ).build
@@ -211,7 +211,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
         val sch = SchemaBuilder[ OuterClass ]
           .caseClass
-          .updateComponent( "inner" / "core" / "str" )(
+          .modifyComponent( "inner" / "core" / "str" )(
               v => FieldBuilder.from( v ).fieldName( "string_field" ).build,
           )
           .build
@@ -230,7 +230,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
         val coreSch = SchemaBuilder[ Core ]
           .caseClass
-          .updateField( "str" )( _.fieldName( "string_field" ).build )
+          .rebuildField( "str" )( _.fieldName( "string_field" ).build )
           .build
         import coreSch.givenSchema
 

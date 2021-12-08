@@ -50,7 +50,7 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
        )
    }
 
-   def updateField[ N <: FieldName, F, S ](
+   def rebuildField[ N <: FieldName, F, S ](
        fieldName : N,
    )(
        using
@@ -65,7 +65,7 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
       decons,
     )
 
-    def updateComponent[ Sel <: Tuple, F, N <: FieldName, FS, Inner ](
+    def modifyComponent[ Sel <: Tuple, F, N <: FieldName, FS, Inner ](
         selector : Selector[ Sel ],
     )(
         using

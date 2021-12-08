@@ -5,8 +5,6 @@ import org.hungerford.generic.schema.product.field.FieldReplacer
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.validator.Validator
 
-import scala.language.higherKinds
-
 sealed trait Schema[ T ] {
 
     // Internal representation of components

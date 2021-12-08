@@ -39,7 +39,7 @@ class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
         val fd = FieldBuilder[ Outer ]
           .buildSchema( _.caseClass.build )
           .rebuildSchema(
-              _.updateField( "inner" )(
+              _.rebuildField( "inner" )(
                   _.fieldName( "inner_field" )
                     .build
               ).build

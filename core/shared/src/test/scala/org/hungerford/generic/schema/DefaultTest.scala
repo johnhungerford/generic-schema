@@ -23,13 +23,13 @@ class DefaultTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Mat
           .deconstruct( v => v.inner )
           .build
 
-        sch1.modifyComponent( "inner" )(
+        val updated = sch1.modifyComponent( "inner" )(
             _.withName( "inner_field" )
               .modifySchema(
-                  _.modifyComponent( Selector.field( "core" ) )(
+                  _.modifyComponent( "core" )(
                       _.withName( "core_field" )
                         .modifySchema(
-                            _.modifyComponent( Selector.field( "bool" ) )(
+                            _.modifyComponent( "bool" )(
                                 _.withName( "boolean_field" )
                             ),
                         ),
@@ -37,7 +37,10 @@ class DefaultTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Mat
               ),
         )
 
-        sch1.modifyComponent( "inner" / "core" / "bool" )( _.withName( "boolean_field" ) )
+        val updated1 = sch1.modifyComponent( "inner" / "core" / "bool" )( _.withName( "boolean_field" ) )
+
+        updated( "inner_field" / "core_field" / "boolean_field" ).fieldName shouldBe "boolean_field"
+        updated1( "inner" / "core" / "boolean_field" ).fieldName shouldBe "boolean_field"
     }
 
 }

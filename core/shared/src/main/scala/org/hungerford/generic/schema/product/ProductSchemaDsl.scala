@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
-import org.hungerford.generic.schema.{Schema, SchemaBuilder}
+import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.field.{BuildableFieldBuilder, Field, FieldBuilder, FieldName, FieldReplacer, FieldRetriever, UniqueFieldNames}
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.validator.Validator
@@ -20,7 +20,7 @@ trait ProductSchemaDsl {
             pc : ProductConstructor[ C, RV, AF, T ],
             pdc : ProductDeconstructor[ DC, RV, AF, T ],
         ) : Schema.Aux[ T, ProductShape[ T, R, RV, AF, NewAFS, C, DC ] ] = {
-            SchemaBuilder.from( schema )
+            ProductSchemaBuilder.from( schema )
               .additionalFields[ AF ]
               .fromSchema[ NewAFS ]( modifier( schema.shape.additionalFieldsSchema ) )
               .build

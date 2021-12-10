@@ -5,6 +5,7 @@ import org.hungerford.generic.schema.product.field.{Field, FieldBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
+import org.hungerford.generic.schema.Default.dsl.*
 
 class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
 
@@ -15,8 +16,7 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
 
         import org.hungerford.generic.schema.primitives.Primitives.given
 
-       val testSchema = SchemaBuilder[ Test ]
-         .product
+       val testSchema = Schema.productBuilder[ Test ]
          .addField( FieldBuilder[ Int ].fieldName( "int" ).fromSchema.build )
          .addField( FieldBuilder[ String ].fieldName( "str" ).fromSchema.build )
          .construct( (int, str) => Test( int, str ) )

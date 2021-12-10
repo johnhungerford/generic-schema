@@ -4,44 +4,16 @@ import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, ProductDeriver, ProductSchemaBuilder, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.validator.Validator
 
-case class SchemaBuilder[ T ](
-   private[ schema ] val desc : Option[ String ] = None,
-   private[ schema ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-) {
-   def description( description : String ) : SchemaBuilder[ T ] = copy( desc = Some( description ) )
-
-   def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : SchemaBuilder[ T ] =
-       validate( validator +: otherValidators )
-
-   def validate( validators : Iterable[ Validator[ T ] ] ) : SchemaBuilder[ T ] = copy( vals = validators.toSet )
-
-   def primitive : PrimitiveSchemaBuilder[ T ] = PrimitiveSchemaBuilder[ T ]( desc, vals )
-
-   def buildPrimitive : Primitive[ T ] = Primitive[ T ]( desc, vals )
-
-   def product : ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ] =
-       ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ](
-           desc,
-           vals,
-           NoSchema,
-           EmptyTuple,
-           (),
-           (),
-       )
-
-   def caseClass[ R <: Tuple, Rt <: Tuple, RVt <: Tuple ](
-       implicit
-       deriver : SchemaDeriver.Aux[ T, ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ] ],
-       fieldsConstraint : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
-   ) : ProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ] = {
-       ProductSchemaBuilder.from[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ]( deriver.derive )
-   }
-}
-
 case class PrimitiveSchemaBuilder[ T ](
+   private[ schema ] val nm : Option[ String ] = None,
    private[ schema ] val desc : Option[ String ] = None,
    private[ schema ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+   private[ schema ] val exs : Seq[ T ] = Nil,
+   private[ schema ] val dep : Boolean = false,
 ) {
+
+   def name( name : String ) : PrimitiveSchemaBuilder[ T ] = copy( nm = Some( name ) )
+
    def description( description : String ) : PrimitiveSchemaBuilder[ T ] = copy( desc = Some( description ) )
 
    def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : PrimitiveSchemaBuilder[ T ] =
@@ -49,23 +21,24 @@ case class PrimitiveSchemaBuilder[ T ](
 
    def validate( validators : Iterable[ Validator[ T ] ] ) : PrimitiveSchemaBuilder[ T ] = copy( vals = validators.toSet )
 
+   def examples( example : T, otherExamples : T* ) : PrimitiveSchemaBuilder[ T ] =
+     examples( example +: otherExamples )
+
+   def examples( examples : Seq[ T ] ) : PrimitiveSchemaBuilder[ T ] = copy( exs = examples )
+
+   def deprecated : PrimitiveSchemaBuilder[ T ] = copy( dep = true )
+
    def build : Primitive[ T ] = Primitive[ T ](
+       nm,
        desc,
        vals,
+       exs,
+       dep,
    )
 }
 
-object SchemaBuilder {
-   def apply[ T ] : SchemaBuilder[ T ] = SchemaBuilder[ T ]()
-
-   def none : Schema.Aux[ Nothing, Unit ] = NoSchema
-
-   def from[ T, S ](
-       schema : Schema.Aux[ T, S ],
-   )(
-       using
-       rb : SchemaRebuilder[ T, S ],
-   ) : rb.Builder = rb.rebuild( schema )
+object PrimitiveSchemaBuilder {
+  def apply[ T ] : PrimitiveSchemaBuilder[ T ] = PrimitiveSchemaBuilder[ T ]()
 }
 
 trait SchemaRebuilder[ T, S ] {
@@ -86,8 +59,11 @@ object SchemaRebuilder {
 
             def rebuild( schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ]) : Builder = {
                 ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ](
+                    schema.name,
                     schema.genericDescription,
                     schema.genericValidators,
+                    schema.genericExamples,
+                    schema.deprecated,
                     schema.shape.additionalFieldsSchema,
                     schema.shape.fieldDescriptions,
                     schema.shape.constructor,
@@ -107,8 +83,11 @@ object SchemaRebuilder {
 
         def rebuild( schema : Schema.Aux[ T, Unit ] ) : Builder = {
             PrimitiveSchemaBuilder[ T ](
+                schema.name,
                 schema.genericDescription,
                 schema.genericValidators,
+                schema.genericExamples,
+                schema.deprecated,
             )
         }
     }

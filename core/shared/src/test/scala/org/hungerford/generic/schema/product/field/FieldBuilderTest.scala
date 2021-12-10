@@ -3,7 +3,9 @@ package org.hungerford.generic.schema.product.field
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
-import org.hungerford.generic.schema.SchemaBuilder
+import org.hungerford.generic.schema.Schema
+
+import org.hungerford.generic.schema.Default.dsl.*
 
 class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
 
@@ -40,7 +42,7 @@ class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
 
         val field = FieldBuilder[ TestClass ]
           .fieldName( "test_class" )
-          .buildSchema( _.product
+          .fromSchema( Schema.productBuilder[ TestClass ]
             .description( "generic-description" )
             .addField( FieldBuilder[ Int ].fieldName( "int" ).primitive.build )
             .addField( FieldBuilder[ String ].fieldName( "str" ).primitive.build )

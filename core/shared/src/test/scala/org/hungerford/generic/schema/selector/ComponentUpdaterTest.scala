@@ -1,21 +1,23 @@
 package org.hungerford.generic.schema.selector
 
-import org.hungerford.generic.schema.SchemaBuilder
 import org.hungerford.generic.schema.product.field.FieldBuilder
 import org.scalatest.flatspec.AnyFlatSpecLike
+
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Default.dsl.*
 
 class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
     behavior of "ComponentUpdater"
 
     case class One( str : String )
-    val oneSch = SchemaBuilder[ One ].caseClass.build
+    val oneSch = Schema.derived[ One ]
     case class Two( one : One )
-    val twoSch = SchemaBuilder[ Two ].caseClass.build
+    val twoSch = Schema.derived[ Two ]
     case class Three( two : Two, str : String )
     case class Four( int : Int, three : Three )
     case class Five( dbl : Double, map : Map[ Int, String ], four : Four )
-    val fiveSch = SchemaBuilder[ Five ].caseClass.build
+    val fiveSch = Schema.derived[ Five ]
 
     it should "update a schema's field using a selector" in {
         val newSch = ComponentUpdater.update( oneSch )( Selector.field( "str" ) ){ field =>

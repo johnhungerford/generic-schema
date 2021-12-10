@@ -45,7 +45,7 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
         def getFieldNames[ FDs <: Tuple ]( fds : FDs, fns : Set[ String ] = Set.empty ) : Set[ String ] = {
             fds match {
                 case EmptyTuple => fns
-                case FieldCase( name, _, _, _ ) *: next =>
+                case FieldCase( name, _, _, _, _, _, _ ) *: next =>
                     getFieldNames( next, fns + name )
             }
         }

@@ -37,12 +37,13 @@ trait TapirSchemaProductTranslation
     override def build[ T ]( fields : TapirFields[ T ], schema : Schema[ T ] ) : TapirSchema[ T ] = {
         TapirSchema(
             SProduct( fields ),
-            None,
+            schema.name.map( n => TapirSchema.SName( n ) ),
             false,
             schema.genericDescription,
             None,
             None,
-            None,
+            schema.genericExamples.headOption,
+            schema.deprecated,
         )
 
     }

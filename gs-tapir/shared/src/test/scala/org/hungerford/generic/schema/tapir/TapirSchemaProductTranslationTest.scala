@@ -1,11 +1,13 @@
 package org.hungerford.generic.schema.tapir
 
-import org.hungerford.generic.schema.SchemaBuilder
 import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
-import sttp.tapir.Schema
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Default.dsl.*
+
+import sttp.tapir.{Schema => TapirSchema}
 import sttp.tapir.SchemaType.{SProductField, SProduct}
 
 class TapirSchemaProductTranslationTest
@@ -18,9 +20,9 @@ class TapirSchemaProductTranslationTest
     case class TestCase( int : Int, str : String, bool : Boolean )
 
     it should "translate a product schema into an SProduct schema type with the correct field names, correct getters, and the correct description" in {
-        val sch = SchemaBuilder[ TestCase ].caseClass.description( "test-case-description" ).build
+        val sch = Schema.derivedBuilder[ TestCase ].description( "test-case-description" ).build
 
-        val tapirSchema : Schema[ TestCase ] = SchemaTranslator.translate( sch )
+        val tapirSchema : TapirSchema[ TestCase ] = SchemaTranslator.translate( sch )
 
         val tc = TestCase( 5, "hello", true )
 

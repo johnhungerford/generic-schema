@@ -1,9 +1,10 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.SchemaBuilder
-
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
+
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Default.dsl.*
 
 class FieldGetterTest extends AnyFlatSpecLike with Matchers {
 
@@ -12,7 +13,7 @@ class FieldGetterTest extends AnyFlatSpecLike with Matchers {
     case class TestCase( int : Int, str : String, bool : Boolean )
 
     it should "extract a field from a tuple" in {
-        val sch = SchemaBuilder[ TestCase ].caseClass.build
+        val sch = Schema.derived[ TestCase ]
 
         val tc = TestCase( 5, "hello", true )
 

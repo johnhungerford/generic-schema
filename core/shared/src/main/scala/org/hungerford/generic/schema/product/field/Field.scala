@@ -22,6 +22,9 @@ sealed trait Field[ T ] {
     val schema : Schema.Aux[ T, Shape ]
     val description : Option[ String ] = None
     val validators : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ]
+    def default : Option[ T ]
+    def examples : Seq[ T ]
+    def deprecated : Boolean
 }
 
 case class FieldCase[ T, N <: FieldName, S ](
@@ -29,6 +32,9 @@ case class FieldCase[ T, N <: FieldName, S ](
     override val schema : Schema.Aux[ T, S ],
     override val description : Option[ String ] = None,
     override val validators : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+    override val default : Option[ T ] = None,
+    override val examples : Seq[ T ] = Nil,
+    override val deprecated : Boolean = false,
 ) extends Field[ T ] {
     type Name = N
     type Shape = S
@@ -96,6 +102,21 @@ trait FieldDsl {
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withoutValidation : Field.Aux[ T, N, S ] =
             field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( validators = Set.empty[ Validator[ T ] ] ) }
+    extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
+        def withDefault( defaultValue : T ) : Field.Aux[ T, N, S ] =
+            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( default = Some( defaultValue ) ) }
+    extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
+        def withoutDefault : Field.Aux[ T, N, S ] =
+            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( default = None ) }
+    extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
+        def withExamples( exs : T* ) : Field.Aux[ T, N, S ] =
+            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( examples = exs ) }
+    extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
+        def addExamples( exs : T* ) : Field.Aux[ T, N, S ] =
+            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( examples = fc.examples ++ exs ) }
+    extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
+        def withoutExamples : Field.Aux[ T, N, S ] =
+            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( examples = Nil ) }
 
     extension ( field : Field.type ) def builder[ T ] : FieldBuilderWithoutSchemaOrName[ T ] = FieldBuilder[ T ]
 

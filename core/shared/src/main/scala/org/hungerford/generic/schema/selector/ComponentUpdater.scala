@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
-import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaBuilder, SchemaRebuilder}
+import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaRebuilder}
 import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, ProductSchemaBuilder, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldCase, FieldName, FieldReplacer, FieldRetriever, UniqueFieldNames}
 

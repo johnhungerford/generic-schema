@@ -2,10 +2,12 @@ package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.product.field.FieldBuilder
 import org.hungerford.generic.schema.types.Provider
-import org.hungerford.generic.schema.{Schema, Primitive, SchemaBuilder, SchemaProvider}
+import org.hungerford.generic.schema.{Schema, Primitive, SchemaProvider}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.hungerford.generic.schema.selector.Selector
+
+import org.hungerford.generic.schema.Default.dsl.*
 
 class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
@@ -14,50 +16,46 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
     case class TestCase( int : Int, str : String )
 
     it should "be able to add fields" in {
-        SchemaBuilder[ Int ]
-          .product
+        Schema.productBuilder[ Int ]
           .addField(
-              FieldBuilder[ Int ].buildSchema( _.buildPrimitive )
+              FieldBuilder[ Int ].fromSchema( Schema.primitive )
                 .fieldName( "some name" )
                 .build
           )
           .addField(
-              FieldBuilder[ String ].buildSchema( _.buildPrimitive )
+              FieldBuilder[ String ].fromSchema( Schema.primitive )
                 .fieldName( "some other name" )
                 .build
           )
           .addField(
-              FieldBuilder[ Boolean ].buildSchema( _.buildPrimitive )
+              FieldBuilder[ Boolean ].fromSchema( Schema.primitive )
                 .description( "test description" )
                 .fieldName( "bool" )
                 .build
           )
           .addField(
-              FieldBuilder[ BigInt ].buildSchema( _.buildPrimitive )
+              FieldBuilder[ BigInt ].fromSchema( Schema.primitive )
                 .fieldName( "and another" )
                 .build
           )
     }
 
     it should "be able to add constructor" in {
-        SchemaBuilder[ TestCase ]
-          .product
+        Schema.productBuilder[ TestCase ]
           .addField( FieldBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldBuilder[ String ].primitive.fieldName( "str" ).build )
           .construct( (int, str) => TestCase( int, str ) )
     }
 
     it should "be able to add deconstructor" in {
-        SchemaBuilder[ TestCase ]
-          .product
+        Schema.productBuilder[ TestCase ]
           .addField( FieldBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldBuilder[ String ].primitive.fieldName( "str" ).build )
           .deconstruct( ( value : TestCase ) => (value.int, value.str) )
     }
 
     it should "be able to build schema if constructor and deconstructor are provided" in {
-        SchemaBuilder[ TestCase ]
-          .product
+        Schema.productBuilder[ TestCase ]
           .addField( FieldBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldBuilder[ String ].primitive.fieldName( "str" ).build )
           .construct( (int, str) => TestCase( int, str ) )
@@ -66,8 +64,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be able to remove field descriptions" in {
-        SchemaBuilder[ TestCase ]
-          .product
+        Schema.productBuilder[ TestCase ]
           .addField( FieldBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldBuilder[ String ].primitive.fieldName( "str" ).build )
           .addField( FieldBuilder[ Boolean ].primitive.fieldName( "bool" ).build )
@@ -76,8 +73,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .deconstruct( ( value : TestCase ) => (value.int, value.str) )
           .build
 
-        SchemaBuilder[ TestCase ]
-          .product
+        Schema.productBuilder[ TestCase ]
           .addField( FieldBuilder[ String ].primitive.fieldName( "str" ).build )
           .addField( FieldBuilder[ Boolean ].primitive.fieldName( "bool" ).build )
           .addField( FieldBuilder[ Int ].primitive.fieldName( "int" ).build )
@@ -90,15 +86,14 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be able to rebuild" in {
-        val schema = SchemaBuilder[ TestCase ]
-          .product
+        val schema = Schema.productBuilder[ TestCase ]
           .addField( FieldBuilder[ Int ].primitive.fieldName( "int" ).build )
           .addField( FieldBuilder[ String ].primitive.fieldName( "str" ).build )
           .construct( (int, str) => TestCase( int, str ) )
           .deconstruct( ( value : TestCase ) => (value.int, value.str) )
           .build
 
-        ProductSchemaBuilder.from( schema )
+        schema.rebuild
           .removeField( "str" )
           .addField( FieldBuilder[ String ].primitive.fieldName( "string" ).build )
           .construct( (int, str) => TestCase( int, str ) )
@@ -108,8 +103,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be able to add fields after adding constructor/deconstructor, but require that you rebuild the constructor/deconstructor" in {
-      val builder = SchemaBuilder[ TestCase ]
-        .product
+      val builder = Schema.productBuilder[ TestCase ]
         .addField( FieldBuilder[ Int ].primitive.fieldName( "int" ).build )
         .addField( FieldBuilder[ String ].primitive.fieldName( "str" ).build )
         .construct( (int, str) => TestCase( int, str ) )
@@ -130,10 +124,9 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
     it should "preserve constructor/deconstructor when updating additional fields to same type, but does not preserve when additional fields type is changed" in {
         case class TC( int : Int, fields : Map[ String, String ] )
 
-        val builder = SchemaBuilder[ TC ]
-          .product
+        val builder = Schema.productBuilder[ TC ]
           .addField( FieldBuilder[ Int ].primitive.fieldName( "int" ).build )
-          .additionalFields[ String ].buildSchema( _.primitive.build )
+          .additionalFields[ String ].fromSchema( Schema.primitive )
           .construct( (int, af) => TC( int, af ) )
           .deconstruct( v => (v.int, v.fields) )
         
@@ -158,8 +151,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be able to rebuild a field, selected by name" in {
-        val sch = SchemaBuilder[ TestCase ]
-          .caseClass
+        val sch = Schema.derivedBuilder[ TestCase ]
           .rebuildField( "int" )( _.fieldName( "int_field" ).build )
           .build
 
@@ -171,8 +163,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
         case class InnerClass( core : Core )
         case class OuterClass( inner : InnerClass )
 
-        val sch = SchemaBuilder[ OuterClass ]
-          .caseClass
+        val sch = Schema.derivedBuilder[ OuterClass ]
           .rebuildField( "inner" )(
               _.fieldName( "inner_field" )
                 .rebuildSchema(
@@ -208,8 +199,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
         import org.hungerford.generic.schema.selector.Selector.*
 
-        val sch = SchemaBuilder[ OuterClass ]
-          .caseClass
+        val sch = Schema.derivedBuilder[ OuterClass ]
           .modifyComponent( "inner" / "core" / "str" )(
               v => FieldBuilder.from( v ).fieldName( "string_field" ).build,
           )
@@ -227,22 +217,19 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
         case class Inner( core : Core )
         case class Outer( inner : Inner )
 
-        val coreSch = SchemaBuilder[ Core ]
-          .caseClass
+        val coreSch = Schema.derivedBuilder[ Core ]
           .rebuildField( "str" )( _.fieldName( "string_field" ).build )
           .build
         import coreSch.givenSchema
 
-        val innerSch = SchemaBuilder[ Inner ]
-          .product
+        val innerSch = Schema.productBuilder[ Inner ]
           .addField( FieldBuilder[ Core ].fieldName( "core_field" ).fromSchema.build )
           .construct( Inner.apply )
           .deconstruct( v => v.core )
           .build
         import innerSch.givenSchema
 
-        val outerSch = SchemaBuilder[ Outer ]
-          .product
+        val outerSch = Schema.productBuilder[ Outer ]
           .addField( FieldBuilder[ Inner ].fieldName( "inner" ).fromSchema.build )
           .construct( Outer.apply )
           .deconstruct( v => v.inner )

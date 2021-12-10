@@ -26,8 +26,8 @@ class FieldDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Ma
         {
             import org.hungerford.generic.schema.primitives.Primitives.given
 
-            Field.fromSchema[ Int ]( "test-name" ) shouldBe FieldCase[ Int, "test-name", Unit ]( "test-name", Primitive[ Int ]( Some( "Integer number between -2147483648 and 2147483647" ) ) )
-            Field.builder[ Int ].fieldName( "test-name" ).fromSchema.build shouldBe FieldCase[ Int, "test-name", Unit ]( "test-name", Primitive[ Int ]( Some( "Integer number between -2147483648 and 2147483647" ) ) )
+            Field.fromSchema[ Int ]( "test-name" ) shouldBe FieldCase[ Int, "test-name", Unit ]( "test-name", Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
+            Field.builder[ Int ].fieldName( "test-name" ).fromSchema.build shouldBe FieldCase[ Int, "test-name", Unit ]( "test-name", Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
         }
 
         val sch = Schema.derived[ TC ]

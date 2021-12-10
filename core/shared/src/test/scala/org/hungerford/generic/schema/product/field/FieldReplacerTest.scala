@@ -1,9 +1,11 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.SchemaBuilder
 import org.hungerford.generic.schema.product.CtxWrapTuplesConstraint
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
+
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Default.dsl.*
 
 class FieldReplacerTest extends AnyFlatSpecLike with Matchers {
 
@@ -11,9 +13,7 @@ class FieldReplacerTest extends AnyFlatSpecLike with Matchers {
 
     case class TestClass( int : Int, str : String, bool : Boolean )
 
-    val fields = SchemaBuilder[ TestClass ]
-      .caseClass
-      .build
+    val fields = Schema.derived[ TestClass ]
       .shape
       .fieldDescriptions
 

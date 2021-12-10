@@ -1,8 +1,10 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.SchemaBuilder
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
+
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Default.dsl.*
 
 class FieldRemoverTest extends AnyFlatSpecLike with Matchers {
 
@@ -10,8 +12,7 @@ class FieldRemoverTest extends AnyFlatSpecLike with Matchers {
 
      case class TestClass( int : Int, str : String, bool : Boolean )
 
-     val fields = SchemaBuilder[ TestClass ]
-       .caseClass
+     val fields = Schema.derivedBuilder[ TestClass ]
        .build
        .shape
        .fieldDescriptions

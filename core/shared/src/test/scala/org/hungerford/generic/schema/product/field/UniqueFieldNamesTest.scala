@@ -3,7 +3,8 @@ package org.hungerford.generic.schema.product.field
 import org.hungerford.generic.schema.product.field.Field.Aux
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-import org.hungerford.generic.schema.SchemaBuilder
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Default.dsl.*
 
 
 class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
@@ -23,8 +24,7 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be summoned for field descriptions built in a schema" in {
-        val sch = SchemaBuilder[ (Int, String, Double) ]
-            .product
+        val sch = Schema.productBuilder[ (Int, String, Double) ]
             .addField( FieldBuilder[ Int ].fieldName( "name" ).primitive.build )
             .addField( FieldBuilder[ String ].fieldName( "is" ).primitive.build )
             .addField( FieldBuilder[ Double ].fieldName( "other" ).primitive.build )
@@ -35,8 +35,7 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
 
         summon[ UniqueFieldNames[ sch.R ] ]
 
-        val sch2 = SchemaBuilder[ (Int, String, Double) ]
-            .product
+        val sch2 = Schema.productBuilder[ (Int, String, Double) ]
             .addField( FieldBuilder[ Int ].primitive.fieldName( "name" ).build )
             .addField( FieldBuilder[ String ].primitive.fieldName( "is" ).build )
             .addField( FieldBuilder[ Double ].primitive.fieldName( "other" ).build )
@@ -47,20 +46,19 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
 
         summon[ UniqueFieldNames[ sch2.R ] ]
 
-        val sch3 = SchemaBuilder[ (Int, String, Double) ]
-            .product
+        val sch3 = Schema.productBuilder[ (Int, String, Double) ]
             .addField(
-             FieldBuilder[ Int ].buildSchema( _.buildPrimitive )
+             FieldBuilder[ Int ].primitive
                .fieldName( "some name" )
                .build
             )
             .addField(
-                FieldBuilder[ String ].buildSchema( _.buildPrimitive )
+                FieldBuilder[ String ].primitive
                   .fieldName( "some other name" )
                   .build
             )
             .addField(
-                FieldBuilder[ Double ].buildSchema( _.buildPrimitive )
+                FieldBuilder[ Double ].primitive
                   .description( "test description" )
                   .fieldName( "some other" )
                   .build
@@ -78,8 +76,7 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
     it should "do something else" in {
        case class NoAF( intField : Int, strField : String )
 
-       val testSchema1 = SchemaBuilder[ NoAF ]
-         .product
+       val testSchema1 = Schema.productBuilder[ NoAF ]
          .addField( FieldBuilder[ Int ].primitive.fieldName( "int_field" ).build )
          .addField( FieldBuilder[ String ].primitive.fieldName( "str_field" ).build )
          .construct( (int, str) => {

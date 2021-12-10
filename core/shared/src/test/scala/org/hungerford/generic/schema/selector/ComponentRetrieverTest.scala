@@ -1,9 +1,11 @@
 package org.hungerford.generic.schema.selector
 
-import org.hungerford.generic.schema.SchemaBuilder
+import org.scalatest.flatspec.AnyFlatSpecLike
+
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Default.dsl.*
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.field.Field
-import org.scalatest.flatspec.AnyFlatSpecLike
 
 class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
@@ -13,10 +15,10 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
     case class Inner( innerest : Innerest, str : String )
     case class Outer( int : Int, inner : Inner )
 
-    val sch = SchemaBuilder[ Outer ].caseClass.build
+    val sch = Schema.derived[ Outer ]
 
     it should "retrieve a nested field" in {
-        val innerSch = SchemaBuilder[ Inner ].caseClass.build
+        val innerSch = Schema.derived[ Inner ]
         val fld = ComponentRetriever.retrieve( sch )( Selector.field( "inner" ) / "innerest" / "dbl" )
         summon[ fld.type <:< Field[ Double ] ]
         fld.fieldName shouldBe "dbl"

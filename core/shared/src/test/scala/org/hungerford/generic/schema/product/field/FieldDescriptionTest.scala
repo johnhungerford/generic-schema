@@ -3,6 +3,8 @@ package org.hungerford.generic.schema.product.field
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Default.dsl.*
 
 class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
     behavior of "FieldTranslator"
@@ -37,7 +39,7 @@ class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
         case class Outer( inner : Inner )
 
         val fd = FieldBuilder[ Outer ]
-          .buildSchema( _.caseClass.build )
+          .fromSchema( Schema.derived )
           .rebuildSchema(
               _.rebuildField( "inner" )(
                   _.fieldName( "inner_field" )

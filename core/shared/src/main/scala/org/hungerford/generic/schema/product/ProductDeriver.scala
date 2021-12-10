@@ -96,7 +96,10 @@ object ProductBuildDeriver {
         override def derive : DerivedBuilder[ T, Rt, RVt ] = {
             ProductSchemaBuilder[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ](
                 None,
+                None,
                 Set.empty[ Validator[ T ] ],
+                Nil,
+                false,
                 NoSchema,
                 fieldDeriver.derive,
                 rv => mirror.fromProduct( rv ),

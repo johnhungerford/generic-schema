@@ -36,8 +36,10 @@ class MinMaxValidatorsTest extends AnyFlatSpecLike with org.scalatest.matchers.s
   }
 
   it should "not validate a value equal to the min value if the exclusive parameter is true" in {
-    val validator = Validator.exclusiveMin[ Int ]( 5 )
+    val validator = Validator.minExclusive[ Int ]( 5 )
+    validator.isValid( 4 ) shouldBe false
     validator.isValid( 5 ) shouldBe false
+    validator.isValid( 6 ) shouldBe true
   }
 
   behavior of "Max"
@@ -72,8 +74,10 @@ class MinMaxValidatorsTest extends AnyFlatSpecLike with org.scalatest.matchers.s
   }
 
   it should "not validate a value equal to the max value if the exclusive parameter is true" in {
-    val validator = Validator.exclusiveMax[ Int ]( 5 )
+    val validator = Validator.maxExclusive[ Int ]( 5 )
+    validator.isValid( 4 ) shouldBe true
     validator.isValid( 5 ) shouldBe false
+    validator.isValid( 6 ) shouldBe false
   }
-  
+
 }

@@ -29,15 +29,18 @@ object Validator {
     def nonEmptyString : Validator[ String ] = StringLength( min[ Int ]( 1 ) )
 
     // Collections validators
-    def minSize[ T ]( length : Int ) : Validator[ Iterable[ T ] ] = CollSize[ T ]( min[ Int ]( length ) )
-    def minSizeExclusive[ T ]( length : Int ) : Validator[ Iterable[ T ] ] =
-        CollSize[ T ]( minExclusive[ Int ]( length ) )
-    def maxSize[ T ]( length : Int ) : Validator[ Iterable[ T ] ] = CollSize[ T ]( max[ Int ]( length ) )
-    def maxSizeExclusive[ T ]( length : Int ) : Validator[ Iterable[ T ] ] =
-        CollSize[ T ]( maxExclusive[ Int ]( length ) )
-    def fixedSize[ T ](length : Int ) : Validator[ Iterable[ T ] ] =
-        CollSize[ T ]( ( instance: Int ) => instance == length )
-    def nonEmptyCollection[ T ] : Validator[ Iterable[ T ] ] = CollSize[ T ]( min[ Int ]( 1 ) )
+    def minSize[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
+        CollSize[ T, Col ]( min[ Int ]( length ) )
+    def minSizeExclusive[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
+        CollSize[ T, Col ]( minExclusive[ Int ]( length ) )
+    def maxSize[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
+        CollSize[ T, Col]( max[ Int ]( length ) )
+    def maxSizeExclusive[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
+        CollSize[ T, Col ]( maxExclusive[ Int ]( length ) )
+    def fixedSize[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
+        CollSize[ T, Col ]( EqValidator( length ) )
+    def nonEmptyCollection[ T, Col[ _ ] <: Iterable[ _ ] ] : Validator[ Col[ T ] ] =
+        CollSize[ T, Col ]( min[ Int ]( 1 ) )
 
     // Enum validators
     def oneOf[ T ]( possibleValues : Iterable[ T ] ) : Validator[ T ] = new OneOf[ T ]( possibleValues.toSet )
@@ -84,8 +87,8 @@ case class NoneOf[ T ]( excludedValues : Set[ T ] ) extends Validator[ T ] {
     override def isValid( instance: T ): Boolean = !excludedValues.contains( instance )
 }
 
-case class CollSize[ T ]( sizeValidator : Validator[ Int ] ) extends Validator[ Iterable[ T ] ] {
-    override def isValid( instance: Iterable[ T ] ): Boolean = sizeValidator.isValid( instance.size )
+case class CollSize[ T, Col[ _ ] <: Iterable[ _ ] ]( sizeValidator : Validator[ Int ] ) extends Validator[ Col[ T ] ] {
+    override def isValid( instance: Col[ T ] ): Boolean = sizeValidator.isValid( instance.size )
 }
 
 case class NonZero[ T : Numeric ]() extends Validator[ T ] {

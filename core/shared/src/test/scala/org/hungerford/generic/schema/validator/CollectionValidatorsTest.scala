@@ -7,7 +7,7 @@ class CollectionValidatorsTest extends AnyFlatSpecLike with org.scalatest.matche
   behavior of "CollSize"
 
   it should "validate based on minimum size inclusively" in {
-    def validator[ T ] = Validator.minSize[ T ]( 5 )
+    def validator[ T, Col[ _ ] <: Iterable[ _ ] ] = Validator.minSize[ T, Col ]( 5 )
     validator.isValid( "1234" ) shouldBe false
     validator.isValid( Array( 1, 2, 3, 4 ) ) shouldBe false
     validator.isValid( "12345" ) shouldBe true
@@ -17,7 +17,7 @@ class CollectionValidatorsTest extends AnyFlatSpecLike with org.scalatest.matche
   }
 
   it should "validate based on minimum size exclusively" in {
-    def validator[ T ] = Validator.minSizeExclusive[ T ]( 5 )
+    def validator[ T, Col[ _ ] <: Iterable[ _ ] ] = Validator.minSizeExclusive[ T, Col ]( 5 )
     validator.isValid( "1234" ) shouldBe false
     validator.isValid( Array( 1, 2, 3, 4 ) ) shouldBe false
     validator.isValid( "12345" ) shouldBe false
@@ -27,7 +27,7 @@ class CollectionValidatorsTest extends AnyFlatSpecLike with org.scalatest.matche
   }
 
   it should "validate based on maximum size inclusively" in {
-    def validator[ T ] = Validator.maxSize[ T ]( 5 )
+    def validator[ T, Col[ _ ] <: Iterable[ _ ] ] = Validator.maxSize[ T, Col ]( 5 )
     validator.isValid( "1234" ) shouldBe true
     validator.isValid( Array( 1, 2, 3, 4 ) ) shouldBe true
     validator.isValid( "12345" ) shouldBe true
@@ -37,7 +37,7 @@ class CollectionValidatorsTest extends AnyFlatSpecLike with org.scalatest.matche
   }
 
   it should "validate based on maximum size exclusively" in {
-    def validator[ T ] = Validator.maxSizeExclusive[ T ]( 5 )
+    def validator[ T, Col[ _ ] <: Iterable[ _ ] ] = Validator.maxSizeExclusive[ T, Col ]( 5 )
     validator.isValid( "1234" ) shouldBe true
     validator.isValid( Array( 1, 2, 3, 4 ) ) shouldBe true
     validator.isValid( "12345" ) shouldBe false
@@ -47,7 +47,7 @@ class CollectionValidatorsTest extends AnyFlatSpecLike with org.scalatest.matche
   }
 
   it should "validate based on exact size" in {
-    def validator[ T ] = Validator.fixedSize[ T ]( 5 )
+    def validator[ T, Col[ _ ] <: Iterable[ _ ] ] = Validator.fixedSize[ T, Col ]( 5 )
     validator.isValid( "1234" ) shouldBe false
     validator.isValid( Array( 1, 2, 3, 4 ) ) shouldBe false
     validator.isValid( "12345" ) shouldBe true
@@ -57,7 +57,7 @@ class CollectionValidatorsTest extends AnyFlatSpecLike with org.scalatest.matche
   }
 
   it should "correctly validate a non-empty iterable" in {
-    def validator[ T ] = Validator.nonEmptyCollection[ T ]
+    def validator[ T, Col[ _ ] <: Iterable[ _ ] ] = Validator.nonEmptyCollection[ T, Col ]
     validator.isValid( "" ) shouldBe false
     validator.isValid( Array[ Int ]() ) shouldBe false
     validator.isValid( "." ) shouldBe true

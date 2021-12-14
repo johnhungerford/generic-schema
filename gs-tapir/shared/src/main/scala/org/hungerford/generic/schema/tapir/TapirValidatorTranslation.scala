@@ -41,8 +41,8 @@ object TapirValidatorTranslation extends LowPriorityValidatorTranslations {
       } )
   }
 
-  given iterableTrans[ T : Iterable ] : TapirValidatorTranslation[ Iterable[ T ], TapirValidator ] with {
-    override def translate( validator: Validator[ Iterable[ T ] ] ): TapirValidator[ Iterable[ T ] ] =
+  given iterableTrans[ Col[ _ ] <: Iterable[ _ ], T ] : TapirValidatorTranslation[ Col[ T ], TapirValidator ] with {
+    override def translate( validator: Validator[ Col[ T ] ] ): TapirValidator[ Col[ T ] ] =
       unboundedTranslation.applyOrElse( validator, {
         case CollSize(Min(minValue, false)) => TapirValidator.minSize(minValue)
         case CollSize(Min(minValue, true)) => TapirValidator.minSize(minValue + 1)

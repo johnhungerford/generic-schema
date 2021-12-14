@@ -32,4 +32,13 @@ class TapirValidatorTranslationTest extends AnyFlatSpecLike with org.scalatest.m
     translate( Validator.regex( "abcdefg".r ) ) shouldBe TapirValidator.pattern( "abcdefg" )
   }
 
+  it should "translate collections validators" in {
+    import TapirValidatorTranslation.translate
+    translate( Validator.minSize[ Int, List ]( 5 ) ) shouldBe TapirValidator.minSize[ Int, List ]( 5 )
+    translate( Validator.minSizeExclusive[ Int, LazyList ]( 5 ) ) shouldBe TapirValidator.minSize[ Int, LazyList ]( 6 )
+    translate( Validator.maxSize[ Int, Iterable ]( 5 ) ) shouldBe TapirValidator.maxSize[ Int, Iterable ]( 5 )
+    translate( Validator.maxSizeExclusive[ Int, Seq ]( 5 ) ) shouldBe TapirValidator.maxSize[ Int, Seq ]( 4 )
+    translate( Validator.fixedSize[ Int, Set ]( 5 ) ) shouldBe TapirValidator.fixedSize[ Int, Set ]( 5 )
+  }
+
 }

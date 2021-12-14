@@ -26,7 +26,9 @@ trait TapirSchemaProductTranslation
     ) : TapirFields[ T ] = {
         to :+ SProductField(
             TapirFieldName( field.fieldName.asInstanceOf[ String ] ),
-            fieldSchema, ( v : T ) => Some( informedBy.shape.getField[ N ]( field.fieldName, v ) ),
+            field.validators
+              .foldLeft( fieldSchema )( (sch, nextV ) => sch.validate( TapirValidatorTranslation.translate[ F ]( nextV ) ) ),
+            ( v : T ) => Some( informedBy.shape.getField[ N ]( field.fieldName, v ) ),
         )
     }
 
@@ -47,6 +49,7 @@ trait TapirSchemaProductTranslation
             None,
             schema.genericExamples.headOption,
             schema.deprecated,
+            TapirValidatorTranslation.translateValidators( schema.genericValidators )
         )
 
     }

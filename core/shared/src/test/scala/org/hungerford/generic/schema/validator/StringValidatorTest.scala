@@ -66,4 +66,11 @@ class StringValidatorTest extends AnyFlatSpecLike with org.scalatest.matchers.sh
     validator.isValid( "123456" ) shouldBe false
   }
 
+  it should "correctly validate a non-empty string" in {
+    val validator = Validator.nonEmptyString
+    validator.isValid( "" ) shouldBe false
+    validator.isValid( "." ) shouldBe true
+    validator.isValid( "safgergwq3r4t35rtgewfuwri9g8oejih4uovfnsorgihw94" ) shouldBe true
+  }
+
 }

@@ -20,16 +20,16 @@ sealed trait Schema[ T ] {
     def deprecated : Boolean
 
     // updaters
-    private[ schema ] def _withName( name : String ) : Schema[ T ]
-    private[ schema ] def _withoutName : Schema[ T ]
-    private[ schema ] def _withDescription( description : String ) : Schema[ T ]
-    private[ schema ] def _withoutDescription : Schema[ T ]
-    private[ schema ] def _withValidation( validators : Validator[ T ]* ) : Schema[ T ]
-    private[ schema ] def _withoutValidation : Schema[ T ]
-    private[ schema ] def _withExamples( examples : T* ) : Schema[ T ]
-    private[ schema ] def _withoutExamples : Schema[ T ]
-    private[ schema ] def _withDeprecated : Schema[ T ]
-    private[ schema ] def _withoutDeprecated : Schema[ T ]
+    private[ schema ] def _withName( name : String ) : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withoutName : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withDescription( description : String ) : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withoutDescription : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withValidation( validators : Validator[ T ]* ) : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withoutValidation : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withExamples( examples : T* ) : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withoutExamples : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withDeprecated : Schema.Aux[ T, Shape ]
+    private[ schema ] def _withoutDeprecated : Schema.Aux[ T, Shape ]
 
     given givenSchema : Schema.Aux[ T, Shape ] = this
 
@@ -46,25 +46,25 @@ case object NoSchema extends Schema[ Nothing ] {
     val genericExamples : Seq[ Nothing ] = Nil
     val deprecated : Boolean = false
 
-    private[ schema ] def _withName( name : String ) : Schema[ Nothing ] = this
+    private[ schema ] def _withName( name : String ) : Schema.Aux[ Nothing, Unit ] = this
 
-    private[ schema ] def _withoutName : Schema[ Nothing ] = this
+    private[ schema ] def _withoutName : Schema.Aux[ Nothing, Unit ] = this
 
-    override private[ schema ] def _withDescription( description : String ) : Schema[ Nothing ] = this
+    override private[ schema ] def _withDescription( description : String ) : Schema.Aux[ Nothing, Unit ] = this
 
-    override private[ schema ] def _withValidation( validators : Validator[ Nothing ]* ) : Schema[ Nothing ] = this
+    override private[ schema ] def _withValidation( validators : Validator[ Nothing ]* ) : Schema.Aux[ Nothing, Unit ] = this
 
-    override private[ schema ] def _withoutDescription : Schema[ Nothing ] = this
+    override private[ schema ] def _withoutDescription : Schema.Aux[ Nothing, Unit ] = this
 
-    override private[ schema ] def _withoutValidation : Schema[ Nothing ] = this
+    override private[ schema ] def _withoutValidation : Schema.Aux[ Nothing, Unit ] = this
 
-    private[ schema ] def _withExamples( examples : Nothing* ) : Schema[ Nothing ] = this
+    private[ schema ] def _withExamples( examples : Nothing* ) : Schema.Aux[ Nothing, Unit ] = this
 
-    private[ schema ] def _withoutExamples : Schema[ Nothing ] = this
+    private[ schema ] def _withoutExamples : Schema.Aux[ Nothing, Unit ] = this
 
-    private[ schema ] def _withDeprecated : Schema[ Nothing ] = this
+    private[ schema ] def _withDeprecated : Schema.Aux[ Nothing, Unit ] = this
 
-    private[ schema ] def _withoutDeprecated : Schema[ Nothing ] = this
+    private[ schema ] def _withoutDeprecated : Schema.Aux[ Nothing, Unit ] = this
 }
 
 final case class Primitive[ T ](
@@ -77,28 +77,28 @@ final case class Primitive[ T ](
     override type Shape = Unit
     override def shape : Unit = ()
 
-    private[ schema ] def _withName( name : String ) : Schema[ T ] = copy( name = Some( name ) )
+    private[ schema ] def _withName( name : String ) : Schema.Aux[ T, Shape ] = copy( name = Some( name ) )
 
-    private[ schema ] def _withoutName : Schema[ T ] = copy( name = None )
+    private[ schema ] def _withoutName : Schema.Aux[ T, Shape ] = copy( name = None )
 
-    override private[ schema ] def _withDescription( description : String ) : Schema[ T ] =
+    override private[ schema ] def _withDescription( description : String ) : Schema.Aux[ T, Shape ] =
         copy( genericDescription = Some( description ) )
 
-    override private[ schema ] def _withValidation( validators : Validator[ T ]* ) : Schema[ T ] =
+    override private[ schema ] def _withValidation( validators : Validator[ T ]* ) : Schema.Aux[ T, Shape ] =
         copy( genericValidators = genericValidators ++ validators.toSet )
 
-    override private[ schema ] def _withoutDescription : Schema[ T ] = copy( genericDescription = None )
+    override private[ schema ] def _withoutDescription : Schema.Aux[ T, Shape ] = copy( genericDescription = None )
 
-    override private[ schema ] def _withoutValidation : Schema[ T ] = copy( genericValidators = Set.empty[ Validator[ T ] ] )
+    override private[ schema ] def _withoutValidation : Schema.Aux[ T, Shape ] = copy( genericValidators = Set.empty[ Validator[ T ] ] )
 
-    override private[ schema ] def _withExamples( examples : T* ) : Schema[ T ] =
+    override private[ schema ] def _withExamples( examples : T* ) : Schema.Aux[ T, Shape ] =
         copy( genericExamples = genericExamples ++ examples )
 
-    override private[ schema ] def _withoutExamples : Schema[ T ] = copy( genericExamples = Nil )
+    override private[ schema ] def _withoutExamples : Schema.Aux[ T, Shape ] = copy( genericExamples = Nil )
 
-    private[ schema ] def _withDeprecated : Schema[ T ] = copy( deprecated = true )
+    private[ schema ] def _withDeprecated : Schema.Aux[ T, Shape ] = copy( deprecated = true )
 
-    private[ schema ] def _withoutDeprecated : Schema[ T ] = copy( deprecated = false )
+    private[ schema ] def _withoutDeprecated : Schema.Aux[ T, Shape ] = copy( deprecated = false )
 
 }
 
@@ -112,27 +112,27 @@ final case class ComplexSchema[ T, S ](
 ) extends Schema[ T ] {
     override type Shape = S
 
-    private[ schema ] def _withName( name : String ) : Schema[ T ] = copy( name = Some( name ) )
+    private[ schema ] def _withName( name : String ) : Schema.Aux[ T, Shape ] = copy( name = Some( name ) )
 
-    private[ schema ] def _withoutName : Schema[ T ] = copy( name = None )
+    private[ schema ] def _withoutName : Schema.Aux[ T, Shape ] = copy( name = None )
 
-    override private[ schema ] def _withDescription( description : String ) : Schema[ T ] = copy( genericDescription = Some( description ) )
+    override private[ schema ] def _withDescription( description : String ) : Schema.Aux[ T, Shape ] = copy( genericDescription = Some( description ) )
 
-    override private[ schema ] def _withoutDescription : Schema[ T ] = copy( genericDescription = None )
+    override private[ schema ] def _withoutDescription : Schema.Aux[ T, Shape ] = copy( genericDescription = None )
 
-    override private[ schema ] def _withValidation( validators : Validator[ T ]* ) : Schema[ T ] =
+    override private[ schema ] def _withValidation( validators : Validator[ T ]* ) : Schema.Aux[ T, Shape ] =
         copy( genericValidators = genericValidators ++ validators.toSet )
 
-    override private[ schema ] def _withoutValidation : Schema[ T ] = copy( genericValidators = Set.empty[ Validator[ T ] ] )
+    override private[ schema ] def _withoutValidation : Schema.Aux[ T, Shape ] = copy( genericValidators = Set.empty[ Validator[ T ] ] )
 
-    override private[ schema ] def _withExamples( examples : T* ) : Schema[ T ] =
+    override private[ schema ] def _withExamples( examples : T* ) : Schema.Aux[ T, Shape ] =
         copy( genericExamples = genericExamples ++ examples )
 
-    override private[ schema ] def _withoutExamples : Schema[ T ] = copy( genericExamples = Nil )
+    override private[ schema ] def _withoutExamples : Schema.Aux[ T, Shape ] = copy( genericExamples = Nil )
 
-    private[ schema ] def _withDeprecated : Schema[ T ] = copy( deprecated = true )
+    private[ schema ] def _withDeprecated : Schema.Aux[ T, Shape ] = copy( deprecated = true )
 
-    private[ schema ] def _withoutDeprecated : Schema[ T ] = copy( deprecated = false )
+    private[ schema ] def _withoutDeprecated : Schema.Aux[ T, Shape ] = copy( deprecated = false )
 }
 
 object Schema {
@@ -140,7 +140,7 @@ object Schema {
 
     def empty[ T ] : Primitive[ T ] = Primitive[ T ]()
 
-    def apply[ T ]( implicit schema : Schema[ T ] ) : Schema[ T ] = schema
+    def apply[ T ]( implicit schema : Schema[ T ] ) : Schema.Aux[ T, schema.Shape ] = schema
 }
 
 trait SchemaDsl {
@@ -154,34 +154,34 @@ trait SchemaDsl {
         ) : crt.Inner = crt.retrieve( schema )
         
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withName( name : String ) : Schema[ T ] = schema._withName( name )
+        def withName( name : String ) : Schema.Aux[ T, S ] = schema._withName( name )
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withoutName : Schema[ T ] = schema._withoutName
+        def withoutName : Schema.Aux[ T, S ] = schema._withoutName
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withDescription( description : String ) : Schema[ T ] = schema._withDescription( description )
+        def withDescription( description : String ) : Schema.Aux[ T, S ] = schema._withDescription( description )
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withoutDescription : Schema[ T ] = schema._withoutDescription
+        def withoutDescription : Schema.Aux[ T, S ] = schema._withoutDescription
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withValidation( validators : Validator[ T ]* ) : Schema[ T ] = schema._withValidation( validators : _* )
+        def withValidation( validators : Validator[ T ]* ) : Schema.Aux[ T, S ] = schema._withValidation( validators : _* )
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withoutValidation : Schema[ T ] = schema._withoutValidation
+        def withoutValidation : Schema.Aux[ T, S ] = schema._withoutValidation
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withExamples( examples : T* ) : Schema[ T ] = schema._withExamples( examples : _* )
+        def withExamples( examples : T* ) : Schema.Aux[ T, S ] = schema._withExamples( examples : _* )
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withoutExamples : Schema[ T ] = schema._withoutExamples
+        def withoutExamples : Schema.Aux[ T, S ] = schema._withoutExamples
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withDeprecated : Schema[ T ] = schema._withDeprecated
+        def withDeprecated : Schema.Aux[ T, S ] = schema._withDeprecated
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
-        def withoutDeprecated : Schema[ T ] = schema._withoutDeprecated
+        def withoutDeprecated : Schema.Aux[ T, S ] = schema._withoutDeprecated
 
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
         def rebuild( using srb : SchemaRebuilder[ T, S ] ) : srb.Builder = srb.rebuild( schema )

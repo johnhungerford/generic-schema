@@ -22,10 +22,15 @@ class TapirSchemaProductTranslationTest
     case class TestCase( int : Int, str : String, bool : Boolean )
 
     it should "translate a product schema into an SProduct schema type with the correct field names, correct getters, correct validators, and the correct description" in {
-        val sch = Schema.derivedBuilder[ TestCase ]
-          .description( "test-case-description" )
-          .build
-          .modifyComponent( "int" )( _.addValidators( Validator.min[ Int ]( -5 ), Validator.maxExclusive[ Int ]( 25 ), Validator.nonZero[ Int ] ) )
+        val sch = Schema.derived[ TestCase ]
+          .withDescription( "test-case-description" )
+          .modifyComponent( "int" )(
+              _.addValidators(
+                  Validator.min[ Int ]( -5 ),
+                  Validator.maxExclusive[ Int ]( 25 ),
+                  Validator.nonZero[ Int ],
+              )
+          )
 
         val tapirSchema : TapirSchema[ TestCase ] = SchemaTranslator.translate( sch )
 

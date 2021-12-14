@@ -7,7 +7,7 @@ import sttp.tapir.{Validator as TapirValidator, ValidationError}
 
 class TapirValidatorTranslationTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
-  behavior of "Numeric translation"
+  behavior of "TapirValidatorTranslation.translate"
 
   it should "translate numeric validators (including min/max)" in {
     import TapirValidatorTranslation.*
@@ -46,6 +46,25 @@ class TapirValidatorTranslationTest extends AnyFlatSpecLike with org.scalatest.m
     translate( Validator.oneOf( "a", "b", "c" ) ) shouldBe TapirValidator.enumeration( List( "a", "b", "c" ) )
     translate( Validator.noneOf( "a", "b", "c" ) )( "d" ) shouldBe Nil
     translate( Validator.noneOf( "a", "b", "c" ) )( "a" ) shouldBe List( ValidationError.Custom( "a", "value is excluded" ) )
+  }
+
+  behavior of "TapirValidatorTranslation.translateValidators"
+
+  it should "translate a set of validators" in {
+    val validators = Set[ Validator[ Int ] ](
+      Validator.min( 5 ),
+      Validator.oneOf( 2, 3, 6, 55, 58, 132 ),
+      Validator.max( 100 ),
+      ( instance : Int ) => instance % 2 == 0,
+    )
+
+    val translated = TapirValidatorTranslation.translateValidators( validators )
+    translated( 2 ).nonEmpty shouldBe true
+    translated( 3 ).nonEmpty shouldBe true
+    translated( 6 ).isEmpty shouldBe true
+    translated( 55 ).nonEmpty shouldBe true
+    translated( 58 ).isEmpty shouldBe true
+    translated( 132 ).nonEmpty shouldBe true
   }
 
 }

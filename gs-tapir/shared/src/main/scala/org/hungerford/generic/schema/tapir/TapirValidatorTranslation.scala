@@ -5,8 +5,8 @@ import org.hungerford.generic.schema.validator.*
 
 import scala.util.matching.Regex
 
-trait TapirValidatorTranslation[ T, Out[ _ ] ] {
-  def translate( validator : Validator[ T ] ) : Out[ T ]
+trait TapirValidatorTranslation[ T ] {
+  def translate( validator : Validator[ T ] ) : TapirValidator[ T ]
 }
 
 trait LowPriorityValidatorTranslations {
@@ -18,13 +18,13 @@ trait LowPriorityValidatorTranslations {
     } )
   }
 
-  given unboundedTrans[ T ] : TapirValidatorTranslation[ T, TapirValidator ] with {
+  given unboundedTrans[ T ] : TapirValidatorTranslation[ T ] with {
     override def translate(validator: Validator[T]): TapirValidator[T] = unboundedTranslation[ T ]( validator )
   }
 }
 
 object TapirValidatorTranslation extends LowPriorityValidatorTranslations {
-  given stringTrans : TapirValidatorTranslation[ String, TapirValidator ] with {
+  given stringTrans : TapirValidatorTranslation[ String ] with {
     override def translate( validator: Validator[ String ] ): TapirValidator[ String ] =
       unboundedTranslation.applyOrElse( validator, {
         case StringLength(Min(minValue, false)) => TapirValidator.minLength(minValue)
@@ -38,10 +38,14 @@ object TapirValidatorTranslation extends LowPriorityValidatorTranslations {
         case CollSize(Max(maxValue, false)) => TapirValidator.maxLength(maxValue)
         case CollSize(Max(maxValue, true)) => TapirValidator.maxLength(maxValue - 1)
         case CollSize(EqValidator(length)) => TapirValidator.fixedLength(length)
+        case tr => TapirValidator.custom( t => {
+          if ( tr.isValid( t ) ) Nil
+          else List( ValidationError.Custom( t, "invalid" ) )
+        } )
       } )
   }
 
-  given iterableTrans[ Col[ _ ] <: Iterable[ _ ], T ] : TapirValidatorTranslation[ Col[ T ], TapirValidator ] with {
+  given iterableTrans[ Col[ _ ] <: Iterable[ _ ], T ] : TapirValidatorTranslation[ Col[ T ] ] with {
     override def translate( validator: Validator[ Col[ T ] ] ): TapirValidator[ Col[ T ] ] =
       unboundedTranslation.applyOrElse( validator, {
         case CollSize(Min(minValue, false)) => TapirValidator.minSize(minValue)
@@ -49,10 +53,14 @@ object TapirValidatorTranslation extends LowPriorityValidatorTranslations {
         case CollSize(Max(maxValue, false)) => TapirValidator.maxSize(maxValue)
         case CollSize(Max(maxValue, true)) => TapirValidator.maxSize(maxValue - 1)
         case CollSize(EqValidator(length)) => TapirValidator.fixedSize(length)
+        case tr => TapirValidator.custom( t => {
+          if ( tr.isValid( t ) ) Nil
+          else List( ValidationError.Custom( t, "invalid" ) )
+        } )
       } )
   }
 
-  given numericTrans[ T : Numeric ] : TapirValidatorTranslation[ T, TapirValidator ] with {
+  given numericTrans[ T : Numeric ] : TapirValidatorTranslation[ T ] with {
     override def translate(validator: Validator[T]): TapirValidator[T] =
       unboundedTranslation.applyOrElse(validator, {
         case PositiveOrZero() => TapirValidator.positiveOrZero
@@ -68,10 +76,25 @@ object TapirValidatorTranslation extends LowPriorityValidatorTranslations {
         } )
         case Min( minValue, exclusive ) => TapirValidator.Min( minValue, exclusive )
         case Max( maxValue, exclusive ) => TapirValidator.Max( maxValue, exclusive )
+        case tr => TapirValidator.custom( t => {
+          if ( tr.isValid( t ) ) Nil
+          else List( ValidationError.Custom( t, "invalid" ) )
+        } )
       } )
   }
 
-  def translate[ T ]( validator : Validator[ T ] )( using tr : TapirValidatorTranslation[ T, TapirValidator ] ) : TapirValidator[ T ] = {
+  def translate[ T ]( validator : Validator[ T ] )( using tr : TapirValidatorTranslation[ T ] ) : TapirValidator[ T ] = {
     tr.translate( validator )
+  }
+
+  def translateValidators[ T ](
+    validators: Set[ Validator[ T ] ],
+  )(
+    using
+    tr : TapirValidatorTranslation[ T ],
+  ) : TapirValidator[ T ] = {
+    validators.foldLeft( TapirValidator.pass[ T ] ){ ( lastTv, nextv ) =>
+      lastTv.and( tr.translate( nextv ) )
+    }
   }
 }

@@ -39,7 +39,7 @@ object Validator {
         CollSize[ T ]( ( instance: Int ) => instance == length )
     def nonEmptyCollection[ T ] : Validator[ Iterable[ T ] ] = CollSize[ T ]( min[ Int ]( 1 ) )
 
-    // Enum validator
+    // Enum validators
     def oneOf[ T ]( possibleValues : Iterable[ T ] ) : Validator[ T ] = new OneOf[ T ]( possibleValues.toSet )
     def oneOf[ T ]( value : T, otherValues : T* ) : Validator[ T ] = oneOf[ T ]( value +: otherValues )
     def noneOf[ T ]( excludedValues : Iterable[ T ] ) : Validator[ T ] = new NoneOf[ T ]( excludedValues.toSet )

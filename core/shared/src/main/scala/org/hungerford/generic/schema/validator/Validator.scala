@@ -25,7 +25,7 @@ object Validator {
     def minLengthExclusive( length : Int ) : Validator[ String ] = StringLength( minExclusive[ Int ]( length ) )
     def maxLength( length : Int ) : Validator[ String ] = StringLength( max[ Int ]( length ) )
     def maxLengthExclusive( length : Int ) : Validator[ String ] = StringLength( maxExclusive[ Int ]( length ) )
-    def fixedLength(length : Int ) : Validator[ String ] = StringLength((instance: Int ) => instance == length )
+    def fixedLength(length : Int ) : Validator[ String ] = StringLength( EqValidator( length ) )
     def nonEmptyString : Validator[ String ] = StringLength( min[ Int ]( 1 ) )
 
     // Collections validators
@@ -62,6 +62,10 @@ case class Max[ T : Ordering ]( maxValue : T, exclusive : Boolean = false )
         if ( exclusive ) ord.lt( instance, maxValue )
         else ord.lteq( instance, maxValue )
     }
+}
+
+case class EqValidator[ T ]( mustEqual : T ) extends Validator[ T ] {
+    override def isValid( instance: T ): Boolean = instance == mustEqual
 }
 
 case class Regx( pattern : Regex ) extends Validator[ String ] {

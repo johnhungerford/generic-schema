@@ -9,15 +9,27 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
 
     def fieldsInit[ T ] : Fields[ T ]
 
-    def addTranslatedField[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
-        field : Field.Aux[ F, N, S ],
-        fieldSchema : OtherSchema[ F ],
-        to : Fields[ T ],
-        informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
-    )(
-        using
-        fg : FieldGetter.Aux[ N, R, RV, F ],
-    ) : Fields[ T ]
+    trait TranslatedFieldAdder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] {
+        def addTranslatedField(
+          field : Field.Aux[ F, N, S ],
+          fieldSchema : OtherSchema[ F ],
+          to : Fields[ T ],
+          informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
+        )(
+          using
+          fg : FieldGetter.Aux[ N, R, RV, F ],
+        ) : Fields[ T ]
+    }
+
+//    def addTranslatedField[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
+//        field : Field.Aux[ F, N, S ],
+//        fieldSchema : OtherSchema[ F ],
+//        to : Fields[ T ],
+//        informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
+//    )(
+//        using
+//        fg : FieldGetter.Aux[ N, R, RV, F ],
+//    ) : Fields[ T ]
 
     def addAdditionalFields[ T, AF, AFS, R <: Tuple, RV <: Tuple, C, DC ](
         additionalFields : Schema.Aux[ AF, AFS ],
@@ -39,6 +51,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
     object FieldBuilder {
         given[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ] (
             using
+            fa : TranslatedFieldAdder[ T, F, N, S, R, RV, AF, AFS, C, DC ],
             tr : FieldTranslator[ F, N, S, OtherSchema ],
             fg : FieldGetter.Aux[ N, R, RV, F ],
         ) : FieldBuilder[ T, F, N, S, R, RV, AF, AFS, C, DC ] with {
@@ -48,7 +61,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
                 informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
             ) = {
                 val fieldSchema = tr.translate( field ).schema
-                addTranslatedField[ T, F, N, S, R, RV, AF, AFS, C, DC ]( field, fieldSchema, to, informedBy )
+                fa.addTranslatedField( field, fieldSchema, to, informedBy )
             }
         }
     }

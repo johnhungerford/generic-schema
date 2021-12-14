@@ -24,7 +24,10 @@ trait TapirSchemaProductTranslation
         using
         fg : FieldGetter.Aux[ N, R, RV, F ],
     ) : TapirFields[ T ] = {
-        to :+ SProductField( TapirFieldName( field.fieldName.asInstanceOf[ String ] ), fieldSchema, ( v : T ) => Some( informedBy.shape.getField[ N ]( field.fieldName, v ) ) )
+        to :+ SProductField(
+            TapirFieldName( field.fieldName.asInstanceOf[ String ] ),
+            fieldSchema, ( v : T ) => Some( informedBy.shape.getField[ N ]( field.fieldName, v ) ),
+        )
     }
 
     override def addAdditionalFields[ T, AF, AFS, R <: Tuple, RV <: Tuple, C, DC ](

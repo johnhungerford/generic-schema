@@ -1,12 +1,15 @@
 package org.hungerford.generic.schema.tapir
 
 import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.{Field, TranslatedFieldDescription, FieldGetter, FieldName}
+import org.hungerford.generic.schema.product.field.Field.Aux
+import org.hungerford.generic.schema.product.field.FieldGetter.Aux
+import org.hungerford.generic.schema.product.field.{Field, FieldGetter, FieldName, TranslatedFieldDescription}
 import org.hungerford.generic.schema.product.translation.FieldBuildingProductSchemaTranslation
 import sttp.tapir.Schema as TapirSchema
 import sttp.tapir.SchemaType.{SProduct, SProductField}
-import sttp.tapir.{FieldName => TapirFieldName}
+import sttp.tapir.FieldName as TapirFieldName
 
 type TapirFields[ X ] = List[ SProductField[ X ] ]
 
@@ -15,18 +18,30 @@ trait TapirSchemaProductTranslation
 
     override def fieldsInit[ T ] : TapirFields[ T ] = List.empty[ SProductField[ T ] ]
 
-    override def addTranslatedField[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
-        field : Field.Aux[ F, N, S ],
-        fieldSchema : TapirSchema[ F ],
-        to : TapirFields[ T ],
-        informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ],
-    )(
+    given translatedFieldAdder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
         using
-        fg : FieldGetter.Aux[ N, R, RV, F ],
-    ) : TapirFields[ T ] = {
-        to :+ SProductField( TapirFieldName( field.fieldName.asInstanceOf[ String ] ), fieldSchema, ( v : T ) => Some( informedBy.shape.getField[ N ]( field.fieldName, v ) ) )
-    }
+        vt : TapirValidatorTranslation[ F ],
+    ) :
+        TranslatedFieldAdder[ T, F, N, S, R, RV, AF, AFS, C, DC ] with {
+            override def addTranslatedField(
+                field: Field.Aux[F, N, S],
+                fieldSchema: TapirSchema[F],
+                to: TapirFields[T],
+                informedBy: Schema.Aux[T, ProductShape[T, R, RV, AF, AFS, C, DC]],
+            )(
+                using
+                fg: FieldGetter.Aux[N, R, RV, F],
+            ): TapirFields[T] = {
+                to :+ SProductField(
+                    TapirFieldName( field.fieldName.asInstanceOf[ String ] ),
+                    field.validators
+                      .foldLeft( fieldSchema )( (sch, nextV ) => sch.validate( TapirValidatorTranslation.translate[ F ]( nextV ) ) ),
+                    ( v : T ) => Some( informedBy.shape.getField[ N ]( field.fieldName, v ) ),
+                )
+            }
+        }
 
+    // TODO: use type class for this
     override def addAdditionalFields[ T, AF, AFS, R <: Tuple, RV <: Tuple, C, DC ](
         additionalFields : Schema.Aux[ AF, AFS ],
         additionalFieldsTranslated : TapirSchema[ AF ],
@@ -44,6 +59,7 @@ trait TapirSchemaProductTranslation
             None,
             schema.genericExamples.headOption,
             schema.deprecated,
+            TapirValidatorTranslation.translateValidators( schema.genericValidators )
         )
 
     }

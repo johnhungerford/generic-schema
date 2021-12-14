@@ -41,4 +41,11 @@ class TapirValidatorTranslationTest extends AnyFlatSpecLike with org.scalatest.m
     translate( Validator.fixedSize[ Int, Set ]( 5 ) ) shouldBe TapirValidator.fixedSize[ Int, Set ]( 5 )
   }
 
+  it should "translate enum validators" in {
+    import TapirValidatorTranslation.translate
+    translate( Validator.oneOf( "a", "b", "c" ) ) shouldBe TapirValidator.enumeration( List( "a", "b", "c" ) )
+    translate( Validator.noneOf( "a", "b", "c" ) )( "d" ) shouldBe Nil
+    translate( Validator.noneOf( "a", "b", "c" ) )( "a" ) shouldBe List( ValidationError.Custom( "a", "value is excluded" ) )
+  }
+
 }

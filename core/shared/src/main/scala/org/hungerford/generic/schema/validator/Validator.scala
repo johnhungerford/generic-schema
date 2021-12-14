@@ -37,6 +37,8 @@ object Validator {
     // Enum validator
     def oneOf[ T ]( possibleValues : Iterable[ T ] ) : Validator[ T ] = new OneOf[ T ]( possibleValues.toSet )
     def oneOf[ T ]( value : T, otherValues : T* ) : Validator[ T ] = oneOf[ T ]( value +: otherValues )
+    def noneOf[ T ]( excludedValues : Iterable[ T ] ) : Validator[ T ] = new NoneOf[ T ]( excludedValues.toSet )
+    def noneOf[ T ]( value : T, otherValues : T* ) : Validator[ T ] = noneOf[ T ]( value +: otherValues )
 }
 
 case class Min[ T : Ordering ]( minValue : T, exclusive : Boolean = false )
@@ -67,6 +69,10 @@ case class StringLength( lengthValidator : Validator[ Int ] ) extends Validator[
 
 case class OneOf[ T ]( possibleValues : Set[ T ] ) extends Validator[ T ] {
     override def isValid( instance: T ): Boolean = possibleValues.contains( instance )
+}
+
+case class NoneOf[ T ]( excludedValues : Set[ T ] ) extends Validator[ T ] {
+    override def isValid( instance: T ): Boolean = !excludedValues.contains( instance )
 }
 
 case class CollSize[ T ]( sizeValidator : Validator[ Int ] ) extends Validator[ Iterable[ T ] ] {

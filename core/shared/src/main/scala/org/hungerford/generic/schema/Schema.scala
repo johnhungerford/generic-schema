@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema
 
-import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, ProductSchemaBuilder, ProductShape}
+import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
 import org.hungerford.generic.schema.product.field.FieldReplacer
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.validator.Validator

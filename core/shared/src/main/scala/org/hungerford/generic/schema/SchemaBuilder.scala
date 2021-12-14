@@ -1,7 +1,8 @@
 package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.product.field.Field
-import org.hungerford.generic.schema.product.{CtxWrapTuplesConstraint, ProductDeriver, ProductSchemaBuilder, ProductShape, TupleIntLength}
+import org.hungerford.generic.schema.product.{ProductDeriver, ProductSchemaBuilder, ProductShape, TupleIntLength}
+import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.validator.Validator
 
 case class PrimitiveSchemaBuilder[ T ](

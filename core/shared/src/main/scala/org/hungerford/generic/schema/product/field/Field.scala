@@ -18,10 +18,10 @@ sealed trait Field[ T ] {
     type Name <: FieldName
     type Shape
 
-    val fieldName : Name
-    val schema : Schema.Aux[ T, Shape ]
-    val description : Option[ String ] = None
-    val validators : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ]
+    def fieldName : Name
+    def schema : Schema.Aux[ T, Shape ]
+    def description : Option[ String ] = None
+    def validators : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ]
     def default : Option[ T ]
     def examples : Seq[ T ]
     def deprecated : Boolean

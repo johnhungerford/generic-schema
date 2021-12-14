@@ -1,11 +1,11 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.product.field.{Field, FieldCase, FieldName}
-import org.hungerford.generic.schema.types.Deriver
+import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Deriver}
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider}
-import scala.compiletime.constValue
 
+import scala.compiletime.constValue
 import scala.deriving.Mirror
 import org.hungerford.generic.schema.product.field.UniqueFieldNames
 import org.hungerford.generic.schema.product.constructor.ProductConstructor

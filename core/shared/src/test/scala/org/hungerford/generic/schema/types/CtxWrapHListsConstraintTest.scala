@@ -1,4 +1,4 @@
-package org.hungerford.generic.schema.product
+package org.hungerford.generic.schema.types
 
 import org.scalatest.flatspec.AnyFlatSpecLike
 

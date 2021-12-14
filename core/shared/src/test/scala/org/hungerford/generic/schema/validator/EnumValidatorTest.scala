@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.validator
 
 import org.scalatest.flatspec.AnyFlatSpecLike
 
-class EnumValidator extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
+class EnumValidatorTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
   behavior of "OneOf"
 

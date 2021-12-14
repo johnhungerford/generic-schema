@@ -8,10 +8,15 @@ trait Validator[ T ] {
 
 object Validator {
     // Ordering validators
-    def min[ T : Ordering ]( minValue : T ) = new Min[ T ]( minValue )
-    def minExclusive[ T : Ordering ]( minValue : T ) = new Min[ T ]( minValue, true )
-    def max[ T : Ordering ]( maxValue : T ) = new Max[ T ]( maxValue )
-    def maxExclusive[ T : Ordering ](maxValue : T ) = new Max[ T ]( maxValue, true )
+    def min[ T : Ordering ]( minValue : T ) : Min[ T ] = Min[ T ]( minValue )
+    def minExclusive[ T : Ordering ]( minValue : T ) : Min[ T ] = new Min[ T ]( minValue, true )
+    def max[ T : Ordering ]( maxValue : T ) : Max[ T ] = new Max[ T ]( maxValue )
+    def maxExclusive[ T : Ordering ](maxValue : T ) : Max[ T ] = new Max[ T ]( maxValue, true )
+
+    // Numeric validators
+    def positiveOrZero[ T : Numeric ] : PositiveOrZero[ T ] = PositiveOrZero[ T ]()
+    def negativeOrZero[ T : Numeric ] : NegativeOrZero[ T ] = NegativeOrZero[ T ]()
+    def nonZero[ T : Numeric ] : NonZero[ T ] = NonZero[ T ]()
 
     // String validators
     def regex( pattern : Regex ) : Validator[ String ] = new Regx( pattern )
@@ -20,7 +25,7 @@ object Validator {
     def minLengthExclusive( length : Int ) : Validator[ String ] = StringLength( minExclusive[ Int ]( length ) )
     def maxLength( length : Int ) : Validator[ String ] = StringLength( max[ Int ]( length ) )
     def maxLengthExclusive( length : Int ) : Validator[ String ] = StringLength( maxExclusive[ Int ]( length ) )
-    def length( length : Int ) : Validator[ String ] = StringLength( ( instance: Int ) => instance == length )
+    def fixedLength(length : Int ) : Validator[ String ] = StringLength((instance: Int ) => instance == length )
     def nonEmptyString : Validator[ String ] = StringLength( min[ Int ]( 1 ) )
 
     // Collections validators
@@ -30,7 +35,7 @@ object Validator {
     def maxSize[ T ]( length : Int ) : Validator[ Iterable[ T ] ] = CollSize[ T ]( max[ Int ]( length ) )
     def maxSizeExclusive[ T ]( length : Int ) : Validator[ Iterable[ T ] ] =
         CollSize[ T ]( maxExclusive[ Int ]( length ) )
-    def size[ T ]( length : Int ) : Validator[ Iterable[ T ] ] =
+    def fixedSize[ T ](length : Int ) : Validator[ Iterable[ T ] ] =
         CollSize[ T ]( ( instance: Int ) => instance == length )
     def nonEmptyCollection[ T ] : Validator[ Iterable[ T ] ] = CollSize[ T ]( min[ Int ]( 1 ) )
 
@@ -77,4 +82,19 @@ case class NoneOf[ T ]( excludedValues : Set[ T ] ) extends Validator[ T ] {
 
 case class CollSize[ T ]( sizeValidator : Validator[ Int ] ) extends Validator[ Iterable[ T ] ] {
     override def isValid( instance: Iterable[ T ] ): Boolean = sizeValidator.isValid( instance.size )
+}
+
+case class NonZero[ T : Numeric ]() extends Validator[ T ] {
+    private val num : Numeric[ T ] = implicitly
+    override def isValid( instance: T ): Boolean = instance != num.zero
+}
+
+case class PositiveOrZero[ T : Numeric ]() extends Validator[ T ] {
+    private val num : Numeric[ T ] = implicitly
+    override def isValid( instance: T ): Boolean = num.gteq( instance, num.zero )
+}
+
+case class NegativeOrZero[ T : Numeric ]() extends Validator[ T ] {
+    private val num : Numeric[ T ] = implicitly
+    override def isValid( instance: T ): Boolean = num.lteq( instance, num.zero )
 }

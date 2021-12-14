@@ -60,7 +60,7 @@ class StringValidatorTest extends AnyFlatSpecLike with org.scalatest.matchers.sh
   }
 
   it should "validate based on exact length" in {
-    val validator = Validator.length( 5 )
+    val validator = Validator.fixedLength( 5 )
     validator.isValid( "1234" ) shouldBe false
     validator.isValid( "12345" ) shouldBe true
     validator.isValid( "123456" ) shouldBe false

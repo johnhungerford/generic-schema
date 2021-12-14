@@ -47,7 +47,7 @@ class CollectionValidatorsTest extends AnyFlatSpecLike with org.scalatest.matche
   }
 
   it should "validate based on exact size" in {
-    def validator[ T ] = Validator.size[ T ]( 5 )
+    def validator[ T ] = Validator.fixedSize[ T ]( 5 )
     validator.isValid( "1234" ) shouldBe false
     validator.isValid( Array( 1, 2, 3, 4 ) ) shouldBe false
     validator.isValid( "12345" ) shouldBe true

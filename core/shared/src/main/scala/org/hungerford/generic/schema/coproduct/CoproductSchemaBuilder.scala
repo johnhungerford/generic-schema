@@ -101,17 +101,3 @@ object DiscriminatorAdder {
         }
     }
 }
-
-trait SubtypeAdder[ ST, T, R <: Tuple, D, DN ] {
-    type Evidence[ _ <: TypeName, _ ]
-    type AddParameters[ _ <: TypeName, _ ]
-    type AddResult[ _ <: TypeName, _ ]
-    type AdderType =
-        ( Option[ String ], Option[ String ], Set[ Validator[ T ] ], Seq[ T ], Boolean, R ) => AddFn
-    type AddFn = [ N <: FieldName, STS ]=>
-        Evidence[ N, STS ] ?=>
-            AddParameters[ N, STS ] =>
-              AddResult[ N, STS ]
-
-    def add : AdderType
-}

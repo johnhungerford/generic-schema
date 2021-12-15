@@ -8,6 +8,7 @@ import org.hungerford.generic.schema.coproduct.subtype.{Subtype, TypeName}
 
 import scala.collection.immutable.ListMap
 
+
 case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
     private[ schema ] val nm : Option[ String ] = None,
     private[ schema ] val desc : Option[ String ] = None,
@@ -34,6 +35,9 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
 
     def addSubtype[ ST, DV, N <: TypeName, S ](
         st : Subtype.Aux[ T, ST, D, DN, DV, N, S ],
+    )(
+        using
+        vd : ValidDiscriminator[ D, DN, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ]
     ) : CoproductSchemaBuilder[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ] = {
         copy[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ](
             sts = sts ++ ( st *: EmptyTuple ),

@@ -8,12 +8,12 @@ class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matc
 
     behavior of "CoproductSchemaBuilder"
 
-    trait SomeTrait
+    case class SomeTrait( value : Any )
 
     it should "be able to add a subtype" in {
         val csb = CoproductSchemaBuilder.empty[ SomeTrait ]
-          .addSubtype[ Int ]( SubtypeCase[ Int, "int", Unit ]( "int", Primitive[ Int ]() ) )
-          .addSubtype[ String ]( SubtypeCase[ String, "str", Unit ]( "str", Primitive[ String ]() ) )
+          .addSubtype( SubtypeCase[ SomeTrait, Int, Unit, Nothing, Unit, "int",  Unit ]( "int", Primitive[ Int ](), SomeTrait.apply, () ) )
+          .addSubtype( SubtypeCase[ SomeTrait, String, Unit, Nothing, Unit, "str", Unit ]( "str", Primitive[ String ](), SomeTrait.apply, () ) )
     }
 
 }

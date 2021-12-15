@@ -6,41 +6,57 @@ import org.hungerford.generic.schema.validator.Validator
 
 type TypeName = String & Singleton
 
-trait Subtype[ T ] {
+trait Subtype[ T, ST, Discr ] {
+    type DiscrName
+    type DiscrValue
     type Name <: TypeName
     type Shape
 
     def typeName: Name
 
-    def schema: Schema.Aux[ T, Shape ]
+    def schema: Schema.Aux[ ST, Shape ]
+
+    def asSuper : ST => T
+
+    def discriminatorValue : DiscrValue
 
     def description: Option[ String ] = None
 
-    def validators: Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ]
+    def validators: Set[ Validator[ ST ] ] = Set.empty[ Validator[ ST ] ]
 
-    def default: Option[ T ] = None
+    def default: Option[ ST ] = None
 
-    def examples: Seq[ T ] = Seq.empty[ T ]
+    def examples: Seq[ ST ] = Seq.empty[ ST ]
 
     def deprecated: Boolean = false
 }
 
 object Subtype {
-    type Aux[ T, N <: TypeName, S ] = Subtype[ T ] { type Name = N; type Shape = S }
+    type Aux[ T, ST, D, DN, DV, N <: TypeName, S ] = Subtype[ T, ST, D ] {
+        type Name = N; type DiscrValue = DV; type DiscrName = DN; type Shape = S
+    }
+    type Ctx[ T, D ] = [ X ] =>> Subtype[ T, X, D ]
+
+    type NoD[ T, ST, N <: TypeName, S ] = Aux[ T, ST, Unit, Nothing, Nothing, N, S ]
+    type WithD[ T, ST, D, DN <: FieldName, DV <: D, N <: TypeName, S ] = Aux[ T, ST, D, DN, DV, N, S ]
 }
 
-case class SubtypeCase[ T, N <: TypeName, S ](
+case class SubtypeCase[ T, ST, D, DN, DV, N <: TypeName, S ](
     override val typeName: N,
-    override val schema: Schema.Aux[ T, S ],
+    override val schema: Schema.Aux[ ST, S ],
+    override val asSuper : ST => T,
+    override val discriminatorValue : DV,
     override val description: Option[ String ] = None,
-    override val validators: Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-    override val default: Option[ T ] = None,
-    override val examples: Seq[ T ] = Seq.empty[ T ],
+    override val validators: Set[ Validator[ ST ] ] = Set.empty[ Validator[ ST ] ],
+    override val default: Option[ ST ] = None,
+    override val examples: Seq[ ST ] = Seq.empty[ ST ],
     override val deprecated: Boolean = false,
-) extends Subtype[ T ] {
+) extends Subtype[ T, ST, D ] {
     type Name = N
+    type DiscrName = DN
+    type DiscrValue = DV
     type Shape = S
 
     // For testing: get aux type from an instance
-    type ST = Subtype.Aux[ T, N, S ]
+    type Aux = Subtype.Aux[ T, ST, D, DN, DV, N, S ]
 }

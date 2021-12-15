@@ -11,7 +11,7 @@ class ValidDiscriminatorTest extends AnyFlatSpecLike with org.scalatest.matchers
     behavior of "ValidDiscriminator"
 
     it should "exist for non-existent discriminators type/name" in {
-        assertCompiles( """summon[ ValidDiscriminator[ Nothing, Nothing, Map[ Float, LazyList[ BigInt ] ] ] ]""" )
+        assertCompiles( """summon[ ValidDiscriminator[ Unit, Nothing, Map[ Float, LazyList[ BigInt ] ] ] ]""" )
     }
 
     it should "exist for any discriminator type/name for an empty tuple" in {
@@ -23,10 +23,10 @@ class ValidDiscriminatorTest extends AnyFlatSpecLike with org.scalatest.matchers
         import dsl.{*, given}
         Schema.derived[ P1 ]
     }
-    val st1 = SubtypeCase( "subtype-1", sch1 )
+    val st1 = SubtypeCase[ Any, P1, Int, "d", 1, "subtype-1", sch1.Shape ]( "subtype-1", sch1, v => v, 1 )
 
     it should "exist for a 1-tuple with a subtype of a product containing field type and name of discriminator" in {
-        assertCompiles( """summon[ ValidDiscriminator[ Int, "d", st1.ST *: EmptyTuple ] ]""" )
+        assertCompiles( """summon[ ValidDiscriminator[ Int, "d", st1.Aux *: EmptyTuple ] ]""" )
     }
 
     case class P2( other : String, d : Int )
@@ -34,11 +34,11 @@ class ValidDiscriminatorTest extends AnyFlatSpecLike with org.scalatest.matchers
         import dsl.{*, given}
         Schema.derived[ P2 ]
     }
-    val st2 = SubtypeCase( "subtype-2", sch2 )
+    val st2 = SubtypeCase[ Any, P2, Int, "d", 2, "subtype-2", sch2.Shape ]( "subtype-2", sch2, v => v, 2 )
 
     it should "exist for a 2-tuple with a two subtypes of products each containing field type and name of discriminator" in {
-        assertCompiles( """summon[ ValidDiscriminator[ Int, "d", st1.ST *: st2.ST *: EmptyTuple ] ]""" )
-        assertCompiles( """summon[ ValidDiscriminator[ Int, "d", st2.ST *: st1.ST *: EmptyTuple ] ]""" )
+        assertCompiles( """summon[ ValidDiscriminator[ Int, "d", st1.Aux *: st2.Aux *: EmptyTuple ] ]""" )
+        assertCompiles( """summon[ ValidDiscriminator[ Int, "d", st2.Aux *: st1.Aux *: EmptyTuple ] ]""" )
     }
 
     case class BadP2( other : String, e : Int )
@@ -46,13 +46,13 @@ class ValidDiscriminatorTest extends AnyFlatSpecLike with org.scalatest.matchers
         import dsl.{*, given}
         Schema.derived[ BadP2 ]
     }
-    val badSt2 = SubtypeCase( "subtype-2-bad", badSch2 )
+    val badSt2 = SubtypeCase[ Any, BadP2, Int, "e", 3, "subtype-2-bad",  badSch2.Shape ]( "subtype-2-bad", badSch2, v => v, 3 )
 
     it should "not exist for a 2-tuple with one subtype of a product lacking a field with the NAME of the discriminator" in {
-        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", st1.ST *: badSt2.ST *: EmptyTuple ] ]""" )
-        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", st2.ST *: badSt2.ST *: EmptyTuple ] ]""" )
-        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", badSt2.ST *: st1.ST *: EmptyTuple ] ]""" )
-        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", badSt2.ST *: st2.ST *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", st1.Aux *: badSt2.Aux *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", st2.Aux *: badSt2.Aux *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", badSt2.Aux *: st1.Aux *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", badSt2.Aux *: st2.Aux *: EmptyTuple ] ]""" )
     }
 
     case class BadP3( other : String, d : String )
@@ -60,12 +60,12 @@ class ValidDiscriminatorTest extends AnyFlatSpecLike with org.scalatest.matchers
         import dsl.{*, given}
         Schema.derived[ BadP3 ]
     }
-    val badSt3 = SubtypeCase( "subtype-3-bad", badSch3 )
+    val badSt3 = SubtypeCase[ Any, BadP3, String, "d", 4, "subtype-3-bad", badSch3.Shape ]( "subtype-3-bad", badSch3, v => v, 4 )
 
     it should "not exist for a 2-tuple with one subtype of a product lacking a field with TYPE of the discriminator" in {
-        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", st1.ST *: badSt3.ST *: EmptyTuple ] ]""" )
-        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", st2.ST *: badSt3.ST *: EmptyTuple ] ]""" )
-        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", badSt3.ST *: st1.ST *: EmptyTuple ] ]""" )
-        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", badSt3.ST *: st2.ST *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", st1.Aux *: badSt3.Aux *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", st2.Aux *: badSt3.Aux *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", badSt3.Aux *: st1.Aux *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ ValidDiscriminator[ Int, "d", badSt3.Aux *: st2.Aux *: EmptyTuple ] ]""" )
     }
 }

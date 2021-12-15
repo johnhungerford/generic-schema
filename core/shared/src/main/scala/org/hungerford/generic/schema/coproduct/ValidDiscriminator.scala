@@ -10,16 +10,14 @@ trait ValidDiscriminator[ D, DN, R ]
 
 object ValidDiscriminator {
 
-    given [ R ] : ValidDiscriminator[ Nothing, Nothing, R ] with {}
+    given [ R ] : ValidDiscriminator[ Unit, Nothing, R ] with {}
 
     given [ D, DN ] : ValidDiscriminator[ D, DN, EmptyTuple ] with {}
 
-    given [ D, DN <: TypeName, T, N <: TypeName, STR <: Tuple, STRV <: Tuple, STAF, STAFS, STC, STDC, Tail <: Tuple, FT ](
+    given [ D, DN <: TypeName, DV, T, ST, N <: TypeName, STR <: Tuple, STRV <: Tuple, STAF, STAFS, STC, STDC, Tail <: Tuple, FT ](
         using
-        fg : FieldRetriever.Aux[ DN, STR, FT ],
-        ev : FT <:< Field[ D ],
         next : ValidDiscriminator[ D, DN, Tail ],
-    ) : ValidDiscriminator[ D, DN, Subtype.Aux[ T, N, ProductShape[ T, STR, STRV, STAF, STAFS, STC, STDC ] ] *: Tail ] with {}
+    ) : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, N, ProductShape[ ST, STR, STRV, STAF, STAFS, STC, STDC ] ] *: Tail ] with {}
 
 }
 

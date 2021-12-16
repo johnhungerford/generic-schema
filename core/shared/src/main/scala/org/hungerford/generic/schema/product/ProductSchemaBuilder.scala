@@ -5,6 +5,7 @@ import org.hungerford.generic.schema.{ComplexSchema, NoSchema, Schema}
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.selector.{AmbigSelector, ComponentRetriever, ComponentUpdater, FieldSelector, Selector}
+import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 
 import scala.collection.immutable.NewVectorIterator
 

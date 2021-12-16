@@ -36,9 +36,9 @@ case class FieldBuilderWithoutSchemaOrName[ T ](
    def fieldName[ N <: FieldName ]( name : N ) : FieldBuilderWithoutSchemaWithName[ T, N ] =
        FieldBuilderWithoutSchemaWithName[ T, N ]( name, desc, vs )
    def description( description : String ) : FieldBuilderWithoutSchemaOrName[ T ] = copy( desc = Some( description ) )
-   def validate( validators : Validator[ T ]* ) : FieldBuilderWithoutSchemaOrName[ T ] = copy( vs = validators.toSet )
+   def validate( validators : Validator[ T ]* ) : FieldBuilderWithoutSchemaOrName[ T ] =  copy( vs = vs ++ validators.toSet )
    def examples( examples: T* ): FieldBuilderWithoutSchemaOrName[ T ] =
-     copy( exs = examples )
+     copy( exs = exs ++ examples )
 }
 
 case class FieldBuilderWithoutSchemaWithName[ T, N <: FieldName ](
@@ -75,7 +75,7 @@ case class FieldBuilderWithoutSchemaWithName[ T, N <: FieldName ](
 
    def fieldName[ NewN <: FieldName ]( name : NewN ) : FieldBuilderWithoutSchemaWithName[ T, NewN ] = copy[ T, NewN ]( fn = name )
    def description( description : String ) : FieldBuilderWithoutSchemaWithName[ T, N ] = copy( desc = Some( description ) )
-   def validate( validators : Validator[ T ]* ) : FieldBuilderWithoutSchemaWithName[ T, N ] = copy( vs = validators.toSet )
+   def validate( validators : Validator[ T ]* ) : FieldBuilderWithoutSchemaWithName[ T, N ] =  copy( vs = vs ++ validators.toSet )
    def examples(examples: T*): FieldBuilderWithoutSchemaWithName[ T, N ] =
      copy(exs = examples)
    def default( defaultValue : T ) : FieldBuilderWithoutSchemaWithName[ T, N ] = copy( df = Some( defaultValue ) )
@@ -130,8 +130,8 @@ case class FieldBuilderWithSchemaWithoutName[ T, S ](
         BuildableFieldBuilder[ T, N, S ]( sch, name, desc, vs )
 
     def description( description : String ) : FieldBuilderWithSchemaWithoutName[ T, S ] = copy( desc = Some( description ) )
-    def validate( validators : Validator[ T ]* ) : FieldBuilderWithSchemaWithoutName[ T, S ] = copy( vs = validators.toSet )
-    def examples( examples : T* ) : FieldBuilderWithSchemaWithoutName[ T, S ] = copy( exs = examples )
+    def validate( validators : Validator[ T ]* ) : FieldBuilderWithSchemaWithoutName[ T, S ] =  copy( vs = vs ++ validators.toSet )
+    def examples( examples : T* ) : FieldBuilderWithSchemaWithoutName[ T, S ] = copy( exs = exs ++ examples )
     def default( defaultValue : T ) : FieldBuilderWithSchemaWithoutName[ T, S ] = copy( df = Some( defaultValue ) )
     def deprecate : FieldBuilderWithSchemaWithoutName[ T, S ] = copy( dep = true )
 }
@@ -148,8 +148,8 @@ case class BuildableFieldBuilder[ T, N <: FieldName, S ](
    def fieldName[ NewN <: FieldName ]( name : NewN ) : BuildableFieldBuilder[ T, NewN, S ] =
      copy[ T, NewN, S ]( fn = name )
    def description( description : String ) : BuildableFieldBuilder[ T, N, S ] = copy( desc = Some( description ) )
-   def validate( validators : Validator[ T ]* ) : BuildableFieldBuilder[ T, N, S ] = copy( vs = validators.toSet )
-   def examples( examples : T* ) : BuildableFieldBuilder[ T, N, S ] = copy( exs = examples )
+   def validate( validators : Validator[ T ]* ) : BuildableFieldBuilder[ T, N, S ] =  copy( vs = vs ++ validators.toSet )
+   def examples( examples : T* ) : BuildableFieldBuilder[ T, N, S ] = copy( exs = exs ++ examples )
    def default( defaultValue : T ) : BuildableFieldBuilder[ T, N, S ] = copy( df = Some( defaultValue ) )
    def deprecate : BuildableFieldBuilder[ T, N, S ] = copy( dep = true )
 

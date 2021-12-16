@@ -1,11 +1,10 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.product.CtxWrapTuplesConstraint
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.Default.dsl.*
+import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 
 class FieldReplacerTest extends AnyFlatSpecLike with Matchers {
 

@@ -4,6 +4,7 @@ import org.hungerford.generic.schema.product.constructor.{ProductConstructor, Pr
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.field.{BuildableFieldBuilder, Field, FieldBuilder, FieldName, FieldReplacer, FieldRetriever, UniqueFieldNames}
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
+import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.validator.Validator
 
 trait ProductSchemaDsl {

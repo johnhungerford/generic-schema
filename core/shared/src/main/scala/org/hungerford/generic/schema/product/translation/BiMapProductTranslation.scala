@@ -1,11 +1,11 @@
 package org.hungerford.generic.schema.product.translation
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.product.{ProductShape, CtxWrapTuplesConstraint}
+import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
-import org.hungerford.generic.schema.product.field.{FieldName, Field, FieldTranslator, TranslatedFieldDescription, TranslatedFieldInjector}
+import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldTranslator, TranslatedFieldDescription, TranslatedFieldInjector}
 import org.hungerford.generic.schema.translation.SchemaTranslator
-import org.hungerford.generic.schema.types.{Injector, SimpleExtractor}
+import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Injector, SimpleExtractor}
 
 trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
 

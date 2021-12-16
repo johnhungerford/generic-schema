@@ -1,10 +1,11 @@
 package org.hungerford.generic.schema.coproduct
 
-import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.field.{FieldName, FieldRetriever}
 import org.hungerford.generic.schema.coproduct.subtype.{Subtype, TypeName}
+import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 
 import scala.collection.immutable.ListMap
 
@@ -42,6 +43,15 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
         copy[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ](
             sts = sts ++ ( st *: EmptyTuple ),
         )
+    }
+
+    def build[ RV <: Tuple ](
+        using
+        ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, D ], R, RV ],
+        dEv : ValidDiscriminator[ D, DN, R ],
+    ) : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] = {
+        val shape = CoproductShape[ T, R, RV, D, DN ]( sts )
+        ComplexSchema[ T, CoproductShape[ T, R, RV, D, DN ] ]( shape, nm, desc, vals, exs, dep )
     }
 
 }

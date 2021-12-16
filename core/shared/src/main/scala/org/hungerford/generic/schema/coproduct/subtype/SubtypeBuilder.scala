@@ -41,17 +41,16 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] (
     def default( defaultValue : ST ) : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] = copy( df = Some( defaultValue ) )
     def deprecate : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] = copy( dep = true )
 
-    def build(
+    def build[ CorrectN <: TypeName ](
         using
         schEv : Sch =:= Schema.Aux[ ST, S ],
         asEv : AS =:= (ST => T),
         dvEv : DV <:< D,
-        tnEv : N <:< TypeName,
+        tnEv : Sub.Aux[ N, TypeName, CorrectN ],
         vd : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, N with TypeName, S ] *: EmptyTuple ],
-    ) : Subtype.Aux[ T, ST, D, DN, DV, N with TypeName, S ] = {
-        type TN[+X] = N with X
-        SubtypeCase[ T, ST, D, DN, DV, N with TypeName, S ](
-            tnEv.liftCo[ TN ]( tn ),
+    ) : Subtype.Aux[ T, ST, D, DN, DV, CorrectN, S ] = {
+        SubtypeCase[ T, ST, D, DN, DV, CorrectN, S ](
+            tnEv( tn ),
             schEv( sch ),
             asEv( as ),
             dv,

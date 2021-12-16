@@ -60,3 +60,14 @@ case class SubtypeCase[ T, ST, D, DN, DV, N <: TypeName, S ](
     // For testing: get aux type from an instance
     type Aux = Subtype.Aux[ T, ST, D, DN, DV, N, S ]
 }
+
+trait SubtypeDsl {
+
+    extension ( subtype : Subtype.type )
+        def builder[ T, ST, D, DN ](
+            using
+            asEv : AsSuperGenerator[ T, ST ],
+        ) : SubtypeBuilder[ T, ST, D, DN, Unit, asEv.AS, Unit, Nothing, Unit ] =
+            SubtypeBuilder.empty[ T, ST, D, DN ]
+
+}

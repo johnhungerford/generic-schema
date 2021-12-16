@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.field.{FieldName, FieldRetriever}
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{AsSuperGenerator, Subtype, SubtypeBuilder, TypeName}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 
 import scala.collection.immutable.ListMap
@@ -44,6 +44,11 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
             sts = sts ++ ( st *: EmptyTuple ),
         )
     }
+
+    def buildSubtype[ ST ](
+        using
+        asEv : AsSuperGenerator[ T, ST ],
+    ) : SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ] = SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ]( this )
 
     def build[ RV <: Tuple ](
         using
@@ -110,4 +115,19 @@ object DiscriminatorAdder {
             )
         }
     }
+}
+
+case class SubtypeBuilderAdder[ ST, ASType, T, R <: Tuple, D, DN  ](
+    stb : CoproductSchemaBuilder[ T, R, D, DN ],
+)(
+    using
+    val asEv: AsSuperGenerator.Aux[ T, ST, ASType ],
+) {
+    def apply[ DV, N <: TypeName, S ](
+        buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, asEv.AS, Unit, Nothing, Unit ] => Subtype.Aux[ T, ST, D, DN, DV, N, S ],
+    )(
+        using
+        vd: ValidDiscriminator[ D, DN, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ]
+    ): CoproductSchemaBuilder[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ] =
+        stb.addSubtype( buildFn( SubtypeBuilder.empty[ T, ST, D, DN ] ) )
 }

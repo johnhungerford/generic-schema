@@ -1,5 +1,6 @@
 package org.hungerford.generic.schema
 
+import org.hungerford.generic.schema.coproduct.CoproductSchemaBuilder
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
 import org.hungerford.generic.schema.product.field.FieldReplacer
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
@@ -217,6 +218,10 @@ trait SchemaDsl {
                 constr = (),
                 decons = (),
             )
+
+    extension ( sch : Schema.type )
+        def coproductBuilder[ T ] : CoproductSchemaBuilder[ T, EmptyTuple, Unit, Nothing ] =
+            CoproductSchemaBuilder[ T, EmptyTuple, Unit, Nothing ]( sts = EmptyTuple )
 
     extension ( sch : Schema.type )
         def primitiveBuilder[ T ] : PrimitiveSchemaBuilder[ T ] = PrimitiveSchemaBuilder[ T ]()

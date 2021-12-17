@@ -32,7 +32,7 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] (
     def asSuper( fn : ST => T ) : SubtypeBuilder[ T, ST, D, DN, DV, ST => T, N, S, Sch ] =
         copy[ T, ST, D, DN, DV, ST => T, N, S, Sch ]( as = fn )
 
-    def discriminatorValue[ NewDV <: D ]( value : NewDV ) : SubtypeBuilder[ T, ST, D, DN, NewDV, AS, N, S, Sch ] =
+    def discriminatorValue[ NewDV <: (D & Singleton) ]( value : NewDV ) : SubtypeBuilder[ T, ST, D, DN, NewDV, AS, N, S, Sch ] =
         copy[ T, ST, D, DN, NewDV, AS, N, S, Sch ]( dv = value )
 
     def description( description : String ) : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] = copy( desc = Some( description ) )
@@ -45,9 +45,9 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] (
         using
         schEv : Sch =:= Schema.Aux[ ST, S ],
         asEv : AS =:= (ST => T),
-        dvEv : DV <:< D,
+        dvEv : CorrectDV[ D, DV ],
         tnEv : Sub.Aux[ N, TypeName, CorrectN ],
-        vd : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, N with TypeName, S ] *: EmptyTuple ],
+        vd : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, CorrectN, S ] *: EmptyTuple ],
     ) : Subtype.Aux[ T, ST, D, DN, DV, CorrectN, S ] = {
         SubtypeCase[ T, ST, D, DN, DV, CorrectN, S ](
             tnEv( tn ),
@@ -60,6 +60,24 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] (
             exs,
             dep,
         )
+    }
+}
+
+trait CorrectDV[ D, DV ] {
+    type Out
+
+    def apply( dv: DV ) : Out
+}
+
+object CorrectDV {
+    type Aux[ D, DV, O ] = CorrectDV[ D, DV ] { type Out = O }
+    given [ D, DV ]( using ev: Sub[ DV, D & Singleton ] ) : CorrectDV[ D, DV ] with {
+        type Out = ev.ASub
+        override def apply( dv: DV ): ev.ASub = ev( dv )
+    }
+    given CorrectDV[ Unit, Unit ] with {
+        type Out = Unit
+        override def apply( dv: Unit ): Unit = dv
     }
 }
 

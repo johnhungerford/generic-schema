@@ -38,6 +38,8 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
         st : Subtype.Aux[ T, ST, D, DN, DV, N, S ],
     )(
         using
+        uniqT : UniqueTypeNames[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
+        uniqDV : UniqueDiscriminatorValues[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
         vd : ValidDiscriminator[ D, DN, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ]
     ) : CoproductSchemaBuilder[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ] = {
         copy[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ](
@@ -53,6 +55,8 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
     def build[ RV <: Tuple ](
         using
         ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, D ], R, RV ],
+        uniqT : UniqueTypeNames[ R ],
+        uniqDV : UniqueDiscriminatorValues[ R ],
         dEv : ValidDiscriminator[ D, DN, R ],
     ) : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] = {
         val shape = CoproductShape[ T, R, RV, D, DN ]( sts )
@@ -127,6 +131,8 @@ case class SubtypeBuilderAdder[ ST, ASType, T, R <: Tuple, D, DN  ](
         buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, asEv.AS, Unit, Nothing, Unit ] => Subtype.Aux[ T, ST, D, DN, DV, N, S ],
     )(
         using
+        uniqT : UniqueTypeNames[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
+        uniqDV : UniqueDiscriminatorValues[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
         vd: ValidDiscriminator[ D, DN, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ]
     ): CoproductSchemaBuilder[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ] =
         stb.addSubtype( buildFn( SubtypeBuilder.empty[ T, ST, D, DN ] ) )

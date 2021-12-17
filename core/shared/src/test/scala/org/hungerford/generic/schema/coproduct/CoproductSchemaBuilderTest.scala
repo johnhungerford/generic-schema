@@ -30,4 +30,38 @@ class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matc
           .build
     }
 
+    case class SubCase2( int : Int ) extends SuperTrait
+
+    it should "not be able to add two subtypes with the same name" in {
+        val csb = Schema.coproductBuilder[ SuperTrait ]
+          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).build )
+
+        assertDoesNotCompile(
+            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case" )
+              |.fromSchema( Schema.derived ).build )""".stripMargin,
+        )
+
+        assertCompiles(
+            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" )
+              |.fromSchema( Schema.derived ).build )""".stripMargin,
+        )
+    }
+
+    it should "not be able to add two subtypes with same discriminator value" in {
+        val csb = Schema.coproductBuilder[ SuperTrait ]
+          .discriminator[ Int ]( "int" )
+          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).discriminatorValue( 1 ).build )
+
+        assertDoesNotCompile(
+            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" ).discriminatorValue( 1 )
+              |.fromSchema( Schema.derived ).build )""".stripMargin,
+        )
+
+        assertCompiles(
+            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" ).discriminatorValue( 2 )
+              |.fromSchema( Schema.derived ).build )""".stripMargin,
+        )
+
+    }
+
 }

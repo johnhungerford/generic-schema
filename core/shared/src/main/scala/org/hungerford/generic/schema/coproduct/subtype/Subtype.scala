@@ -38,7 +38,7 @@ object Subtype {
     type Ctx[ T, D ] = [ X ] =>> Subtype[ T, X, D ]
 
     type NoD[ T, ST, N <: TypeName, S ] = Aux[ T, ST, Unit, Nothing, Nothing, N, S ]
-    type WithD[ T, ST, D, DN <: FieldName, DV <: D, N <: TypeName, S ] = Aux[ T, ST, D, DN, DV, N, S ]
+    type WithD[ T, ST, D, DN <: FieldName, DV <: D & Singleton, N <: TypeName, S ] = Aux[ T, ST, D, DN, DV, N, S ]
 }
 
 case class SubtypeCase[ T, ST, D, DN, DV, N <: TypeName, S ](

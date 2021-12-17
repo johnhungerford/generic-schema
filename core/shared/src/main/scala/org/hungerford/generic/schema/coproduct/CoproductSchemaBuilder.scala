@@ -55,6 +55,8 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
     def build[ RV <: Tuple ](
         using
         ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, D ], R, RV ],
+        uniqT : UniqueTypeNames[ R ],
+        uniqDV : UniqueDiscriminatorValues[ R ],
         dEv : ValidDiscriminator[ D, DN, R ],
     ) : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] = {
         val shape = CoproductShape[ T, R, RV, D, DN ]( sts )

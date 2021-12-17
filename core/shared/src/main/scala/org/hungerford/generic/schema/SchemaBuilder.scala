@@ -1,5 +1,6 @@
 package org.hungerford.generic.schema
 
+import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape}
 import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.product.{ProductDeriver, ProductSchemaBuilder, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
@@ -71,6 +72,23 @@ object SchemaRebuilder {
                     schema.shape.deconstructor,
                 )
             }
+        }
+    }
+
+    given coproductRebuilder[ T, R <: Tuple, RV <: Tuple, D, DN ] : SchemaRebuilder[ T, CoproductShape[ T, R, RV, D, DN ] ] with {
+        type Builder = CoproductSchemaBuilder[ T, R, D, DN ]
+
+        def rebuild(
+            schema : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
+        ) : CoproductSchemaBuilder[ T, R, D, DN ] = {
+            CoproductSchemaBuilder[ T, R, D, DN ](
+                schema.name,
+                schema.genericDescription,
+                schema.genericValidators,
+                schema.genericExamples,
+                schema.deprecated,
+                schema.shape.subtypeDescriptions,
+            )
         }
     }
 

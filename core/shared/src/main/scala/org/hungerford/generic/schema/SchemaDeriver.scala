@@ -1,7 +1,8 @@
 package org.hungerford.generic.schema
 
+import org.hungerford.generic.schema.coproduct.CoproductDeriver
 import org.hungerford.generic.schema.product.field.Field
-import org.hungerford.generic.schema.product.{TupleIntLength, ProductDeriver, ProductShape, ProductBuildDeriver}
+import org.hungerford.generic.schema.product.{ProductDeriver, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
 
@@ -20,12 +21,21 @@ object SchemaDeriver {
     ) : SchemaDeriver.Aux[ T, sd.Shape ] = sd
 
 
-    implicit def productSchemaDeriver[ T ](
-        implicit prd : ProductDeriver[ T ],
+    given productSchemaDeriver[ T ](
+        using
+        prd : ProductDeriver[ T ],
     ) : SchemaDeriver.Aux[ T, prd.Out ] = new SchemaDeriver[ T ] {
         override type Shape = prd.Out
 
         override def derive : Schema.Aux[ T, Shape ] = ComplexSchema[ T, Shape ]( prd.derive )
+    }
+
+    given coproductSchemaDeriver[ T ](
+        using
+        cprd : CoproductDeriver[ T ],
+    ) : SchemaDeriver.Aux[ T, cprd.Out ] = new SchemaDeriver[ T ] {
+        type Shape = cprd.Out
+        def derive : Schema.Aux[ T, Shape ] = ComplexSchema[ T, Shape ]( cprd.derive )
     }
 
     def schema[ T ](
@@ -47,13 +57,13 @@ object SchemaBuildDeriver {
         implicit sd : SchemaBuildDeriver[ T ],
     ) : SchemaBuildDeriver.Aux[ T, sd.Builder ] = sd
 
-
-    implicit def productSchemaBuildDeriver[ T ](
-        implicit prd : ProductBuildDeriver[ T ],
-    ) : SchemaBuildDeriver.Aux[ T, prd.Builder ] = new SchemaBuildDeriver[ T ] {
-        override type Builder = prd.Builder
-
-        override def derive : Builder = prd.derive
+    given rebuilder[ T ](
+        using
+        cpd : SchemaDeriver[ T ],
+        cprb : SchemaRebuilder[ T, cpd.Shape ],
+    ) : SchemaBuildDeriver.Aux[ T, cprb.Builder ] = new SchemaBuildDeriver[ T ] {
+        type Builder = cprb.Builder
+        def derive : Builder = cprb.rebuild( cpd.derive )
     }
 
     def builder[ T ](

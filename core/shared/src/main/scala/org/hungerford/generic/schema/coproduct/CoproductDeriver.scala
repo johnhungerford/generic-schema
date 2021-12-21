@@ -1,45 +1,145 @@
 package org.hungerford.generic.schema.coproduct
 
-import org.hungerford.generic.schema.{ComplexSchema, SchemaProvider}
-import org.hungerford.generic.schema.coproduct.ProductDeriver.MirrorCoproduct
-import org.hungerford.generic.schema.types.{Deriver, Sub}
+import org.hungerford.generic.schema.{Schema, ComplexSchema, SchemaProvider}
+import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Deriver, Sub, Zipper}
 import org.hungerford.generic.schema.coproduct.subtype.{AsSuperGenerator, Subtype, SubtypeCase, TypeName}
+import org.hungerford.generic.schema.product.ProductDeriver.MirrorProduct
+import org.hungerford.generic.schema.product.ProductShape
+import org.hungerford.generic.schema.product.field.FieldName
 
+import scala.util.NotGiven
 import scala.deriving.Mirror
-import scala.compiletime.constValue
+import scala.compiletime.{constValue, erasedValue, summonInline}
 
-trait ProductDeriver[ T ] extends Deriver[ T ]
+trait CoproductDeriver[ T ] {
+    type Out
 
-object ProductDeriver {
-    type Aux[ T, Out0 ] = ProductDeriver[ T ] {type Out = Out0}
+    def derive : Out
+}
 
-    type DerivedCoproduct[ T, R <: Tuple, RV <: Tuple ] = CoproductShape[ T, R, RV, Unit, Nothing ]
+object CoproductDeriver {
+    type Aux[ T, O ] = CoproductDeriver[ T ] { type Out = O }
 
-    type MirrorCoproduct[ T, Elems <: Tuple, ElemLabels <: Tuple ] = Mirror.SumOf[ T ] {
-        type MirroredElemTypes = Elems
-        type MirroredElemLabels = ElemLabels
+    def apply[ T ](
+        using
+        cd : CoproductDeriver[ T ],
+    ) : CoproductDeriver.Aux[ T, cd.Out ] = cd
+
+    transparent inline given [ T, Elems <: NonEmptyTuple, ElemLabels <: NonEmptyTuple ](
+        using
+        mir : Mirror.Of[ T ],
+        der : CoproductMirDeriver[ T, mir.MirroredElemTypes, mir.MirroredElemLabels ],
+        ev1 : mir.MirroredElemTypes =:= Elems,
+        ev2 : mir.MirroredElemLabels =:= ElemLabels,
+    ) : CoproductDeriver.Aux[ T, der.Out ] = {
+
+        new CoproductDeriver[ T ] {
+            override type Out = der.Out
+            override def derive: der.Out = der.derive
+        }
     }
 }
 
-trait SubtypeDeriver[ T ] extends Deriver[ T ]
+trait CoproductMirDeriver[ T, Elems <: Tuple, ElemLabels <: Tuple ] {
+    type Out
 
-object SubtypeDeriver {
-    type Aux[ T, O ] = SubtypeDeriver[ T ] { type Out = O }
+    def derive : Out
+}
 
-    inline given [ T, ST, STSub, N <: TypeName ](
+object CoproductMirDeriver {
+    type Aux[ T, Elems <: Tuple, ElemLabels <: Tuple, O ] = CoproductMirDeriver[ T, Elems, ElemLabels ] { type Out = O }
+
+    given [ T, Elems <: Tuple, ElemLabels <: Tuple, R <: Tuple ](
         using
-        provider : SchemaProvider[ ST ],
+        der : SubtypesDeriver.Aux[ T, Elems, ElemLabels, R ],
+        ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, Unit ], R, Elems ],
+        uniq : UniqueTypeNames[ R ],
+        uniqDv : UniqueDiscriminatorValues[ R ],
+        vd : ValidDiscriminator[ Unit, Nothing, R ],
+    ) : CoproductMirDeriver.Aux[ T, Elems, ElemLabels, CoproductShape[ T, R, Elems, Unit, Nothing ] ] = {
+        new CoproductMirDeriver[ T, Elems, ElemLabels ] {
+            type Out = CoproductShape[ T, R, Elems, Unit, Nothing ]
+
+            def derive: Out = CoproductShape[ T, R, Elems, Unit, Nothing ](
+                der.derive
+            )
+        }
+    }
+
+    def apply[ T, Elems <: Tuple, ElemLabels <: Tuple, Res ](
+        mir : Mirror.SumOf[ T ] { type MirroredElemTypes = Elems; type MirroredElemLabels = ElemLabels },
+    )(
+        using
+        cd : CoproductMirDeriver.Aux[ T, Elems, ElemLabels, Res ],
+    ) : CoproductMirDeriver.Aux[ T, Elems, ElemLabels, Res ] = cd
+}
+
+//trait SubtypeDeriver[ T, ST, N <: TypeName ] {
+//    type Out
+//
+//    def derive : Out
+//}
+//
+//object SubtypeDeriver {
+//    type Aux[ T, ST, N <: TypeName, O ] = SubtypeDeriver[ T, ST, N ] { type Out = O }
+//
+//    inline given [ T, ST, STS, N <: TypeName ](
+//        using
+//        provider : SchemaProvider.Aux[ ST, STS ],
+//        asGen : AsSuperGenerator.Aux[ T, ST, ST => T ],
+//    ) : SubtypeDeriver.Aux[ T, ST, N, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] ] = {
+//        new SubtypeDeriver[  T, ST, N ] {
+//            type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ]
+//
+//            override def derive: Out = {
+//                val typeName = summonInline[ ValueOf[ N ] ].value
+//
+//                SubtypeCase[ T, ST, Unit, Nothing, Unit, N, STS ](
+//                    typeName,
+//                    provider.provide,
+//                    asGen.as,
+//                    (),
+//                )
+//            }
+//        }
+//    }
+//}
+
+trait SubtypesDeriver[ T, STs <: Tuple, Ns <: Tuple ] {
+    type Out <: Tuple
+
+    def derive : Out
+}
+
+object SubtypesDeriver {
+    type Aux[ T, STs <: Tuple, Ns <: Tuple, O ] = SubtypesDeriver[ T, STs, Ns ] { type Out = O }
+
+    inline given [ T ] : SubtypesDeriver[ T, EmptyTuple, EmptyTuple ] with {
+        type Out = EmptyTuple
+
+        def derive : EmptyTuple = EmptyTuple
+    }
+
+    inline given [ T, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
+        using
+        provider : SchemaProvider.Aux[ ST, STS ],
+        ev : NotGiven[ N =:= Nothing ],
         asGen : AsSuperGenerator.Aux[ T, ST, ST => T ],
-    ) : SubtypeDeriver.Aux[ (T, ST, N), Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, provider.Shape ] ] = new SubtypeDeriver[ (T, ST, N) ] {
-        type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, provider.Shape ]
+        tDer : SubtypesDeriver.Aux[ T, STTail, NTail, Next ],
+    ) : SubtypesDeriver.Aux[ T, ST *: STTail, N *: NTail, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next ] = {
+        val typeName = summonInline[ ValueOf[ N ] ].value
 
-        private val typeName = constValue[ N ]
+        new SubtypesDeriver[ T, ST *: STTail, N *: NTail ] {
+            type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next
 
-        override def derive: Out = SubtypeCase[ T, ST, Unit, Nothing, Unit, N, provider.Shape ](
-            typeName,
-            provider.provide,
-            asGen.as,
-            (),
-        )
+            def derive : Out = {
+                SubtypeCase[ T, ST, Unit, Nothing, Unit, N, STS ](
+                    typeName,
+                    provider.provide,
+                    asGen.as,
+                    (),
+                )
+            } *: tDer.derive
+        }
     }
 }

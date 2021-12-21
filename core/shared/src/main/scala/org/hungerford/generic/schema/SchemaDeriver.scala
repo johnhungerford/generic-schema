@@ -2,7 +2,7 @@ package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.coproduct.CoproductDeriver
 import org.hungerford.generic.schema.product.field.Field
-import org.hungerford.generic.schema.product.{ProductBuildDeriver, ProductDeriver, ProductShape, TupleIntLength}
+import org.hungerford.generic.schema.product.{ProductDeriver, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
 

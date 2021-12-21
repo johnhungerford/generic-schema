@@ -8,24 +8,6 @@ import org.hungerford.generic.schema.validator.Validator
 class SchemaRebuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
     behavior of "SchemaRebuilder"
 
-    it should "rebuild a coproduct schema" in {
-        trait SuperType
-        case object SubType extends SuperType
-        case object SubType2 extends SuperType
-
-        val sch = Schema.coproductBuilder[ SuperType ]
-          .buildSubtype[ SubType.type ]( _.typeName( "sub-type-1" ).primitive.build )
-          .build
-
-        sch.shape.subtypeDescriptions.size shouldBe 1
-
-        val sch2 = sch.rebuild
-          .buildSubtype[ SubType2.type ]( _.typeName( "sub-type-2" ).primitive.build )
-          .build
-
-        sch2.shape.subtypeDescriptions.size shouldBe 2
-    }
-
     it should "rebuild a product schema" in {
         case class Prod( int : Int, str : String )
 
@@ -55,7 +37,7 @@ class SchemaRebuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sh
           .build
 
         val sch2 = sch.rebuild
-          .addSubtype[ Float ]( _.typeName( "ZeroFloat" ).primitive.validate( Validator.oneOf( 0F ) ).asSuper( v => Possible( v.toString ) ).build )
+          .buildSubtype[ Float ]( _.typeName( "ZeroFloat" ).primitive.validate( Validator.oneOf( 0F ) ).asSuper( v => Possible( v.toString ) ).build )
           .description( "A numeric type supporting integers for positive numbers, doubles for negative numbers, and 0 as float" )
           .build
     }

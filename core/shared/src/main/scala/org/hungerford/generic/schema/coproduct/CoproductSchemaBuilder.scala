@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.field.{FieldName, FieldRetriever}
-import org.hungerford.generic.schema.coproduct.subtype.{AsSuperGenerator, Subtype, SubtypeBuilder, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{AsSuperGenerator, Subtype, SubtypeBuilder, SubtypeRemover, TypeName}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 
 import scala.collection.immutable.ListMap
@@ -45,6 +45,15 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
         copy[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ](
             sts = sts ++ ( st *: EmptyTuple ),
         )
+    }
+
+    def removeSubtype[ N <: TypeName, NewR <: Tuple ](
+        typeName : N,
+    )(
+        using
+        str : SubtypeRemover.Aux[ N, R, NewR ],
+    ) : CoproductSchemaBuilder[ T, NewR, D, DN ] = {
+        copy[ T, NewR, D, DN ]( sts = str.remove( sts ) )
     }
 
     def buildSubtype[ ST ](

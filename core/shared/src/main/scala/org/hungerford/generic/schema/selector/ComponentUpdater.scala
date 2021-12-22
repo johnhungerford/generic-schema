@@ -1,12 +1,12 @@
 package org.hungerford.generic.schema.selector
 
-import org.hungerford.generic.schema.coproduct.{CoproductShape, UniqueDiscriminatorValues, UniqueTypeNames, ValidDiscriminator}
+import org.hungerford.generic.schema.coproduct.{CoproductShape, UniqueDiscriminatorValues, UniqueTypeNames, ValidDiscriminator, subtype}
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaRebuilder}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldCase, FieldName, FieldReplacer, FieldRetriever, UniqueFieldNames}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeReplacer, SubtypeRetriever, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{CorrectDV, Subtype, SubtypeBuilder, SubtypeReplacer, SubtypeRetriever, TypeName}
 
 import scala.util.NotGiven
 
@@ -152,6 +152,21 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
                     deprecated = outer.deprecated,
                 )
             }
+        }
+    }
+
+    given fromSubtype[ T, ST, D, DN, DV, N <: FieldName, S, SelR, I, NewI, NewS ](
+        using
+        ev : NotGiven[ SelR <:< Tuple ],
+        ev1 : CorrectDV[ D, DV ],
+        ev2 : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] *: EmptyTuple ],
+        scu : ComponentUpdater.Aux[ Schema.Aux[ ST, S ], SelR, I, NewI, Schema.Aux[ ST, NewS ] ],
+    ) : ComponentUpdater.Aux[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], SelR, I, NewI, Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] ] = {
+        new ComponentUpdater[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], SelR, I, NewI ] {
+            override type NewOuter = Subtype.Aux[ T, ST, D, DN, DV, N, NewS ]
+
+            override def update( outer : Subtype.Aux[ T, ST, D, DN, DV, N, S ] )( updater : I => NewI ) : NewOuter =
+                SubtypeBuilder.from( outer ).fromSchema( scu.update( outer.schema )( updater ) ).build
         }
     }
 

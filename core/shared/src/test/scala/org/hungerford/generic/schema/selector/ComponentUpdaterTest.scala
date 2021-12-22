@@ -69,27 +69,49 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         oneS.shape.fieldDescriptions.head.fieldName shouldBe "string_field_5"
     }
 
-    behavior of "ComponentUpdater - fields"
+    behavior of "ComponentUpdater - subtypes"
 
-    sealed trait SuperT
-    final case class SubT1() extends SuperT
-    final case class SubT2( int : Int ) extends SuperT
-    final case class SubT3( int : Int, str : String ) extends SuperT
+    sealed trait OuterT
+    final case class SubT() extends OuterT
+    sealed trait InnerT extends OuterT
+    final case class SubT1() extends InnerT
+    final case class SubT2(int: Int) extends InnerT
+    sealed trait CoreT extends InnerT
+    final case class SubT3(str : String) extends CoreT
 
     it should "update a subtype" in {
-        val sch = Schema.derived[ SuperT ]
+        val sch = Schema.derived[ OuterT ]
 
-        val newSch = ComponentUpdater.update( sch )( Selector.subtype( "SubT2" ) ) { subtype =>
+        val newSch = ComponentUpdater.update( sch )( Selector.subtype( "InnerT" ) ) { subtype =>
             SubtypeBuilder.from( subtype )
               .typeName( "NEW-NAME" )
-              .fromSchema( Schema.primitive[ SubT2 ] )
+              .fromSchema( Schema.primitive[ InnerT ] )
               .build
         }
 
-        newSch.shape.subtypeDescriptions.size shouldBe 3
-        newSch.shape.subtypeDescriptions.head.typeName shouldBe "SubT1"
+        newSch.shape.subtypeDescriptions.size shouldBe 2
+        newSch.shape.subtypeDescriptions.head.typeName shouldBe "SubT"
         newSch.shape.subtypeDescriptions.tail.head.typeName shouldBe "NEW-NAME"
-        newSch.shape.subtypeDescriptions.tail.tail.head.typeName shouldBe "SubT3"
+        newSch.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
+    }
+
+    it should "update from a subtype" in {
+        val st = Schema.derived[ OuterT ]( "InnerT" )
+
+        st.schema.shape.subtypeDescriptions.tail.head.typeName shouldBe "SubT2"
+        st.schema.shape.subtypeDescriptions.tail.head.schema.shape should not be( () )
+
+        val newSt = ComponentUpdater.update( st )( Selector.subtype( "SubT2" ) ) { subtype =>
+            SubtypeBuilder.from( subtype )
+              .typeName( "NEW-NAME" )
+              .fromSchema( Schema.primitive )
+              .build
+        }
+
+        newSt.schema.shape.subtypeDescriptions.size shouldBe 3
+        newSt.schema.shape.subtypeDescriptions.head.typeName shouldBe "SubT1"
+        newSt.schema.shape.subtypeDescriptions.tail.head.typeName shouldBe "NEW-NAME"
+        newSt.schema.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
     }
 
 }

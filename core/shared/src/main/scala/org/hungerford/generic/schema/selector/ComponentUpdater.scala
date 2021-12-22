@@ -8,13 +8,35 @@ import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldCa
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeReplacer, SubtypeRetriever, TypeName}
 
+import scala.util.NotGiven
+
 trait ComponentUpdater[ Outer, Sel, Inner, NewInner ] {
     type NewOuter
 
     def update( outer : Outer )( updater : Inner => NewInner ) : NewOuter
 }
 
-object ComponentUpdater {
+trait LowPriorityComponentUpdaters {
+    given ambigFieldUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
+        using
+        fcu : ComponentUpdater.Aux[ Outer, FieldSelector[ N ], Inner, NewInner, NO ],
+    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
+        type NewOuter = NO
+
+        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
+    }
+
+    given ambigSubTypeUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
+        using
+        fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
+    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
+        type NewOuter = NO
+
+        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
+    }
+}
+
+object ComponentUpdater extends LowPriorityComponentUpdaters {
     type Aux[ Outer, Sel, Inner, NewInner, NO ] = ComponentUpdater[ Outer, Sel, Inner, NewInner ] { type NewOuter = NO }
 
     given [ Outer, NO ] : ComponentUpdater.Aux[ Outer, EmptyTuple, Outer, NO, NO ] = new ComponentUpdater[ Outer, EmptyTuple, Outer, NO ] {
@@ -89,14 +111,15 @@ object ComponentUpdater {
         }
     }
 
-    given fromFieldDesc[ T, N <: FieldName, S, SelN <: FieldName, F, FS, NewN <: FieldName, NewFS, NewS ](
+    given fromFieldDesc[ T, N <: FieldName, S, SelR, I, NewI, NewS ](
         using
-        scu : ComponentUpdater.Aux[ Schema.Aux[ T, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ], Schema.Aux[ T, NewS ] ],
-    ) : ComponentUpdater.Aux[ Field.Aux[ T, N, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ], Field.Aux[ T, N, NewS ] ] = {
-        new ComponentUpdater[ Field.Aux[ T, N, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ] ] {
+        ev : NotGiven[ SelR <:< Tuple ],
+        scu : ComponentUpdater.Aux[ Schema.Aux[ T, S ], SelR, I, NewI, Schema.Aux[ T, NewS ] ],
+    ) : ComponentUpdater.Aux[ Field.Aux[ T, N, S ], SelR, I, NewI, Field.Aux[ T, N, NewS ] ] = {
+        new ComponentUpdater[ Field.Aux[ T, N, S ], SelR, I, NewI ] {
             override type NewOuter = Field.Aux[ T, N, NewS ]
 
-            override def update( outer : Field.Aux[ T, N, S ] )( updater : Field.Aux[ F, SelN, FS ] => Field.Aux[ F, NewN, NewFS ] ) : Field.Aux[ T, N, NewS ] =
+            override def update( outer : Field.Aux[ T, N, S ] )( updater : I => NewI ) : Field.Aux[ T, N, NewS ] =
                 FieldBuilder.from( outer ).fromSchema( scu.update( outer.schema )( updater ) ).build
         }
     }
@@ -131,25 +154,6 @@ object ComponentUpdater {
             }
         }
     }
-
-    given ambigFieldUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
-        using
-        fcu : ComponentUpdater.Aux[ Outer, FieldSelector[ N ], Inner, NewInner, NO ],
-    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
-        type NewOuter = NO
-
-        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
-    }
-
-    given ambigSubTypeUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
-        using
-        fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
-    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
-        type NewOuter = NO
-
-        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
-    }
-
 
     class Updater[ Outer, Inner, Sel ](
         outer : Outer,

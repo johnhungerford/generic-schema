@@ -47,6 +47,11 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
         )
     }
 
+    def buildSubtype[ ST ](
+        using
+        asEv : AsSuperGenerator[ T, ST ],
+    ) : SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ] = SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ]( this )
+
     def removeSubtype[ N <: TypeName, NewR <: Tuple ](
         typeName : N,
     )(
@@ -55,11 +60,6 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
     ) : CoproductSchemaBuilder[ T, NewR, D, DN ] = {
         copy[ T, NewR, D, DN ]( sts = str.remove( sts ) )
     }
-
-    def buildSubtype[ ST ](
-        using
-        asEv : AsSuperGenerator[ T, ST ],
-    ) : SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ] = SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ]( this )
 
     def build[ RV <: Tuple ](
         using

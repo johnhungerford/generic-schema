@@ -4,8 +4,9 @@ import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.field.{FieldName, FieldRetriever}
-import org.hungerford.generic.schema.coproduct.subtype.{AsSuperGenerator, Subtype, SubtypeBuilder, SubtypeRemover, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{AsSuperGenerator, Subtype, SubtypeBuilder, SubtypeRemover, SubtypeRetriever, TypeName}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
+import org.hungerford.generic.schema.selector.{ComponentUpdater, SubTypeSelector}
 
 import scala.collection.immutable.ListMap
 
@@ -50,7 +51,8 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
     def buildSubtype[ ST ](
         using
         asEv : AsSuperGenerator[ T, ST ],
-    ) : SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ] = SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ]( this )
+    ) : SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ] =
+        SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ]( this )
 
     def removeSubtype[ N <: TypeName, NewR <: Tuple ](
         typeName : N,
@@ -60,6 +62,14 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
     ) : CoproductSchemaBuilder[ T, NewR, D, DN ] = {
         copy[ T, NewR, D, DN ]( sts = str.remove( sts ) )
     }
+
+    def modifySubtype[ N <: TypeName, SubT ](
+        subtype : N,
+    )(
+        using
+        str : SubtypeRetriever.Aux[ N, R, SubT ],
+    ) : SubtypeModifier[ N, R, CoproductSchemaBuilder[ T, R, D, DN ], SubT ] =
+        SubtypeModifier[ N, R, CoproductSchemaBuilder[ T, R, D, DN ], SubT ]( this )
 
     def build[ RV <: Tuple ](
         using
@@ -145,4 +155,18 @@ case class SubtypeBuilderAdder[ ST, ASType, T, R <: Tuple, D, DN  ](
         vd: ValidDiscriminator[ D, DN, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ]
     ): CoproductSchemaBuilder[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ] =
         stb.addSubtype( buildFn( SubtypeBuilder.empty[ T, ST, D, DN ] ) )
+}
+
+case class SubtypeModifier[ N <: TypeName, R <: Tuple, Builder, SubT ](
+    builder : Builder
+)(
+    using
+    str : SubtypeRetriever.Aux[ N, R, SubT ],
+) {
+    def apply[ NewSubT, NewBuilder ](
+        modifier : SubT => NewSubT,
+    )(
+        using
+        cm : ComponentUpdater.Aux[ Builder, SubTypeSelector[ N ], SubT, NewSubT, NewBuilder ]
+    ) : NewBuilder = cm.update( builder )( modifier )
 }

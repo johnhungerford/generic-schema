@@ -47,4 +47,11 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         st.schema.shape.fieldDescriptions.head.fieldName shouldBe "str"
     }
 
+    it should "retrieve a subtype from a schema builder" in {
+        val schBuilder = Schema.derivedBuilder[ OuterT ]
+
+        val st = ComponentRetriever.retrieve( schBuilder )( Selector.subtype( "InnerT" ) )
+        st.typeName shouldBe "InnerT"
+    }
+
 }

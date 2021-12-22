@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.{Schema, selector}
 import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeRetriever, TypeName}
-import org.hungerford.generic.schema.coproduct.{CoproductShape, subtype}
+import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, subtype}
 import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
 
@@ -111,12 +111,23 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         }
     }
 
-    def retrieve[ T, S, Sel <: Tuple ](
-        from : Schema.Aux[ T, S ],
+    given fromCoproductSchemaBuilder[ T, R <: Tuple, D, DN, SelN <: TypeName,  ST ](
+        using
+        fr : SubtypeRetriever.Aux[ SelN, R, ST ],
+    ) : ComponentRetriever[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ] ] with {
+        override type Inner = ST
+
+        override def retrieve( from : CoproductSchemaBuilder[ T, R, D, DN ] ) : ST = {
+            fr.retrieve( from.sts )
+        }
+    }
+
+    def retrieve[ Outer, Sel <: Tuple ](
+        from : Outer,
     )(
         select : Selector[ Sel ],
     )(
         using
-        cr : ComponentRetriever[ Schema.Aux[ T, S ], Sel ],
+        cr : ComponentRetriever[ Outer, Sel ],
     ) : cr.Inner = cr.retrieve( from )
 }

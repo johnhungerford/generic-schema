@@ -2,13 +2,13 @@ package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.product.field.FieldBuilder
 import org.scalatest.flatspec.AnyFlatSpecLike
-
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.Default.dsl.*
+import org.hungerford.generic.schema.coproduct.subtype.SubtypeBuilder
 
 class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
-    behavior of "ComponentUpdater"
+    behavior of "ComponentUpdater - fields"
 
     case class One( str : String )
     val oneSch = Schema.derived[ One ]
@@ -67,6 +67,29 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         val twoS = threeS.shape.fieldDescriptions.head.schema
         val oneS = twoS.shape.fieldDescriptions.head.schema
         oneS.shape.fieldDescriptions.head.fieldName shouldBe "string_field_5"
+    }
+
+    behavior of "ComponentUpdater - fields"
+
+    sealed trait SuperT
+    final case class SubT1() extends SuperT
+    final case class SubT2( int : Int ) extends SuperT
+    final case class SubT3( int : Int, str : String ) extends SuperT
+
+    it should "update a subtype" in {
+        val sch = Schema.derived[ SuperT ]
+
+        val newSch = ComponentUpdater.update( sch )( Selector.subtype( "SubT2" ) ) { subtype =>
+            SubtypeBuilder.from( subtype )
+              .typeName( "NEW-NAME" )
+              .fromSchema( Schema.primitive[ SubT2 ] )
+              .build
+        }
+
+        newSch.shape.subtypeDescriptions.size shouldBe 3
+        newSch.shape.subtypeDescriptions.head.typeName shouldBe "SubT1"
+        newSch.shape.subtypeDescriptions.tail.head.typeName shouldBe "NEW-NAME"
+        newSch.shape.subtypeDescriptions.tail.tail.head.typeName shouldBe "SubT3"
     }
 
 }

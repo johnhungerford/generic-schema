@@ -114,4 +114,20 @@ object SubtypeBuilder {
             asEv.as,
             (),
         )
+
+    def from[ T, ST, D, DN, DV, N <: TypeName, S ](
+        subtype : Subtype.Aux[ T, ST, D, DN, DV, N, S ],
+    ) : SubtypeBuilder[ T, ST, D, DN, DV, ST => T, N, S, Schema.Aux[ ST, S ] ] = {
+        SubtypeBuilder[ T, ST, D, DN, DV, ST => T, N, S, Schema.Aux[ ST, S ] ](
+            subtype.typeName,
+            subtype.schema,
+            subtype.asSuper,
+            subtype.discriminatorValue,
+            subtype.description,
+            subtype.validators,
+            subtype.default,
+            subtype.examples,
+            subtype.deprecated,
+        )
+    }
 }

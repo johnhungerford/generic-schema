@@ -1,6 +1,8 @@
 package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.coproduct.subtype.{TypeName, Subtype, SubtypeRetriever}
+import org.hungerford.generic.schema.coproduct.CoproductShape
 import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
 
@@ -61,6 +63,17 @@ object ComponentRetriever {
 
         override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] ) : Field.Aux[ F, SelN, S ] = {
             fr.retrieve( from.fieldDescs )
+        }
+    }
+
+    given fromCoproductSchema[ T, R <: Tuple, RV <: Tuple, D, DN, SelN <: TypeName, ST, DV, STS ](
+        using
+        fr : SubtypeRetriever.Aux[ SelN, R, Subtype.Aux[ T, ST, D, DN, DV, SelN, STS] ],
+    ) : ComponentRetriever[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ] ] with {
+        override type Inner = Subtype.Aux[ T, ST, D, DN, DV, SelN, STS]
+
+        override def retrieve( from : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ) : Inner = {
+            fr.retrieve( from.shape.subtypeDescriptions )
         }
     }
 

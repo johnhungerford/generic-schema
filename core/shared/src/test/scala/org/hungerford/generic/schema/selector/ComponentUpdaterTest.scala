@@ -114,4 +114,20 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         newSt.schema.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
     }
 
+    it should "update from a coproduct schema builder" in {
+        val schBuilder = Schema.derivedBuilder[ OuterT ]
+
+        val newSch = ComponentUpdater.update( schBuilder )( Selector.subtype( "InnerT" ) ) { subtype =>
+            SubtypeBuilder.from( subtype )
+              .typeName( "NEW-NAME" )
+              .fromSchema( Schema.primitive[ InnerT ] )
+              .build
+        }
+
+        newSch.sts.size shouldBe 2
+        newSch.sts.head.typeName shouldBe "SubT"
+        newSch.sts.tail.head.typeName shouldBe "NEW-NAME"
+        newSch.sts.tail.head.schema.shape shouldBe ()
+    }
+
 }

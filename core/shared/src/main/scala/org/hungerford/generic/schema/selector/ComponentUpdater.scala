@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.selector
 
-import org.hungerford.generic.schema.coproduct.{CoproductShape, UniqueDiscriminatorValues, UniqueTypeNames, ValidDiscriminator, subtype}
+import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, UniqueDiscriminatorValues, UniqueTypeNames, ValidDiscriminator, subtype}
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaRebuilder}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape, TupleIntLength}
@@ -151,6 +151,30 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
                     genericExamples = outer.genericExamples,
                     deprecated = outer.deprecated,
                 )
+            }
+        }
+    }
+
+    given fromCoproductSchemaBuilder[ T, R <: Tuple, D, DN, SelN <: TypeName, ST, DV, STS, NewDV, NewN <: TypeName, NewSTS, NewR <: Tuple ](
+        using
+        strt : SubtypeRetriever.Aux[ SelN, R, Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ] ],
+        strp : SubtypeReplacer.Aux[ SelN, Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
+        uniqT : UniqueTypeNames[ NewR ],
+        uniqDV : UniqueDiscriminatorValues[ NewR ],
+        dEv : ValidDiscriminator[ D, DN, NewR ],
+    ) : ComponentUpdater.Aux[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], CoproductSchemaBuilder[ T, NewR, D, DN ] ] = {
+        new ComponentUpdater[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
+            type NewOuter = CoproductSchemaBuilder[ T, NewR, D, DN ]
+
+            def update(
+                outer : CoproductSchemaBuilder[ T, R, D, DN ],
+            )(
+                updater : Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ] => Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ],
+            ) : NewOuter = {
+                val inner = strt.retrieve( outer.sts )
+                val newInner = updater( inner )
+                val newSts = strp.replace( outer.sts, newInner )
+                outer.copy[ T, NewR, D, DN ]( sts = newSts )
             }
         }
     }

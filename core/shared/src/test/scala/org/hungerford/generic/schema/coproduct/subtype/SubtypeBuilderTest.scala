@@ -52,7 +52,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
         testBuilder.ts shouldBe ()
 
         val builder = testBuilder
-          .asSuper( v => new TestType { val i : Int = v } )
+          .toSuper( v => new TestType { val i : Int = v } )
 
         val res = builder.ts( 5 )
 
@@ -110,7 +110,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
 
         assertDoesNotCompile("""b1.build""")
 
-        val st = b1.asSuper( v => SuperC( v.int ) ).build
+        val st = b1.toSuper( v => SuperC( v.int ) ).fromSuper( v => Some( SubC( v.int ) ) ).build
 
         st.typeName shouldBe "name"
         st.schema shouldBe Primitive[ Int ]()
@@ -136,7 +136,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
 
         assertDoesNotCompile("""b1.build""")
 
-        val st = b1.asSuper( v => SuperC( v.int ) ).build
+        val st = b1.toSuper( v => SuperC( v.int ) ).fromSuper( v => Some( SubC( v.int ) ) ).build
 
         st.typeName shouldBe "name"
         st.schema shouldBe subcSch

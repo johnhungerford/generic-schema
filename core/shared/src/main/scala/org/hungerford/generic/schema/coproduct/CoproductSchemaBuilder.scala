@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.field.{FieldName, FieldRetriever}
-import org.hungerford.generic.schema.coproduct.subtype.{ToSuperGenerator, Subtype, SubtypeBuilder, SubtypeRemover, SubtypeRetriever, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{FromSuperGenerator, Subtype, SubtypeBuilder, SubtypeRemover, SubtypeRetriever, ToSuperGenerator, TypeName}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.selector.{ComponentUpdater, SubTypeSelector}
 
@@ -50,9 +50,10 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
 
     def buildSubtype[ ST ](
         using
-        asEv : ToSuperGenerator[ T, ST ],
-    ) : SubtypeBuilderAdder[ ST, asEv.TS, T, R, D, DN ] =
-        SubtypeBuilderAdder[ ST, asEv.TS, T, R, D, DN ]( this )
+        tsEv : ToSuperGenerator[ T, ST ],
+        fsEv : FromSuperGenerator[ T, ST ],
+    ) : SubtypeBuilderAdder[ ST, tsEv.TS, fsEv.FS, T, R, D, DN ] =
+        SubtypeBuilderAdder[ ST, tsEv.TS, fsEv.FS, T, R, D, DN ]( this )
 
     def removeSubtype[ N <: TypeName, NewR <: Tuple ](
         typeName : N,
@@ -140,14 +141,15 @@ object DiscriminatorAdder {
     }
 }
 
-case class SubtypeBuilderAdder[ ST, ASType, T, R <: Tuple, D, DN  ](
+case class SubtypeBuilderAdder[ ST, ASType, FSType, T, R <: Tuple, D, DN  ](
     stb : CoproductSchemaBuilder[ T, R, D, DN ],
 )(
     using
-    val asEv: ToSuperGenerator.Aux[ T, ST, ASType ],
+    val tsEv: ToSuperGenerator.Aux[ T, ST, ASType ],
+    val fsEv : FromSuperGenerator.Aux[ T, ST, FSType ],
 ) {
     def apply[ DV, N <: TypeName, S ](
-        buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, asEv.TS, Unit, Nothing, Unit ] => Subtype.Aux[ T, ST, D, DN, DV, N, S ],
+        buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, fsEv.FS, Unit, Nothing, Unit ] => Subtype.Aux[ T, ST, D, DN, DV, N, S ],
     )(
         using
         uniqT : UniqueTypeNames[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],

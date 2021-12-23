@@ -21,7 +21,7 @@ trait Subtype[ T, ST, Discr ] {
 
     def toSuper : ST => T
 
-//    def fromSuper : T => Option[ ST ]
+    def fromSuper : T => Option[ ST ]
 
     def discriminatorValue : DiscrValue
 
@@ -50,7 +50,7 @@ case class SubtypeCase[ T, ST, D, DN, DV, N <: TypeName, S ](
     override val typeName: N,
     override val schema: Schema.Aux[ ST, S ],
     override val toSuper : ST => T,
-//    override val fromSuper : T => Option[ ST ],
+    override val fromSuper : T => Option[ ST ],
     override val discriminatorValue : DV,
     override val description: Option[ String ] = None,
     override val validators: Set[ Validator[ ST ] ] = Set.empty[ Validator[ ST ] ],
@@ -72,8 +72,9 @@ trait SubtypeDsl {
     extension ( subtype : Subtype.type )
         def builder[ T, ST, D, DN ](
             using
-            asEv : ToSuperGenerator[ T, ST ],
-        ) : SubtypeBuilder[ T, ST, D, DN, Unit, asEv.TS, Unit, Nothing, Unit ] =
+            tsEv : ToSuperGenerator[ T, ST ],
+            fsEv : FromSuperGenerator[ T, ST ],
+        ) : SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, fsEv.FS, Unit, Nothing, Unit ] =
             SubtypeBuilder.empty[ T, ST, D, DN ]
 
     extension [ T, ST, D, DN, DV, N <: TypeName, S ]( subtype : Subtype.Aux[ T, ST, D, DN, DV, N, S ] ) {
@@ -92,7 +93,7 @@ trait SubtypeDsl {
         ) : ComponentUpdater.Updater[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], Inner, Sel ] =
             ComponentUpdater.Updater( subtype )
 
-        def rebuild : SubtypeBuilder[ T, ST, D, DN, DV, ST => T, N, S, Schema.Aux[ ST, S ] ] =
+        def rebuild : SubtypeBuilder[ T, ST, D, DN, DV, ST => T, T => Option[ ST ], N, S, Schema.Aux[ ST, S ] ] =
             SubtypeBuilder.from( subtype )
 
         def withName[ NewN <: TypeName ](
@@ -119,11 +120,11 @@ trait SubtypeDsl {
             case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( toSuper = toSuper )
         }
 
-//        def withFromSuper(
-//            fromSuper : ST => T,
-//        ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-//            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( fromSuper = fromSuper )
-//        }
+        def withFromSuper(
+            fromSuper : T => Option[ ST ],
+        ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( fromSuper = fromSuper )
+        }
 
         def withDiscriminatorValue[ NewDV <: D & Singleton ](
             value : NewDV

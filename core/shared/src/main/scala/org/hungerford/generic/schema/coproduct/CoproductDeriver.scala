@@ -1,8 +1,8 @@
 package org.hungerford.generic.schema.coproduct
 
-import org.hungerford.generic.schema.{Schema, ComplexSchema, SchemaProvider}
+import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaProvider}
 import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Deriver, Sub, Zipper}
-import org.hungerford.generic.schema.coproduct.subtype.{ToSuperGenerator, Subtype, SubtypeCase, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{FromSuperGenerator, Subtype, SubtypeCase, ToSuperGenerator, TypeName}
 import org.hungerford.generic.schema.product.ProductDeriver.MirrorProduct
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldName
@@ -94,6 +94,7 @@ object SubtypesDeriver {
         provider : SchemaProvider.Aux[ ST, STS ],
         ev : NotGiven[ N =:= Nothing ],
         tsGen : ToSuperGenerator.Aux[ T, ST, ST => T ],
+        fsGen : FromSuperGenerator.Aux[ T, ST, T => Option[ ST ] ],
         tDer : SubtypesDeriver.Aux[ T, STTail, NTail, Next ],
     ) : SubtypesDeriver.Aux[ T, ST *: STTail, N *: NTail, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next ] = {
         val typeName = summonInline[ ValueOf[ N ] ].value
@@ -106,6 +107,7 @@ object SubtypesDeriver {
                     typeName,
                     provider.provide,
                     tsGen.toSuper,
+                    fsGen.fromSuper,
                     (),
                 ) *: tDer.derive
             }

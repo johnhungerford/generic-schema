@@ -1,10 +1,14 @@
 package org.hungerford.generic.schema.selector
 
+import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, UniqueDiscriminatorValues, UniqueTypeNames, ValidDiscriminator, subtype}
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaRebuilder}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape, TupleIntLength}
 import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldCase, FieldName, FieldReplacer, FieldRetriever, UniqueFieldNames}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
+import org.hungerford.generic.schema.coproduct.subtype.{CorrectDV, Subtype, SubtypeBuilder, SubtypeReplacer, SubtypeRetriever, TypeName}
+
+import scala.util.NotGiven
 
 trait ComponentUpdater[ Outer, Sel, Inner, NewInner ] {
     type NewOuter
@@ -12,7 +16,27 @@ trait ComponentUpdater[ Outer, Sel, Inner, NewInner ] {
     def update( outer : Outer )( updater : Inner => NewInner ) : NewOuter
 }
 
-object ComponentUpdater {
+trait LowPriorityComponentUpdaters {
+    given ambigFieldUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
+        using
+        fcu : ComponentUpdater.Aux[ Outer, FieldSelector[ N ], Inner, NewInner, NO ],
+    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
+        type NewOuter = NO
+
+        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
+    }
+
+    given ambigSubTypeUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
+        using
+        fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
+    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
+        type NewOuter = NO
+
+        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
+    }
+}
+
+object ComponentUpdater extends LowPriorityComponentUpdaters {
     type Aux[ Outer, Sel, Inner, NewInner, NO ] = ComponentUpdater[ Outer, Sel, Inner, NewInner ] { type NewOuter = NO }
 
     given [ Outer, NO ] : ComponentUpdater.Aux[ Outer, EmptyTuple, Outer, NO, NO ] = new ComponentUpdater[ Outer, EmptyTuple, Outer, NO ] {
@@ -87,58 +111,110 @@ object ComponentUpdater {
         }
     }
 
-    given fromFieldDesc[ T, N <: FieldName, S, SelN <: FieldName, F, FS, NewN <: FieldName, NewFS, NewS ](
+    given fromFieldDesc[ T, N <: FieldName, S, SelR, I, NewI, NewS ](
         using
-        scu : ComponentUpdater.Aux[ Schema.Aux[ T, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ], Schema.Aux[ T, NewS ] ],
-    ) : ComponentUpdater.Aux[ Field.Aux[ T, N, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ], Field.Aux[ T, N, NewS ] ] = {
-        new ComponentUpdater[ Field.Aux[ T, N, S ], FieldSelector[ SelN ], Field.Aux[ F, SelN, FS ], Field.Aux[ F, NewN, NewFS ] ] {
+        ev : NotGiven[ SelR <:< Tuple ],
+        scu : ComponentUpdater.Aux[ Schema.Aux[ T, S ], SelR, I, NewI, Schema.Aux[ T, NewS ] ],
+    ) : ComponentUpdater.Aux[ Field.Aux[ T, N, S ], SelR, I, NewI, Field.Aux[ T, N, NewS ] ] = {
+        new ComponentUpdater[ Field.Aux[ T, N, S ], SelR, I, NewI ] {
             override type NewOuter = Field.Aux[ T, N, NewS ]
 
-            override def update( outer : Field.Aux[ T, N, S ] )( updater : Field.Aux[ F, SelN, FS ] => Field.Aux[ F, NewN, NewFS ] ) : Field.Aux[ T, N, NewS ] =
+            override def update( outer : Field.Aux[ T, N, S ] )( updater : I => NewI ) : Field.Aux[ T, N, NewS ] =
                 FieldBuilder.from( outer ).fromSchema( scu.update( outer.schema )( updater ) ).build
         }
     }
 
-    given ambigFieldUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
+    given fromCoproductSchema[ T, R <: Tuple, RV <: Tuple, D, DN, SelN <: TypeName, ST, DV, STS, NewDV, NewN <: TypeName, NewSTS, NewR <: Tuple, NewRV <: Tuple ](
         using
-        fcu : ComponentUpdater.Aux[ Outer, FieldSelector[ N ], Inner, NewInner, NO ],
-    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
-        type NewOuter = NO
+        strt : SubtypeRetriever.Aux[ SelN, R, Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ] ],
+        strp : SubtypeReplacer.Aux[ SelN, Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
+        ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, D ], NewR, NewRV ],
+        uniqT : UniqueTypeNames[ NewR ],
+        uniqDV : UniqueDiscriminatorValues[ NewR ],
+        dEv : ValidDiscriminator[ D, DN, NewR ],
+    ) : ComponentUpdater.Aux[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], Schema.Aux[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ] ] = {
+        new ComponentUpdater[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
+            type NewOuter = Schema.Aux[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ]
 
-        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
+            def update(
+                outer : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
+            )(
+                updater : Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ] => Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ],
+            ) : NewOuter = {
+                val inner = strt.retrieve( outer.shape.subtypeDescriptions )
+                val newInner = updater( inner )
+                ComplexSchema[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ](
+                    outer.shape.copy[ T, NewR, NewRV, D, DN ]( subtypeDescriptions = strp.replace( outer.shape.subtypeDescriptions, newInner ) ),
+                    name = outer.name,
+                    genericDescription = outer.genericDescription,
+                    genericValidators = outer.genericValidators,
+                    genericExamples = outer.genericExamples,
+                    deprecated = outer.deprecated,
+                )
+            }
+        }
     }
 
-    given ambigSubTypeUpdater[ Outer, N <: FieldName, Inner, NewInner, NO ](
+    given fromCoproductSchemaBuilder[ T, R <: Tuple, D, DN, SelN <: TypeName, ST, DV, STS, NewDV, NewN <: TypeName, NewSTS, NewR <: Tuple ](
         using
-        fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
-    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ N ], Inner, NewInner, NO ] = new ComponentUpdater[ Outer, AmbigSelector[ N ], Inner, NewInner ] {
-        type NewOuter = NO
+        strt : SubtypeRetriever.Aux[ SelN, R, Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ] ],
+        strp : SubtypeReplacer.Aux[ SelN, Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
+        uniqT : UniqueTypeNames[ NewR ],
+        uniqDV : UniqueDiscriminatorValues[ NewR ],
+        dEv : ValidDiscriminator[ D, DN, NewR ],
+    ) : ComponentUpdater.Aux[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], CoproductSchemaBuilder[ T, NewR, D, DN ] ] = {
+        new ComponentUpdater[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
+            type NewOuter = CoproductSchemaBuilder[ T, NewR, D, DN ]
 
-        override def update( outer : Outer )( updater : Inner => NewInner ) : NO = fcu.update( outer )( updater )
+            def update(
+                outer : CoproductSchemaBuilder[ T, R, D, DN ],
+            )(
+                updater : Subtype.Aux[ T, ST, D, DN, DV, SelN, STS ] => Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ],
+            ) : NewOuter = {
+                val inner = strt.retrieve( outer.sts )
+                val newInner = updater( inner )
+                val newSts = strp.replace( outer.sts, newInner )
+                outer.copy[ T, NewR, D, DN ]( sts = newSts )
+            }
+        }
     }
 
+    given fromSubtype[ T, ST, D, DN, DV, N <: FieldName, S, SelR, I, NewI, NewS ](
+        using
+        ev : NotGiven[ SelR <:< Tuple ],
+        ev1 : CorrectDV[ D, DV ],
+        ev2 : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] *: EmptyTuple ],
+        scu : ComponentUpdater.Aux[ Schema.Aux[ ST, S ], SelR, I, NewI, Schema.Aux[ ST, NewS ] ],
+    ) : ComponentUpdater.Aux[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], SelR, I, NewI, Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] ] = {
+        new ComponentUpdater[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], SelR, I, NewI ] {
+            override type NewOuter = Subtype.Aux[ T, ST, D, DN, DV, N, NewS ]
 
-    class Updater[ T, S, Sel, F, N <: FieldName, FS ](
-        outer : Schema.Aux[ T, S ],
+            override def update( outer : Subtype.Aux[ T, ST, D, DN, DV, N, S ] )( updater : I => NewI ) : NewOuter =
+                SubtypeBuilder.from( outer ).fromSchema( scu.update( outer.schema )( updater ) ).build
+        }
+    }
+
+    class Updater[ Outer, Inner, Sel ](
+        outer : Outer,
     )(
         using
-        cr : ComponentRetriever.Aux[ Schema.Aux[ T, S ], Sel, Field.Aux[ F, N, FS ] ],
+        cr : ComponentRetriever.Aux[ Outer, Sel, Inner ],
     ) {
-        def apply[ NewN <: FieldName, NewFS ](
-            updater : Field.Aux[ F, N, FS ] => Field.Aux[ F, NewN, NewFS ],
+        def apply[ NewInner ](
+            updater : Inner => NewInner,
         )(
             using
-            cu : ComponentUpdater[ Schema.Aux[ T, S ], Sel, Field.Aux[ F, N, FS ], Field.Aux[ F, NewN, NewFS ] ],
+            cu : ComponentUpdater[ Outer, Sel, Inner, NewInner ],
         ) : cu.NewOuter = cu.update( outer )( updater )
     }
 
-    def update[ T, S, R <: Tuple, F, N <: FieldName, FS ](
-        outer : Schema.Aux[ T, S ],
+    def update[ Outer, Inner, R <: Tuple ](
+        outer : Outer,
     )(
         sel : Selector[ R ],
     )(
         using
-        cr : ComponentRetriever.Aux[ Schema.Aux[ T, S ], R, Field.Aux[ F, N, FS ] ],
-    ) : Updater[ T, S, R, F, N, FS ] = new Updater[ T, S, R, F, N, FS ]( outer )
+        cr : ComponentRetriever.Aux[ Outer, R, Inner ],
+    ) : Updater[ Outer, Inner, R ] = new Updater[ Outer, Inner, R ]( outer )
 
 }

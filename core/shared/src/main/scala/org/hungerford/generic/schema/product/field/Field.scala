@@ -1,9 +1,11 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.{Schema, SchemaRebuilder, Primitive}
+import org.hungerford.generic.schema.coproduct.subtype.Subtype
+import org.hungerford.generic.schema.{Primitive, Schema, SchemaRebuilder}
 import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.Field.Aux
+import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.validator.Validator
 
 import scala.collection.mutable
@@ -54,13 +56,22 @@ object Field {
 }
 
 trait FieldDsl {
-
+    
     class FieldSchemaRebuilder[ Builder, T, N <: FieldName, S ]( builder : Builder, field : FieldCase[ T, N, S ] ) {
         def apply[ NewS ]( rebuilder : Builder => Schema.Aux[ T, NewS ] ) : Field.Aux[ T, N, NewS ] = {
             field.copy[ T, N, NewS ]( schema = rebuilder( builder ) )
         }
     }
 
+    extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
+        def apply[ Sel <: Tuple, Inner ](
+            selector : Selector[ Sel ],
+        )(
+            using
+            cr : ComponentRetriever.Aux[ Field.Aux[ T, N, S ], Sel, Inner ],
+        ) : Inner = cr.retrieve( field )
+        
+    
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def rebuildSchema( using rb : SchemaRebuilder[ T, S ] ) : FieldSchemaRebuilder[ rb.Builder, T, N, S ] =
             field match {
@@ -77,6 +88,15 @@ trait FieldDsl {
             field.description,
             field.validators,
         )
+
+    extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
+        def modifyComponent[ Sel <: Tuple, Inner ](
+            selector : Selector[ Sel ],
+        )(
+            using
+            cr : ComponentRetriever.Aux[ Field.Aux[ T, N, S ], Sel, Inner ],
+        ) : ComponentUpdater.Updater[ Field.Aux[ T, N, S ], Inner, Sel ] =
+            ComponentUpdater.Updater( field )
 
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def rebuild : BuildableFieldBuilder[ T, N, S ] = FieldBuilder.from( field )

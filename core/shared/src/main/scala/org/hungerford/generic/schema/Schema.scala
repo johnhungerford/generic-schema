@@ -187,26 +187,13 @@ trait SchemaDsl {
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
         def rebuild( using srb : SchemaRebuilder[ T, S ] ) : srb.Builder = srb.rebuild( schema )
 
-    case class ComponentModifier[ T, S, Sel <: Tuple, Inner ](
-        schema : Schema.Aux[ T, S ],
-    ) {
-        def apply[ NewInner, NewS ](
-            updater : Inner => NewInner,
-        )(
-            using
-            cu : => ComponentUpdater.Aux[ Schema.Aux[ T, S ], Sel, Inner, NewInner, Schema.Aux[ T, NewS ] ],
-        ) : Schema.Aux[ T, NewS ] = {
-            cu.update( schema )( updater )
-        }
-    }
-
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
         def modifyComponent[ Sel <: Tuple, Inner ](
             selector : Selector[ Sel ],
         )(
             using
             crt : ComponentRetriever.Aux[ Schema.Aux[ T, S ], Sel, Inner ],
-        ) : ComponentModifier[ T, S, Sel, Inner ] = ComponentModifier[ T, S, Sel, Inner ](
+        ) : ComponentUpdater.Updater[ Schema.Aux[ T, S ], Inner, Sel ] = ComponentUpdater.Updater(
             schema,
         )
 

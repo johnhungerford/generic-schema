@@ -1,15 +1,15 @@
 package org.hungerford.generic.schema
 
 import org.scalatest.flatspec.AnyFlatSpecLike
-
-import org.hungerford.generic.schema.product.field.{FieldDsl, Field}
+import org.hungerford.generic.schema.product.field.{Field, FieldDsl}
+import org.hungerford.generic.schema.selector.SelectorDsl
 
 class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
     behavior of "static schema dsl"
 
     case class TestCase( int : Int, str : String )
-    object TestSchemaDsl extends SchemaDsl with FieldDsl
+    object TestSchemaDsl extends SchemaDsl with FieldDsl with SelectorDsl
 
     it should "allow building schemas" in {
         assertDoesNotCompile( """Schema.primitiveBuilder[ Int ].description( "test-description" ).build""" )
@@ -64,6 +64,43 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
           .deconstruct( _.str )
           .build
 
+    }
+
+    sealed trait NestedSuperT
+    final case class NSub1( dbl : Double ) extends NestedSuperT
+    final case class NSub2( flt : Float ) extends NestedSuperT
+
+    sealed trait SuperT
+    final case class SubT1() extends SuperT
+    sealed trait SubT2 extends SuperT
+    final case class SubT2A( int : Int ) extends SubT2
+    final case class SubT2B( nst : NestedSuperT ) extends SubT2
+
+    case class Wrapper( st : SuperT )
+
+    it should "allow retrieval and modification of deeply nested component involving both products and coproducts" in {
+        import TestSchemaDsl.*
+
+        val sch = Schema.derived[ Wrapper ]
+
+        val subComponent = sch( "st" / "SubT2" / "SubT2B" / "nst" / "NSub2" / "flt" )
+        subComponent.fieldName shouldBe "flt"
+        subComponent.schema.shape shouldBe ()
+        subComponent.description shouldBe None
+
+        val newSch = sch.modifyComponent( "st" / "SubT2" / "SubT2B" / "nst" / "NSub2" / "flt" )(
+            _.rebuild
+              .fieldName( "NEW_NAME" )
+              .description( "test-description" )
+              .build
+        )
+
+        assertDoesNotCompile( """newSch( "st" / "SubT2" / "SubT2B" / "nst" / "NSub2" / "flt" )""")
+        val newSc = newSch( "st" / "SubT2" / "SubT2B" / "nst" / "NSub2" / "NEW_NAME" )
+
+        newSc.fieldName shouldBe "NEW_NAME"
+        newSc.schema.shape shouldBe ()
+        newSc.description shouldBe Some( "test-description" )
     }
 
 }

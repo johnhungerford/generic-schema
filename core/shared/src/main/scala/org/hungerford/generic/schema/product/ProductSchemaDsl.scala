@@ -27,4 +27,13 @@ trait ProductSchemaDsl {
               .build
         }
 
+    extension [ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ]( builder : ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] )
+        def modifyComponent[ Sel <: Tuple, Inner ](
+            selector : Selector[ Sel ],
+        )(
+            using
+            cr : ComponentRetriever.Aux[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], Sel, Inner ],
+        ) : ComponentUpdater.Updater[ ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ], Inner, Sel ] =
+            ComponentUpdater.Updater( builder )
+
 }

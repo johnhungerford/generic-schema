@@ -74,37 +74,6 @@ object CoproductMirDeriver {
     ) : CoproductMirDeriver.Aux[ T, Elems, ElemLabels, Res ] = cd
 }
 
-//trait SubtypeDeriver[ T, ST, N <: TypeName ] {
-//    type Out
-//
-//    def derive : Out
-//}
-//
-//object SubtypeDeriver {
-//    type Aux[ T, ST, N <: TypeName, O ] = SubtypeDeriver[ T, ST, N ] { type Out = O }
-//
-//    inline given [ T, ST, STS, N <: TypeName ](
-//        using
-//        provider : SchemaProvider.Aux[ ST, STS ],
-//        asGen : AsSuperGenerator.Aux[ T, ST, ST => T ],
-//    ) : SubtypeDeriver.Aux[ T, ST, N, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] ] = {
-//        new SubtypeDeriver[  T, ST, N ] {
-//            type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ]
-//
-//            override def derive: Out = {
-//                val typeName = summonInline[ ValueOf[ N ] ].value
-//
-//                SubtypeCase[ T, ST, Unit, Nothing, Unit, N, STS ](
-//                    typeName,
-//                    provider.provide,
-//                    asGen.as,
-//                    (),
-//                )
-//            }
-//        }
-//    }
-//}
-
 trait SubtypesDeriver[ T, STs <: Tuple, Ns <: Tuple ] {
     type Out <: Tuple
 

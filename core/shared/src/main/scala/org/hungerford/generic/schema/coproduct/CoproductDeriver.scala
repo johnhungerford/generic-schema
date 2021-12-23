@@ -107,8 +107,8 @@ object SubtypesDeriver {
                     provider.provide,
                     asGen.as,
                     (),
-                )
-            } *: tDer.derive
+                ) *: tDer.derive
+            }
         }
     }
 }

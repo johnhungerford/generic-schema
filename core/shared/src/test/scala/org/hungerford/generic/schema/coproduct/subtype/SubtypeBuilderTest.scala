@@ -55,10 +55,6 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
           .asSuper( v => new TestType { val i : Int = v } )
 
         val res = builder.as( 5 )
-        res match {
-            case _ : TestType =>
-            case _ => fail( "wrong type!" )
-        }
 
         assertDoesNotCompile( """builder.build""")
     }

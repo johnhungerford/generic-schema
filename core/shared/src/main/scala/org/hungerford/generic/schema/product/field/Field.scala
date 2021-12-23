@@ -75,7 +75,7 @@ trait FieldDsl {
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def rebuildSchema( using rb : SchemaRebuilder[ T, S ] ) : FieldSchemaRebuilder[ rb.Builder, T, N, S ] =
             field match {
-                case f : FieldCase[ T, N, S ] =>
+                case f : FieldCase[ T, N, S ] @unchecked =>
                     new FieldSchemaRebuilder[ rb.Builder, T, N, S ]( rb.rebuild( f.schema ), f )
             }
 
@@ -103,40 +103,40 @@ trait FieldDsl {
 
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withName[ N1 <: FieldName ]( name : N1 ) : Field.Aux[ T, N1, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N1, S ]( fieldName = name ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N1, S ]( fieldName = name ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withSchema[ S1 ]( sch : Schema.Aux[ T, S1 ] ) : Field.Aux[ T, N, S1 ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S1 ]( schema = sch ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S1 ]( schema = sch ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withDescription( desc : String ) : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( description = Some( desc ) ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( description = Some( desc ) ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withoutDescription : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( description = None ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( description = None ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withValidators( vals : Validator[ T ]* ) : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( validators = vals.toSet ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( validators = vals.toSet ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def addValidators( vals : Validator[ T ]* ) : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( validators = fc.validators ++ vals.toSet ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( validators = fc.validators ++ vals.toSet ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withoutValidation : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( validators = Set.empty[ Validator[ T ] ] ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( validators = Set.empty[ Validator[ T ] ] ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withDefault( defaultValue : T ) : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( default = Some( defaultValue ) ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( default = Some( defaultValue ) ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withoutDefault : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( default = None ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( default = None ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withExamples( exs : T* ) : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( examples = exs ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( examples = exs ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def addExamples( exs : T* ) : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( examples = fc.examples ++ exs ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( examples = fc.examples ++ exs ) }
     extension [ T, N <: FieldName, S ]( field : Field.Aux[ T, N, S ] )
         def withoutExamples : Field.Aux[ T, N, S ] =
-            field match { case fc : FieldCase[ T, N, S ] => fc.copy[ T, N, S ]( examples = Nil ) }
+            field match { case fc : FieldCase[ T, N, S ] @unchecked => fc.copy[ T, N, S ]( examples = Nil ) }
 
     extension ( field : Field.type ) def builder[ T ] : FieldBuilderWithoutSchemaOrName[ T ] = FieldBuilder[ T ]
 

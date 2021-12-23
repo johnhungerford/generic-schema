@@ -95,25 +95,25 @@ trait SubtypeDsl {
         def withName[ NewN <: TypeName ](
             name : NewN,
         ) : Subtype.Aux[ T, ST, D, DN, DV, NewN, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( typeName = name )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( typeName = name )
         }
 
         def withSchema[ NewS ](
             schema : Schema.Aux[ ST, NewS ],
         ) : Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( schema = schema )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( schema = schema )
         }
 
         def modifySchema[ NewS ](
             modifier : Schema.Aux[ ST, S ] => Schema.Aux[ ST, NewS ],
         ) : Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( schema = modifier( subtype.schema ) )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( schema = modifier( subtype.schema ) )
         }
 
         def withAsSuper(
             asSuper : ST => T,
         ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( asSuper = asSuper )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( asSuper = asSuper )
         }
 
         def withDiscriminatorValue[ NewDV <: D & Singleton ](
@@ -122,26 +122,26 @@ trait SubtypeDsl {
             using
             ev : NotGiven[ D =:= Unit ],
         ) : Subtype.Aux[ T, ST, D, DN, NewDV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( discriminatorValue = value )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( discriminatorValue = value )
         }
 
         def withoutDiscriminator : Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( discriminatorValue = () )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( discriminatorValue = () )
         }
 
         def withDescription( description : String ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( description = Some( description ) )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( description = Some( description ) )
         }
 
         def withoutDescription : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( description = None )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( description = None )
         }
 
         def withValidators(
             validator: Validator[ ST ],
             otherValidators : Validator[ ST ]*,
         ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
                 sc.copy( validators = ( validator +: otherValidators ).toSet )
         }
 
@@ -149,22 +149,22 @@ trait SubtypeDsl {
             validator: Validator[ ST ],
             otherValidators : Validator[ ST ]*,
         ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
                 sc.copy( validators = subtype.validators ++ ( validator +: otherValidators ).toSet )
         }
 
         def withoutValidators : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
                 sc.copy( validators = Set.empty )
         }
 
         def asDeprecated : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
                 sc.copy( deprecated = true )
         }
 
         def asUndeprecated : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
                 sc.copy( deprecated = false )
         }
 
@@ -172,7 +172,7 @@ trait SubtypeDsl {
             example: ST,
             otherExamples : ST*,
         ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
                 sc.copy( examples = example +: otherExamples )
         }
 
@@ -180,21 +180,23 @@ trait SubtypeDsl {
             example: ST,
             otherExamples : ST*,
         ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
                 sc.copy( examples = ( example +: otherExamples ) ++ subtype.examples )
         }
 
         def withoutExamples : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
                 sc.copy( examples = Nil )
         }
 
         def withDefault( default : ST )  : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( default = Some( default ) )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
+                sc.copy( default = Some( default ) )
         }
 
         def withoutDefault : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( default = None )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked =>
+                sc.copy( default = None )
         }
 
     }

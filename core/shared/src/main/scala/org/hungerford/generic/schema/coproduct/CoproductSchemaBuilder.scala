@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.field.{FieldName, FieldRetriever}
-import org.hungerford.generic.schema.coproduct.subtype.{AsSuperGenerator, Subtype, SubtypeBuilder, SubtypeRemover, SubtypeRetriever, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{ToSuperGenerator, Subtype, SubtypeBuilder, SubtypeRemover, SubtypeRetriever, TypeName}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.selector.{ComponentUpdater, SubTypeSelector}
 
@@ -50,9 +50,9 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
 
     def buildSubtype[ ST ](
         using
-        asEv : AsSuperGenerator[ T, ST ],
-    ) : SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ] =
-        SubtypeBuilderAdder[ ST, asEv.AS, T, R, D, DN ]( this )
+        asEv : ToSuperGenerator[ T, ST ],
+    ) : SubtypeBuilderAdder[ ST, asEv.TS, T, R, D, DN ] =
+        SubtypeBuilderAdder[ ST, asEv.TS, T, R, D, DN ]( this )
 
     def removeSubtype[ N <: TypeName, NewR <: Tuple ](
         typeName : N,
@@ -144,10 +144,10 @@ case class SubtypeBuilderAdder[ ST, ASType, T, R <: Tuple, D, DN  ](
     stb : CoproductSchemaBuilder[ T, R, D, DN ],
 )(
     using
-    val asEv: AsSuperGenerator.Aux[ T, ST, ASType ],
+    val asEv: ToSuperGenerator.Aux[ T, ST, ASType ],
 ) {
     def apply[ DV, N <: TypeName, S ](
-        buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, asEv.AS, Unit, Nothing, Unit ] => Subtype.Aux[ T, ST, D, DN, DV, N, S ],
+        buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, asEv.TS, Unit, Nothing, Unit ] => Subtype.Aux[ T, ST, D, DN, DV, N, S ],
     )(
         using
         uniqT : UniqueTypeNames[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],

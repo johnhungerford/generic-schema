@@ -49,12 +49,12 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
     }
 
     it should "be able to add an asSuper function, and not be able to build" in {
-        testBuilder.as shouldBe ()
+        testBuilder.ts shouldBe ()
 
         val builder = testBuilder
           .asSuper( v => new TestType { val i : Int = v } )
 
-        val res = builder.as( 5 )
+        val res = builder.ts( 5 )
 
         assertDoesNotCompile( """builder.build""")
     }
@@ -97,7 +97,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
           .build
 
         st.typeName shouldBe "name"
-        st.asSuper( SubT( 5 ) ) shouldBe SubT( 5 )
+        st.toSuper( SubT( 5 ) ) shouldBe SubT( 5 )
     }
 
     it should "be able to build if you add a typename and schema and asSuper if has no discriminator type and is not an actual subtype of T" in {
@@ -114,7 +114,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
 
         st.typeName shouldBe "name"
         st.schema shouldBe Primitive[ Int ]()
-        st.asSuper( SubC( 5 ) ) shouldBe SuperC( 5 )
+        st.toSuper( SubC( 5 ) ) shouldBe SuperC( 5 )
     }
 
     it should "be able to build if you add a typename and schema and asSuper and a discriminator value if it has a discriminator type and is not an actual subtype of T" in {
@@ -140,7 +140,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
 
         st.typeName shouldBe "name"
         st.schema shouldBe subcSch
-        st.asSuper( SubC( 5 ) ) shouldBe SuperC( 5 )
+        st.toSuper( SubC( 5 ) ) shouldBe SuperC( 5 )
         st.discriminatorValue shouldBe 500
     }
 

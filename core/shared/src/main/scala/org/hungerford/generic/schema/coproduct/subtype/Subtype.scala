@@ -19,7 +19,9 @@ trait Subtype[ T, ST, Discr ] {
 
     def schema: Schema.Aux[ ST, Shape ]
 
-    def asSuper : ST => T
+    def toSuper : ST => T
+
+//    def fromSuper : T => Option[ ST ]
 
     def discriminatorValue : DiscrValue
 
@@ -47,7 +49,8 @@ object Subtype {
 case class SubtypeCase[ T, ST, D, DN, DV, N <: TypeName, S ](
     override val typeName: N,
     override val schema: Schema.Aux[ ST, S ],
-    override val asSuper : ST => T,
+    override val toSuper : ST => T,
+//    override val fromSuper : T => Option[ ST ],
     override val discriminatorValue : DV,
     override val description: Option[ String ] = None,
     override val validators: Set[ Validator[ ST ] ] = Set.empty[ Validator[ ST ] ],
@@ -69,8 +72,8 @@ trait SubtypeDsl {
     extension ( subtype : Subtype.type )
         def builder[ T, ST, D, DN ](
             using
-            asEv : AsSuperGenerator[ T, ST ],
-        ) : SubtypeBuilder[ T, ST, D, DN, Unit, asEv.AS, Unit, Nothing, Unit ] =
+            asEv : ToSuperGenerator[ T, ST ],
+        ) : SubtypeBuilder[ T, ST, D, DN, Unit, asEv.TS, Unit, Nothing, Unit ] =
             SubtypeBuilder.empty[ T, ST, D, DN ]
 
     extension [ T, ST, D, DN, DV, N <: TypeName, S ]( subtype : Subtype.Aux[ T, ST, D, DN, DV, N, S ] ) {
@@ -110,11 +113,17 @@ trait SubtypeDsl {
             case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( schema = modifier( subtype.schema ) )
         }
 
-        def withAsSuper(
-            asSuper : ST => T,
+        def withToSuper(
+            toSuper : ST => T,
         ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
-            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( asSuper = asSuper )
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( toSuper = toSuper )
         }
+
+//        def withFromSuper(
+//            fromSuper : ST => T,
+//        ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+//            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] @unchecked => sc.copy( fromSuper = fromSuper )
+//        }
 
         def withDiscriminatorValue[ NewDV <: D & Singleton ](
             value : NewDV

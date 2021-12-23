@@ -9,10 +9,10 @@ import org.hungerford.generic.schema.types.Sub
 
 import scala.util.NotGiven
 
-case class SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] (
+case class SubtypeBuilder[ T, ST, D, DN, DV, TS, N, S, Sch ] (
     private[subtype] val tn: N,
     private[subtype] val sch: Sch,
-    private[subtype] val as : AS,
+    private[subtype] val ts : TS,
     private[subtype] val dv : DV,
     private[subtype] val desc: Option[ String ] = None,
     private[subtype] val vals: Set[ Validator[ ST ] ] = Set.empty[ Validator[ ST ] ],
@@ -20,31 +20,31 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] (
     private[subtype] val exs: Seq[ ST ] = Seq.empty[ ST ],
     private[subtype] val dep: Boolean = false,
 ) {
-    def typeName[ NewN <: TypeName ]( name : NewN ) : SubtypeBuilder[ T, ST, D, DN, DV, AS, NewN, S, Sch ] =
-        copy[ T, ST, D, DN, DV, AS, NewN, S, Sch ]( tn = name )
+    def typeName[ NewN <: TypeName ]( name : NewN ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, NewN, S, Sch ] =
+        copy[ T, ST, D, DN, DV, TS, NewN, S, Sch ]( tn = name )
 
-    def fromSchema[ NewS ]( implicit schema : Schema.Aux[ ST, NewS ] ) : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, NewS, Schema.Aux[ ST, NewS ] ] =
-        copy[ T, ST, D, DN, DV, AS, N, NewS, Schema.Aux[ ST, NewS ] ]( sch = schema )
+    def fromSchema[ NewS ]( implicit schema : Schema.Aux[ ST, NewS ] ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, N, NewS, Schema.Aux[ ST, NewS ] ] =
+        copy[ T, ST, D, DN, DV, TS, N, NewS, Schema.Aux[ ST, NewS ] ]( sch = schema )
 
-    def primitive : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, Unit, Schema.Aux[ ST, Unit ] ] =
+    def primitive : SubtypeBuilder[ T, ST, D, DN, DV, TS, N, Unit, Schema.Aux[ ST, Unit ] ] =
         fromSchema( Primitive[ ST ]() )
 
     def asSuper( fn : ST => T ) : SubtypeBuilder[ T, ST, D, DN, DV, ST => T, N, S, Sch ] =
-        copy[ T, ST, D, DN, DV, ST => T, N, S, Sch ]( as = fn )
+        copy[ T, ST, D, DN, DV, ST => T, N, S, Sch ]( ts = fn )
 
-    def discriminatorValue[ NewDV <: (D & Singleton) ]( value : NewDV ) : SubtypeBuilder[ T, ST, D, DN, NewDV, AS, N, S, Sch ] =
-        copy[ T, ST, D, DN, NewDV, AS, N, S, Sch ]( dv = value )
+    def discriminatorValue[ NewDV <: (D & Singleton) ]( value : NewDV ) : SubtypeBuilder[ T, ST, D, DN, NewDV, TS, N, S, Sch ] =
+        copy[ T, ST, D, DN, NewDV, TS, N, S, Sch ]( dv = value )
 
-    def description( description : String ) : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] = copy( desc = Some( description ) )
-    def validate( validators : Validator[ ST ]* ) : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] = copy( vals = vals ++ validators.toSet )
-    def examples( examples : ST* ) : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] = copy( exs = exs ++ examples )
-    def default( defaultValue : ST ) : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] = copy( df = Some( defaultValue ) )
-    def deprecate : SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] = copy( dep = true )
+    def description( description : String ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, N, S, Sch ] = copy( desc = Some( description ) )
+    def validate( validators : Validator[ ST ]* ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, N, S, Sch ] = copy( vals = vals ++ validators.toSet )
+    def examples( examples : ST* ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, N, S, Sch ] = copy( exs = exs ++ examples )
+    def default( defaultValue : ST ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, N, S, Sch ] = copy( df = Some( defaultValue ) )
+    def deprecate : SubtypeBuilder[ T, ST, D, DN, DV, TS, N, S, Sch ] = copy( dep = true )
 
     def build[ CorrectN <: TypeName ](
         using
         schEv : Sch =:= Schema.Aux[ ST, S ],
-        asEv : AS =:= (ST => T),
+        asEv : TS =:= ( ST => T ),
         dvEv : CorrectDV[ D, DV ],
         tnEv : Sub.Aux[ N, TypeName, CorrectN ],
         vd : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, CorrectN, S ] *: EmptyTuple ],
@@ -52,14 +52,14 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, AS, N, S, Sch ] (
         SubtypeCase[ T, ST, D, DN, DV, CorrectN, S ](
             tnEv( tn ),
             schEv( sch ),
-            asEv( as ),
+            asEv( ts ),
             dv,
             desc,
             vals,
             df,
             exs,
             dep,
-        )
+            )
     }
 }
 
@@ -81,37 +81,37 @@ object CorrectDV {
     }
 }
 
-trait AsSuperGenerator[ T, ST ] {
-    type AS
+trait ToSuperGenerator[ T, ST ] {
+    type TS
 
-    def as : AS
+    def toSuper : TS
 }
 
-object AsSuperGenerator {
-    type Aux[ T, ST, ASType ] = AsSuperGenerator[ T, ST ] { type AS = ASType }
+object ToSuperGenerator {
+    type Aux[ T, ST, TSType ] = ToSuperGenerator[ T, ST ] { type TS = TSType }
 
-    given [ T, ST ]( using ev : ST <:< T ) : AsSuperGenerator[ T, ST ] with {
-        type AS = ST => T
+    given [ T, ST ]( using ev : ST <:< T ) : ToSuperGenerator[ T, ST ] with {
+        type TS = ST => T
 
-        def as : ST => T = ( st : ST ) => ev( st )
+        def toSuper : ST => T = ( v : ST ) => ev( v )
     }
 
-    given notSubtype[ T, ST ]( using ev : NotGiven[ ST <:< T ] ) : AsSuperGenerator[ T, ST ] with {
-        type AS = Unit
+    given notSubtype[ T, ST ]( using ev : NotGiven[ ST <:< T ] ) : ToSuperGenerator[ T, ST ] with {
+        type TS = Unit
 
-        def as : Unit = ()
+        def toSuper : Unit = ()
     }
 }
 
 object SubtypeBuilder {
     def empty[ T, ST, D, DN ](
         using
-        asEv : AsSuperGenerator[ T, ST ],
-    ) : SubtypeBuilder[ T, ST, D, DN, Unit, asEv.AS, Unit, Nothing, Unit ] =
-        SubtypeBuilder[ T, ST, D, DN, Unit, asEv.AS, Unit, Nothing, Unit ](
+        tsEv : ToSuperGenerator[ T, ST ],
+    ) : SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, Unit, Nothing, Unit ] =
+        SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, Unit, Nothing, Unit ](
             (),
             (),
-            asEv.as,
+            tsEv.toSuper,
             (),
         )
 
@@ -121,7 +121,7 @@ object SubtypeBuilder {
         SubtypeBuilder[ T, ST, D, DN, DV, ST => T, N, S, Schema.Aux[ ST, S ] ](
             subtype.typeName,
             subtype.schema,
-            subtype.asSuper,
+            subtype.toSuper,
             subtype.discriminatorValue,
             subtype.description,
             subtype.validators,

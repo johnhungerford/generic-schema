@@ -1,8 +1,11 @@
 package org.hungerford.generic.schema.coproduct.subtype
 
-import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.{Schema, SchemaRebuilder}
 import org.hungerford.generic.schema.product.field.FieldName
+import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.validator.Validator
+
+import scala.util.NotGiven
 
 type TypeName = String & Singleton
 
@@ -69,5 +72,134 @@ trait SubtypeDsl {
             asEv : AsSuperGenerator[ T, ST ],
         ) : SubtypeBuilder[ T, ST, D, DN, Unit, asEv.AS, Unit, Nothing, Unit ] =
             SubtypeBuilder.empty[ T, ST, D, DN ]
+
+    extension [ T, ST, D, DN, DV, N <: TypeName, S ]( subtype : Subtype.Aux[ T, ST, D, DN, DV, N, S ] ) {
+        def apply[ Sel <: Tuple, Inner ](
+            selector : Selector[ Sel ],
+        )(
+            using
+            cr : ComponentRetriever.Aux[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], Sel, Inner ],
+        ) : Inner = cr.retrieve( subtype )
+
+        def modifyComponent[ Sel <: Tuple, Inner ](
+            selector : Selector[ Sel ],
+        )(
+            using
+            cr : ComponentRetriever.Aux[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], Sel, Inner ],
+        ) : ComponentUpdater.Updater[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], Inner, Sel ] =
+            ComponentUpdater.Updater( subtype )
+
+        def rebuild : SubtypeBuilder[ T, ST, D, DN, DV, ST => T, N, S, Schema.Aux[ ST, S ] ] =
+            SubtypeBuilder.from( subtype )
+
+        def withName[ NewN <: TypeName ](
+            name : NewN,
+        ) : Subtype.Aux[ T, ST, D, DN, DV, NewN, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( typeName = name )
+        }
+
+        def withSchema[ NewS ](
+            schema : Schema.Aux[ ST, NewS ],
+        ) : Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( schema = schema )
+        }
+
+        def modifySchema[ NewS ](
+            modifier : Schema.Aux[ ST, S ] => Schema.Aux[ ST, NewS ],
+        ) : Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( schema = modifier( subtype.schema ) )
+        }
+
+        def withAsSuper(
+            asSuper : ST => T,
+        ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( asSuper = asSuper )
+        }
+
+        def withDiscriminatorValue[ NewDV <: D & Singleton ](
+            value : NewDV
+        )(
+            using
+            ev : NotGiven[ D =:= Unit ],
+        ) : Subtype.Aux[ T, ST, D, DN, NewDV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( discriminatorValue = value )
+        }
+
+        def withoutDiscriminator : Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( discriminatorValue = () )
+        }
+
+        def withDescription( description : String ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( description = Some( description ) )
+        }
+
+        def withoutDescription : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( description = None )
+        }
+
+        def withValidators(
+            validator: Validator[ ST ],
+            otherValidators : Validator[ ST ]*,
+        ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+                sc.copy( validators = ( validator +: otherValidators ).toSet )
+        }
+
+        def addValidators(
+            validator: Validator[ ST ],
+            otherValidators : Validator[ ST ]*,
+        ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+                sc.copy( validators = subtype.validators ++ ( validator +: otherValidators ).toSet )
+        }
+
+        def withoutValidators : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+                sc.copy( validators = Set.empty )
+        }
+
+        def asDeprecated : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+                sc.copy( deprecated = true )
+        }
+
+        def asUndeprecated : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+                sc.copy( deprecated = false )
+        }
+
+        def withExamples(
+            example: ST,
+            otherExamples : ST*,
+        ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+                sc.copy( examples = example +: otherExamples )
+        }
+
+        def addExamples(
+            example: ST,
+            otherExamples : ST*,
+        ) : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+                sc.copy( examples = ( example +: otherExamples ) ++ subtype.examples )
+        }
+
+        def withoutExamples : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] =>
+                sc.copy( examples = Nil )
+        }
+
+        def withDefault( default : ST )  : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( default = Some( default ) )
+        }
+
+        def withoutDefault : Subtype.Aux[ T, ST, D, DN, DV, N, S ] = subtype match {
+            case sc : SubtypeCase[ T, ST, D, DN, DV, N, S ] => sc.copy( default = None )
+        }
+
+    }
+
+
+
 
 }

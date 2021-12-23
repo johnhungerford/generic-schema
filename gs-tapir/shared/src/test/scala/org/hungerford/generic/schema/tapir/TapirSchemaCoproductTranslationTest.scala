@@ -46,7 +46,7 @@ class TapirSchemaCoproductTranslationTest
                     case Some( _ ) => fail( "not a product!" )
                     case None => fail( "couldn't find schema from value")
                 }
-                sc.subtypeSchema( SubT1( 234) ) match {
+                sc.subtypeSchema( SubT1( 234 ) ) match {
                     case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _ ) ) =>
                         fields.length shouldBe 1
                         fields.head.name.name shouldBe "int"

@@ -73,8 +73,7 @@ trait SubtypeDsl {
         def builder[ T, ST, D, DN ](
             using
             tsEv : ToSuperGenerator[ T, ST ],
-            fsEv : FromSuperGenerator[ T, ST ],
-        ) : SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, fsEv.FS, Unit, Nothing, Unit ] =
+        ) : SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, Unit, Unit, Nothing, Unit ] =
             SubtypeBuilder.empty[ T, ST, D, DN ]
 
     extension [ T, ST, D, DN, DV, N <: TypeName, S ]( subtype : Subtype.Aux[ T, ST, D, DN, DV, N, S ] ) {

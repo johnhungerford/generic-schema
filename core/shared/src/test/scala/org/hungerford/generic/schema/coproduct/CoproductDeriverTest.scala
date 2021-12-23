@@ -27,4 +27,14 @@ class CoproductDeriverTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         sch.subtypeDescriptions.head.typeName shouldBe "SubT1"
     }
 
+    it should "generate Subtype.fromSuper methods correctly" in {
+        val shape = CoproductDeriver[ SuperT ].derive
+
+        val maskedSt1Val : SuperT = SubT1( 3 )
+        val st1 = shape.subtypeDescriptions.head
+        val st2 = shape.subtypeDescriptions.tail.head
+        st1.fromSuper( maskedSt1Val ) shouldBe Some( SubT1( 3 ) )
+        st2.fromSuper( maskedSt1Val ) shouldBe None
+    }
+
 }

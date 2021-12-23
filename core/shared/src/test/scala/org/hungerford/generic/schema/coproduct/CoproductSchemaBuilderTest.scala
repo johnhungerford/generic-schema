@@ -26,7 +26,7 @@ class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matc
 
     it should "be able to add real subtype" in {
         val csb = Schema.coproductBuilder[ SuperTrait ]
-          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).build )
+          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).build )
           .build
     }
 
@@ -34,32 +34,32 @@ class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matc
 
     it should "not be able to add two subtypes with the same name" in {
         val csb = Schema.coproductBuilder[ SuperTrait ]
-          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).build )
+          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).build )
 
         assertDoesNotCompile(
             """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case" )
-              |.fromSchema( Schema.derived ).build )""".stripMargin,
+              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
         )
 
         assertCompiles(
             """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" )
-              |.fromSchema( Schema.derived ).build )""".stripMargin,
+              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
         )
     }
 
     it should "not be able to add two subtypes with same discriminator value" in {
         val csb = Schema.coproductBuilder[ SuperTrait ]
           .discriminator[ Int ]( "int" )
-          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).discriminatorValue( 1 ).build )
+          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).discriminatorValue( 1 ).build )
 
         assertDoesNotCompile(
             """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" ).discriminatorValue( 1 )
-              |.fromSchema( Schema.derived ).build )""".stripMargin,
+              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
         )
 
         assertCompiles(
             """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" ).discriminatorValue( 2 )
-              |.fromSchema( Schema.derived ).build )""".stripMargin,
+              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
         )
 
     }

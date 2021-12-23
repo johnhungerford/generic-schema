@@ -45,8 +45,8 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
         case class SubT2( str : String ) extends SuperT
 
         val expectedSchema = Schema.coproductBuilder[ SuperT ]
-          .buildSubtype[ SubT1 ]( _.typeName( "SubT1" ).fromSchema( Schema.derived ).build )
-          .buildSubtype[ SubT2 ]( _.typeName( "SubT2" ).fromSchema( Schema.derived ).build )
+          .buildSubtype[ SubT1 ]( _.typeName( "SubT1" ).fromSchema( Schema.derived ).fromSuper( { case v@SubT1( _ ) => Some( v ); case _ => None } ).build )
+          .buildSubtype[ SubT2 ]( _.typeName( "SubT2" ).fromSchema( Schema.derived ).fromSuper( { case v@SubT2( _ ) => Some( v ); case _ => None } ).build )
           .build
 
         val sch = SchemaDeriver.schema[ SuperT ]

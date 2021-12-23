@@ -109,42 +109,16 @@ object ToSuperGenerator {
     }
 }
 
-trait FromSuperGenerator[ T, ST ] {
-    type FS
-
-    def fromSuper : FS
-}
-
-object FromSuperGenerator {
-    type Aux[ T, ST, FSType ] = FromSuperGenerator[ T, ST ] { type FS = FSType }
-
-    given [ T, ST ]( using ev : ST <:< T ) : FromSuperGenerator[ T, ST ] with {
-        type FS = T => Option[ ST ]
-
-        def fromSuper : T => Option[ ST ] = ( t : T ) => t match {
-            case st : ST => Some( st )
-            case _ => None
-        }
-    }
-
-    given notSubtype[ T, ST ]( using ev : NotGiven[ ST <:< T ] ) : FromSuperGenerator[ T, ST ] with {
-        type FS = Unit
-
-        def fromSuper : Unit = ()
-    }
-}
-
 object SubtypeBuilder {
     def empty[ T, ST, D, DN ](
         using
         tsEv : ToSuperGenerator[ T, ST ],
-        fsEv : FromSuperGenerator[ T, ST ],
-    ) : SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, fsEv.FS, Unit, Nothing, Unit ] =
-        SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, fsEv.FS, Unit, Nothing, Unit ](
+    ) : SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, Unit, Unit, Nothing, Unit ] =
+        SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, Unit, Unit, Nothing, Unit ](
             (),
             (),
             tsEv.toSuper,
-            fsEv.fromSuper,
+            (),
             (),
         )
 

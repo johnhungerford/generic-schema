@@ -72,30 +72,30 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
    it should "use implicit primitive types" in {
        case class HasAF( str : String, bool : Boolean, other : Map[ String, Double ] )
 
-        import org.hungerford.generic.schema.primitives.Primitives.given
+       import org.hungerford.generic.schema.primitives.Primitives.given
 
         val testSchema = Schema.productBuilder[ HasAF ]
           .addField( FieldBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
-         .addField( FieldBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
-         .additionalFields[ Double ].fromSchema( Schema.primitive )
-         .construct( (tup, af) => {
-             val (str : String, bool : Boolean) = tup
-             HasAF( str, bool, af )
-         } )
-         .deconstruct( value => ((value.str, value.bool), value.other) )
-         .build
+          .addField( FieldBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
+          .additionalFields[ Double ].fromSchema( Schema.primitive )
+          .construct( (tup, af) => {
+              val (str : String, bool : Boolean) = tup
+              HasAF( str, bool, af )
+          } )
+          .deconstruct( value => ((value.str, value.bool), value.other) )
+          .build
 
-       val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( testSchema )
+        val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( testSchema )
 
-       val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
-       res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
+        val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
+        res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
    }
 
    it should "be able to use nested product schemas through nested building" in {
        case class Inside( str : String )
        case class Outside( inside : Inside )
 
-        import org.hungerford.generic.schema.primitives.Primitives.given
+       import org.hungerford.generic.schema.primitives.Primitives.given
 
        val outsideSch = Schema.productBuilder[ Outside ]
          .addField(
@@ -123,12 +123,12 @@ abstract class BiMapProductTranslationTest[ OtherSchema[ _ ], MapVal, BuildMapVa
        case class Inside( str : String )
        case class Outside( inside : Inside )
 
-        import org.hungerford.generic.schema.primitives.Primitives.given
+       import org.hungerford.generic.schema.primitives.Primitives.given
 
        val insideSchema = Schema.productBuilder[ Inside ]
          .addField( FieldBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
          .construct( str => {
-             Inside( str ) 
+             Inside( str )
           } )
          .deconstruct( value => value.str )
          .build

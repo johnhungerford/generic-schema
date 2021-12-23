@@ -33,11 +33,6 @@ object TapirValidatorTranslation extends LowPriorityValidatorTranslations {
         case StringLength(Max(maxValue, true)) => TapirValidator.maxLength(maxValue - 1)
         case StringLength(EqValidator(length)) => TapirValidator.fixedLength(length)
         case Regx(pattern: Regex) => TapirValidator.pattern(pattern.regex)
-        case CollSize(Min(minValue, false)) => TapirValidator.minLength(minValue)
-        case CollSize(Min(minValue, true)) => TapirValidator.minLength(minValue + 1)
-        case CollSize(Max(maxValue, false)) => TapirValidator.maxLength(maxValue)
-        case CollSize(Max(maxValue, true)) => TapirValidator.maxLength(maxValue - 1)
-        case CollSize(EqValidator(length)) => TapirValidator.fixedLength(length)
         case tr => TapirValidator.custom( t => {
           if ( tr.isValid( t ) ) Nil
           else List( ValidationError.Custom( t, "invalid" ) )

@@ -1,8 +1,8 @@
 package org.hungerford.generic.schema.coproduct
 
-import org.hungerford.generic.schema.{Schema, ComplexSchema, SchemaProvider}
+import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaProvider}
 import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Deriver, Sub, Zipper}
-import org.hungerford.generic.schema.coproduct.subtype.{AsSuperGenerator, Subtype, SubtypeCase, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeCase, ToSuperGenerator, TypeName}
 import org.hungerford.generic.schema.product.ProductDeriver.MirrorProduct
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldName
@@ -61,7 +61,7 @@ object CoproductMirDeriver {
             type Out = CoproductShape[ T, R, Elems, Unit, Nothing ]
 
             def derive: Out = CoproductShape[ T, R, Elems, Unit, Nothing ](
-                der.derive
+                der.derive( 0 )
             )
         }
     }
@@ -74,41 +74,10 @@ object CoproductMirDeriver {
     ) : CoproductMirDeriver.Aux[ T, Elems, ElemLabels, Res ] = cd
 }
 
-//trait SubtypeDeriver[ T, ST, N <: TypeName ] {
-//    type Out
-//
-//    def derive : Out
-//}
-//
-//object SubtypeDeriver {
-//    type Aux[ T, ST, N <: TypeName, O ] = SubtypeDeriver[ T, ST, N ] { type Out = O }
-//
-//    inline given [ T, ST, STS, N <: TypeName ](
-//        using
-//        provider : SchemaProvider.Aux[ ST, STS ],
-//        asGen : AsSuperGenerator.Aux[ T, ST, ST => T ],
-//    ) : SubtypeDeriver.Aux[ T, ST, N, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] ] = {
-//        new SubtypeDeriver[  T, ST, N ] {
-//            type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ]
-//
-//            override def derive: Out = {
-//                val typeName = summonInline[ ValueOf[ N ] ].value
-//
-//                SubtypeCase[ T, ST, Unit, Nothing, Unit, N, STS ](
-//                    typeName,
-//                    provider.provide,
-//                    asGen.as,
-//                    (),
-//                )
-//            }
-//        }
-//    }
-//}
-
 trait SubtypesDeriver[ T, STs <: Tuple, Ns <: Tuple ] {
     type Out <: Tuple
 
-    def derive : Out
+    def derive( ordinal : Int ) : Out
 }
 
 object SubtypesDeriver {
@@ -117,14 +86,15 @@ object SubtypesDeriver {
     inline given [ T ] : SubtypesDeriver[ T, EmptyTuple, EmptyTuple ] with {
         type Out = EmptyTuple
 
-        def derive : EmptyTuple = EmptyTuple
+        def derive( ordinal : Int ) : EmptyTuple = EmptyTuple
     }
 
     inline given [ T, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
         using
+        mir : Mirror.SumOf[ T ],
         provider : SchemaProvider.Aux[ ST, STS ],
         ev : NotGiven[ N =:= Nothing ],
-        asGen : AsSuperGenerator.Aux[ T, ST, ST => T ],
+        tsGen : ToSuperGenerator.Aux[ T, ST, ST => T ],
         tDer : SubtypesDeriver.Aux[ T, STTail, NTail, Next ],
     ) : SubtypesDeriver.Aux[ T, ST *: STTail, N *: NTail, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next ] = {
         val typeName = summonInline[ ValueOf[ N ] ].value
@@ -132,14 +102,15 @@ object SubtypesDeriver {
         new SubtypesDeriver[ T, ST *: STTail, N *: NTail ] {
             type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next
 
-            def derive : Out = {
+            def derive( ordinal : Int ) : Out = {
                 SubtypeCase[ T, ST, Unit, Nothing, Unit, N, STS ](
                     typeName,
                     provider.provide,
-                    asGen.as,
+                    tsGen.toSuper,
+                    ( t : T ) => if ( mir.ordinal( t ) == ordinal ) Some( t.asInstanceOf[ ST ] ) else None,
                     (),
-                )
-            } *: tDer.derive
+                ) *: tDer.derive( ordinal + 1 )
+            }
         }
     }
 }

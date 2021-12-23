@@ -21,16 +21,16 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
 
         product.size shouldBe 1
 
-       product.fieldNames shouldBe Set( "int" )
+        product.fieldNames shouldBe Set( "int" )
 
-       val manualProduct = ProductSchemaBuilder[ Test ]
-         .addField( FieldBuilder[ Int ].fieldName( "int" ).fromSchema.build )
-         .construct( v => Test( v ) )
-         .deconstruct( v => v.int )
-         .build
-         .shape
+        val manualProduct = ProductSchemaBuilder[ Test ]
+          .addField( FieldBuilder[ Int ].fieldName( "int" ).fromSchema.build )
+          .construct( v => Test( v ) )
+          .deconstruct( v => v.int )
+          .build
+          .shape
 
-       product.fieldDescriptions shouldBe manualProduct.fieldDescriptions
+        product.fieldDescriptions shouldBe manualProduct.fieldDescriptions
     }
 
     it should "derive a ProductShape from a case class type by constructing primitives" in {
@@ -40,16 +40,16 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
 
         product.size shouldBe 1
 
-       product.fieldNames shouldBe Set( "int" )
+        product.fieldNames shouldBe Set( "int" )
 
-       val manualProduct = ProductSchemaBuilder[ Test ]
-         .addField( FieldBuilder[ Int ].fieldName( "int" ).primitive.build )
-         .construct( t => Test(t ) )
-         .deconstruct( v => v.int )
-         .build
-         .shape
+        val manualProduct = ProductSchemaBuilder[ Test ]
+          .addField( FieldBuilder[ Int ].fieldName( "int" ).primitive.build )
+          .construct( t => Test(t ) )
+          .deconstruct( v => v.int )
+          .build
+          .shape
 
-       product.fieldDescriptions shouldBe manualProduct.fieldDescriptions
+        product.fieldDescriptions shouldBe manualProduct.fieldDescriptions
     }
 
     it should "derive a big product" in {

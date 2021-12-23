@@ -48,6 +48,7 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
                 case EmptyTuple => fns
                 case FieldCase( name, _, _, _, _, _, _ ) *: next =>
                     getFieldNames( next, fns + name )
+                case _ => ???
             }
         }
         getFieldNames( fieldDescriptions, Set.empty )

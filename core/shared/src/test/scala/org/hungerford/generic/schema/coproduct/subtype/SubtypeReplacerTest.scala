@@ -22,7 +22,8 @@ class SubtypeReplacerTest extends AnyFlatSpecLike with org.scalatest.matchers.sh
 
         val newSt = Subtype.builder[ Int, SubT4, String, "str" ]
           .typeName( "test-subtype" )
-          .asSuper( _.str.length )
+          .toSuper( _.str.length )
+          .fromSuper( v => Some( SubT4( v.toString ) ) )
           .discriminatorValue( "test-value" )
           .fromSchema( Schema.derived )
           .build

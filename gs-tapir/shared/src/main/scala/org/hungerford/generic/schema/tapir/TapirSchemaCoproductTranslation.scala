@@ -22,7 +22,7 @@ trait TapirSchemaCoproductTranslation {
     object TapirCoproductTranslator {
         type Aux[ T, R, O ] = TapirCoproductTranslator[ T, R ] { type Out = O }
         given [ T ] : TapirCoproductTranslator[ T, EmptyTuple ] with {
-            type Out = (Nil.type, T => Option[ TapirSchema[ _ ] ])
+            type Out = (List[ TapirSchema[ _ ] ], T => Option[ TapirSchema[ _ ] ])
 
             override def translate( shape: EmptyTuple ): Out = (Nil, ( t : T ) => None)
         }
@@ -52,7 +52,7 @@ trait TapirSchemaCoproductTranslation {
           using
             stst : SchemaTranslator[ ST, S, TapirSchema ],
         ) : TapirCoproductTranslator[ T, Subtype.Aux[ T, ST, D, DN, DV, N, S ] ] with {
-            type Out = (TapirSchema[ ST ], T => Option[ TapirSchema[ ST ] ])
+            type Out = (TapirSchema[ _ ], T => Option[ TapirSchema[ _ ] ])
 
             override def translate(
                 shape: Subtype.Aux[ T, ST, D, DN, DV, N, S ]

@@ -140,6 +140,18 @@ lazy val gsUPickle = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-upic
       libraryDependencies ++= upickle.value,
   )
 
+lazy val gsCirce = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-circe" ) )
+  .configs( IntegrationConfig, WipConfig )
+  .dependsOn( core % "compile->compile;test->test" )
+  .disablePlugins( sbtassembly.AssemblyPlugin )
+  .settings(
+      name := "gs-circe",
+      commonSettings,
+      publishSettings,
+      disableBuild,
+      libraryDependencies ++= circeCore.value,
+  )
+
 lazy val gsTapir = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-tapir" ) )
   .configs( IntegrationConfig, WipConfig )
   .dependsOn( core % "compile->compile;test->test" )
@@ -150,4 +162,22 @@ lazy val gsTapir = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-tapir"
       publishSettings,
       disableBuild,
       libraryDependencies ++= tapir.value,
+  )
+
+lazy val exampleApp = ( crossProject( JSPlatform, JVMPlatform ) in file( "example-app" ) )
+  .configs( IntegrationConfig, WipConfig )
+  .dependsOn( core % "compile->compile;test->test", gsTapir, gsCirce )
+  .enablePlugins( ScalaJSPlugin )
+  .settings(
+      name := "example-app",
+      commonSettings,
+      disablePublish,
+      libraryDependencies ++= circeCore.value ++ circeParser.value,
+  )
+  .jvmSettings(
+      buildSettings,
+      libraryDependencies ++= tapir.value ++ tapirOpenApi ++ tapirCirce.value,
+  )
+  .jsSettings(
+      scalaJSUseMainModuleInitializer := true,
   )

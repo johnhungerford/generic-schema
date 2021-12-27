@@ -33,13 +33,14 @@ trait CirceCoproductSchemaTranslation {
             override def read(
                 from: Json,
                 subtypes: Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, S ]
-            ): subtypeReaderWithoutDiscriminator.this.Out = {
+            ) : subtypeReaderWithoutDiscriminator.this.Out = {
                 val decoder = st.translate( subtypes.schema )
-                val stValue = decoder( from.hcursor ) match {
+                decoder( from.hcursor ) match {
                     case Left( e ) => None
-                    case Right( v ) => Some( v )
+                    case Right( v ) =>
+                        if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
+                        else None
                 }
-                stValue.map( subtypes.toSuper )
             }
         }
 

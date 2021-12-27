@@ -39,17 +39,25 @@ class CirceCoproductSchemaTranslationTest extends AnyFlatSpecLike with org.scala
     case class Super( str : String )
     case class Sub( str : String )
 
-    it should "encode a non-sealed trait coproduct (a custom coproduct) to json correctly" in {
+    it should "encode a non-sealed trait coproduct (a custom coproduct) to json correctly, using validators to choose cases" in {
         import Default.dsl.*
         import CirceSchemaTranslation.given
 
         val sch = Schema.coproductBuilder[ Super ]
+          .buildSubtype[ Sub ](
+              _.typeName( "Sub" )
+                .validate( Validator( v => Try( v.str.toInt >= 0 ).getOrElse( true ) && Try( v.str.toDouble < 0 ).getOrElse( true ) ) )
+                .fromSchema( Schema.derived[ Sub ] )
+                .toSuper( v => Super( v.str ) )
+                .fromSuper( v => Some( Sub( v.str ) ) )
+                .build
+          )
           .buildSubtype[ Int ](
               _.typeName( "int" )
                 .validate( Validator.negativeOrZero, Validator.nonZero )
                 .primitive
                 .toSuper( v => Super( v.toString ) )
-                .fromSuper( v => Try( { val res = v.str.toInt; if res > 0 then res else throw Exception() } ).toOption )
+                .fromSuper( v => Try( v.str.toInt ).toOption )
                 .build
           )
           .buildSubtype[ Double ](
@@ -57,28 +65,24 @@ class CirceCoproductSchemaTranslationTest extends AnyFlatSpecLike with org.scala
                 .validate( Validator.positiveOrZero )
                 .primitive
                 .toSuper( v => Super( v.toString ) )
-                .fromSuper( v => Try( { val res = v.str.toDouble; if res <= 0 then res else throw Exception() } ).toOption )
-                .build
-          )
-          .buildSubtype[ Sub ](
-              _.typeName( "Sub" )
-                .fromSchema( Schema.derived[ Sub ] )
-                .toSuper( v => Super( v.str ) )
-                .fromSuper( v => Some( Sub( v.str ) ) )
+                .fromSuper( v => Try( v.str.toDouble ).toOption )
                 .build
           )
           .build
 
         given Codec[ Super ] = SchemaTranslator.translate( sch )
 
-        val val1 : Super = Super( "-32.4353" )
-        val1.asJson.noSpaces.toString shouldBe """-32.4353"""
+        val val1 : Super = Super( "32.4353" )
+        val1.asJson.noSpaces.toString shouldBe """32.4353"""
 
-        val val2 : Super = Super( "3454" )
-        val2.asJson.noSpaces.toString shouldBe """3454"""
+        val val2 : Super = Super( "-3454" )
+        val2.asJson.noSpaces.toString shouldBe """-3454"""
 
         val val3 : Super = Super( "hello world" )
         val3.asJson.noSpaces.toString shouldBe """{"str":"hello world"}"""
+
+        val val4 : Super = Super( "-23.343" )
+        val4.asJson.noSpaces.toString shouldBe """{"str":"-23.343"}"""
     }
 
 }

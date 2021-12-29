@@ -34,6 +34,15 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, TS, FS, N, S, Sch ] (
         copy[ T, ST, D, DN, DV, ST => T, FS, N, S, Sch ]( ts = fn )
 
     def fromSuper( fn : T => Option[ ST ] ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, T => Option[ ST ], N, S, Sch ] =
+        copy[ T, ST, D, DN, DV, TS, T => Option[ ST ], N, S, Sch ]( fs = { ( value : T ) =>
+            val stValOpt: Option[ ST ] = fn( value )
+            stValOpt flatMap { stVal =>
+                if ( vals.exists( validator => !validator.isValid( stVal ) ) ) None
+                else stValOpt
+            }
+        } )
+
+    def fromSuperWithoutValidation( fn : T => Option[ ST ] ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, T => Option[ ST ], N, S, Sch ] =
         copy[ T, ST, D, DN, DV, TS, T => Option[ ST ], N, S, Sch ]( fs = fn )
 
     def discriminatorValue[ NewDV <: (D & Singleton) ]( value : NewDV ) : SubtypeBuilder[ T, ST, D, DN, NewDV, TS, FS, N, S, Sch ] =

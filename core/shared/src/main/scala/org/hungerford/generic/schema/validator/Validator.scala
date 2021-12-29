@@ -7,6 +7,8 @@ trait Validator[ T ] {
 }
 
 object Validator {
+    def apply[ T ]( fn : T => Boolean ) : Validator[ T ] = ( instance: T ) => fn( instance )
+
     // Ordering validators
     def min[ T : Ordering ]( minValue : T ) : Min[ T ] = Min[ T ]( minValue )
     def minExclusive[ T : Ordering ]( minValue : T ) : Min[ T ] = new Min[ T ]( minValue, true )

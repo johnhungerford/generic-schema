@@ -4,6 +4,7 @@ import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.{Default, Schema}
 
 object DataModel {
+
     case class Request( name : String, id : String, amount : Int, payment : Payment )
 
     sealed trait Payment
@@ -27,18 +28,4 @@ object DataModel {
     case object Failed extends JobStatus
     case object Complete extends JobStatus
 
-    val requestSchema = Default.usingDsl( dsl => {
-        import dsl.{*, given}
-
-        val dateSch = Schema.derived[ Date ]
-          .modifyComponent( "year" )(
-              _.withValidators( Validator.min( 2000 ), Validator.max( 3000 ) )
-          )
-          .modifyComponent( "month" )(
-              _.withValidators( Validator.min( 1 ), Validator.max( 12 ) )
-          )
-        import dateSch.givenSchema
-
-        Schema.derived[ Request ]
-    } )
 }

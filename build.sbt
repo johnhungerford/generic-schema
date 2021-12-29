@@ -167,7 +167,6 @@ lazy val gsTapir = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-tapir"
 lazy val exampleApp = ( crossProject( JSPlatform, JVMPlatform ) in file( "example-app" ) )
   .configs( IntegrationConfig, WipConfig )
   .dependsOn( core % "compile->compile;test->test", gsTapir, gsCirce )
-  .enablePlugins( ScalaJSPlugin )
   .settings(
       name := "example-app",
       commonSettings,

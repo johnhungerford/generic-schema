@@ -16,6 +16,7 @@ class CirceCoproductSchemaTranslationTest extends AnyFlatSpecLike with org.scala
     object SuperT {
         case class SubT1( int : Int, str : String ) extends SuperT
         case class SubT2( dbl : Double, flt : Float, bool : Boolean ) extends SuperT
+        case object SubT3 extends SuperT
     }
 
     it should "encode a sealed trait correctly to json" in {
@@ -34,6 +35,9 @@ class CirceCoproductSchemaTranslationTest extends AnyFlatSpecLike with org.scala
 
         val value : SuperT = SuperT.SubT2( 0.234D, 342.231F, false )
         value.asJson.noSpaces.toString shouldBe """{"dbl":0.234,"flt":342.231,"bool":false}"""
+
+        val singleVal : SuperT = SuperT.SubT3
+        singleVal.asJson.toString shouldBe """"SubT3""""
     }
 
     case class Super( str : String )

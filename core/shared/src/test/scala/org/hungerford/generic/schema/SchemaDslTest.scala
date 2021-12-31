@@ -35,6 +35,19 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
         Schema.derived[ TestCase ]
     }
 
+    it should "allow building a singleton" in {
+        import TestSchemaDsl.*
+
+        val sch1 = Schema.singletonBuilder[ "hello" ].identifier( "HI!" ).build
+        val sch2 = Schema.singletonBuilderOf( "hello" ).identifier( "HI!" ).build
+        val sch3 = Schema.singleton( "hello", "HI!" )
+        sch1 shouldBe sch2
+        sch1 shouldBe sch3
+        sch2 shouldBe sch3
+    }
+
+    behavior of "schema dsl"
+
     it should "allow modifying schemas" in {
 
         val sch = {

@@ -35,3 +35,6 @@ trait CirceSingletonSchemaTranslation {
     }
 
 }
+
+object CirceSingletonSchemaTranslation
+  extends CirceSingletonSchemaTranslation

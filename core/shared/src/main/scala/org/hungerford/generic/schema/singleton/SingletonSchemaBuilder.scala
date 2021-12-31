@@ -35,3 +35,9 @@ case class SingletonSchemaBuilder[ T <: Singleton, N ](
     )
 }
 
+object SingletonSchemaBuilder {
+    def empty[ T <: Singleton ] : SingletonSchemaBuilder[ T, Unit ] = {
+        SingletonSchemaBuilder[ T, Unit ]( idnm = () )
+    }
+}
+

@@ -1,9 +1,11 @@
 package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.coproduct.CoproductSchemaBuilder
+import org.hungerford.generic.schema.coproduct.subtype.TypeName
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
 import org.hungerford.generic.schema.product.field.FieldReplacer
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
+import org.hungerford.generic.schema.singleton.{SingletonSchemaBuilder, SingletonShape}
 import org.hungerford.generic.schema.validator.Validator
 
 sealed trait Schema[ T ] {
@@ -211,9 +213,17 @@ trait SchemaDsl {
             CoproductSchemaBuilder[ T, EmptyTuple, Unit, Nothing ]( sts = EmptyTuple )
 
     extension ( sch : Schema.type )
-        def primitiveBuilder[ T ] : PrimitiveSchemaBuilder[ T ] = PrimitiveSchemaBuilder[ T ]()
+        def singletonBuilder[ T <: Singleton ] : SingletonSchemaBuilder[ T, Unit ] =
+            SingletonSchemaBuilder.empty
+        def singletonBuilderOf[ T <: Singleton ]( value : T ) : SingletonSchemaBuilder[ T, Unit ] =
+            SingletonSchemaBuilder.empty
+        def singleton[ T <: Singleton, N <: TypeName ]( value : T, name : N ) : Schema.Aux[ T , SingletonShape[ T, N ] ] =
+            ComplexSchema(
+                shape = SingletonShape[ T, N ]( name, value ),
+            )
 
     extension ( sch : Schema.type )
+        def primitiveBuilder[ T ] : PrimitiveSchemaBuilder[ T ] = PrimitiveSchemaBuilder[ T ]()
         def primitive[ T ] : Schema.Aux[ T, Unit ] = Primitive[ T ]()
 
     extension ( sch : Schema.type )

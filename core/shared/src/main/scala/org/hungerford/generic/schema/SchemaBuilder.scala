@@ -6,6 +6,7 @@ import org.hungerford.generic.schema.product.{ProductDeriver, ProductSchemaBuild
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.validator.Validator
 
+
 case class PrimitiveSchemaBuilder[ T ](
    private[ schema ] val nm : Option[ String ] = None,
    private[ schema ] val desc : Option[ String ] = None,

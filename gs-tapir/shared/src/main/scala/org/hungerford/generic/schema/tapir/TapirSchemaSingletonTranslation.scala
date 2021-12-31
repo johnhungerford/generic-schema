@@ -23,7 +23,7 @@ trait TapirSchemaSingletonTranslation {
             None,
             schema.genericExamples.headOption,
             schema.deprecated,
-            TapirValidator.enumeration( List( schema.shape.value ) ),
+            TapirValidator.enumeration( List( schema.shape.value ), v => Some( schema.shape.name ) ),
         )
     }
 

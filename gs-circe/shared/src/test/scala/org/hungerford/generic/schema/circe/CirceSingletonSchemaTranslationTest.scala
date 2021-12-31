@@ -49,4 +49,5 @@ class CirceSingletonSchemaTranslationTest extends AnyFlatSpecLike with org.scala
         }
     }
 
+
 }

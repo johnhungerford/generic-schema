@@ -13,27 +13,29 @@ class CirceCoproductSchemaTranslationTest extends AnyFlatSpecLike with org.scala
     behavior of "Encoding"
 
     sealed trait SuperT
-    object SuperT {
-        case class SubT1( int : Int, str : String ) extends SuperT
-        case class SubT2( dbl : Double, flt : Float, bool : Boolean ) extends SuperT
-    }
+    case class SubT1( int : Int, str : String ) extends SuperT
+    case class SubT2( dbl : Double, flt : Float, bool : Boolean ) extends SuperT
+    case object SubT3 extends SuperT
 
     it should "encode a sealed trait correctly to json" in {
         import Default.dsl.*
         import CirceSchemaTranslation.given
 
-        val subt1Sch = Schema.derived[ SuperT.SubT1 ]
+        val subt1Sch = Schema.derived[ SubT1 ]
         import subt1Sch.givenSchema
 
-        val subt2Sch = Schema.derived[ SuperT.SubT2 ]
+        val subt2Sch = Schema.derived[ SubT2 ]
         import subt2Sch.givenSchema
 
         val superTSch = Schema.derived[ SuperT ]
 
         given Codec[ SuperT ] = SchemaTranslator.translate( superTSch )
 
-        val value : SuperT = SuperT.SubT2( 0.234D, 342.231F, false )
+        val value : SuperT = SubT2( 0.234D, 342.231F, false )
         value.asJson.noSpaces.toString shouldBe """{"dbl":0.234,"flt":342.231,"bool":false}"""
+
+        val singleVal : SuperT = SubT3
+        singleVal.asJson.toString shouldBe """"SubT3""""
     }
 
     case class Super( str : String )

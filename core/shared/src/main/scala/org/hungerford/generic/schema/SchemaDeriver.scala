@@ -3,6 +3,7 @@ package org.hungerford.generic.schema
 import org.hungerford.generic.schema.coproduct.CoproductDeriver
 import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.product.{ProductDeriver, ProductShape, TupleIntLength}
+import org.hungerford.generic.schema.singleton.SingletonDeriver
 import org.hungerford.generic.schema.types.Deriver
 import org.hungerford.generic.schema.validator.Validator
 
@@ -36,6 +37,14 @@ object SchemaDeriver {
     ) : SchemaDeriver.Aux[ T, cprd.Out ] = new SchemaDeriver[ T ] {
         type Shape = cprd.Out
         def derive : Schema.Aux[ T, Shape ] = ComplexSchema[ T, Shape ]( cprd.derive )
+    }
+
+    given singletonSchemaDeriver[ T ](
+        using
+        sd : SingletonDeriver[ T ],
+    ) : SchemaDeriver.Aux[ T, sd.Out ] = new SchemaDeriver[ T ] {
+        type Shape = sd.Out
+        def derive : Schema.Aux[ T, Shape ] = ComplexSchema[ T, Shape ]( sd.derive )
     }
 
     def schema[ T ](

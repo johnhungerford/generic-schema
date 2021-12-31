@@ -7,6 +7,7 @@ import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider}
 
 import scala.compiletime.constValue
 import scala.deriving.Mirror
+import scala.util.NotGiven
 import org.hungerford.generic.schema.product.field.UniqueFieldNames
 import org.hungerford.generic.schema.product.constructor.ProductConstructor
 import org.hungerford.generic.schema.product.constructor.ProductDeconstructor
@@ -33,6 +34,7 @@ object ProductDeriver {
     inline given [ T <: Product, L <: Tuple, RVt <: Tuple, LRV <: Tuple, Rt <: Tuple ](
         using
         mirror : MirrorProduct[ T, RVt, L ],
+        mirEv : NotGiven[ mirror.type <:< Mirror.Singleton ],
         zip : Zipper.Aux[ L, RVt, LRV ],
         fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
         lengther : TupleIntLength[ Rt ],

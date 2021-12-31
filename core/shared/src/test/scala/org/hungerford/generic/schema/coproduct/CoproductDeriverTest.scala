@@ -3,6 +3,7 @@ package org.hungerford.generic.schema.coproduct
 import org.hungerford.generic.schema.coproduct.subtype.Subtype
 import org.hungerford.generic.schema.types.Zipper
 import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.singleton.SingletonShape
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 import scala.deriving.Mirror
@@ -35,6 +36,22 @@ class CoproductDeriverTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         val st2 = shape.subtypeDescriptions.tail.head
         st1.fromSuper( maskedSt1Val ) shouldBe Some( SubT1( 3 ) )
         st2.fromSuper( maskedSt1Val ) shouldBe None
+    }
+
+    sealed trait SupS
+    case object SubS1 extends SupS
+    case object SubS2 extends SupS
+
+    it should "derive a coproduct consisting of case objects using singleton schemas" in {
+        val shape = CoproductDeriver[ SupS ].derive
+
+        val sts = shape.subtypeDescriptions
+        sts.size shouldBe 2
+        val st1 = sts.head
+        val st2 = sts.tail.head
+
+        st1.schema.shape shouldBe SingletonShape[ SubS1.type, "SubS1" ]( "SubS1", SubS1 )
+        st2.schema.shape shouldBe SingletonShape[ SubS2.type, "SubS2" ]( "SubS2", SubS2 )
     }
 
 }

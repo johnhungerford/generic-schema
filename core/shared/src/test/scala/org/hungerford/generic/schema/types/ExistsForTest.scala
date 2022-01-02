@@ -6,14 +6,6 @@ class ExistsForTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
 
     behavior of "ExistsFor"
 
-    it should "be summonable for a type class that exists for the given type" in {
-        summon[ ExistsFor[ Numeric, Int ] ]
-    }
-
-    it should "not be summonable for a type class that does not exist for the given type" in {
-        assertDoesNotCompile( """summon[ ExistsFor[ Numeric, String ] ]""" )
-    }
-
     it should "be summonable for a type class that has no instance for empty tuple" in {
         summon[ ExistsFor[ Numeric, EmptyTuple ] ]
     }

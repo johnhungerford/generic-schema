@@ -23,7 +23,7 @@ object Partition {
 
     given succeeds[ C[ _ ], H, Tail <: Tuple, NextM <: Tuple, NextF <: Tuple ](
         using
-        h : ExistsFor[ C, H ],
+        h : C[ H ],
         t : Partition.Aux[ C, Tail, NextM, NextF ],
     ) : Partition[ C, H *: Tail ] with {
         override type MeetsCondition = H *: NextM
@@ -39,7 +39,7 @@ object Partition {
 
     given fails[ C[ _ ], H, Tail <: Tuple, NextM <: Tuple, NextF <: Tuple ](
         using
-        h : NotGiven[ ExistsFor[ C, H ] ],
+        h : NotGiven[ C[ H ] ],
         t : Partition.Aux[ C, Tail, NextM, NextF ],
     ) : Partition[ C, H *: Tail ] with {
         override type MeetsCondition = NextM

@@ -11,6 +11,7 @@ object DataModel {
     final case class CreditCard( number : Int, expDat : Date ) extends Payment
     case object Cash extends Payment
     final case class Check( checkNumber : Int, memo : String, date : Date ) extends Payment
+    case object Other extends Payment
 
     case class Date( year : Int, month : Int )
 

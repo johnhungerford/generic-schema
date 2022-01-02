@@ -2,19 +2,12 @@ package org.hungerford.generic.schema.types
 
 trait ExistsFor[ TC[ _ ], T ]
 
-trait LowPriorityExistsFors {
-    given existsForType[ TC[ _ ], T ](
-        using
-        ev : TC[ T ],
-    ) : ExistsFor[ TC, T ] with {}
-}
-
-object ExistsFor extends LowPriorityExistsFors {
+object ExistsFor {
     given existsForEmptyTuple[ TC[ _ ]  ] : ExistsFor[ TC, EmptyTuple ] with {}
 
-    given existsForNonEmptyTuple[ TC[ _ ], H, Tail <: Tuple ](
+    given existsForNonEmptyTuple[ TC[ _ ], H, Tail <: Tuple, R <: H *: Tail ](
         using
-        h : ExistsFor[ TC, H ],
+        h : TC[ H ],
         t : ExistsFor[ TC, Tail ],
-    ) : ExistsFor[ TC, H *: Tail ] with {}
+    ) : ExistsFor[ TC, R ] with {}
 }

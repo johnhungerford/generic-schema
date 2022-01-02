@@ -16,7 +16,7 @@ object SingletonDeriver {
 
     given mirrorDeriver[ T <: Singleton ](
         using
-        mir : Mirror.ProductOf[ T ],
+        mir : Mirror.Of[ T ],
         ev : mir.type <:< Mirror.Singleton,
         ev2 : Sub[ mir.MirroredLabel, TypeName ],
         voN : ValueOf[ mir.MirroredLabel ],

@@ -115,7 +115,7 @@ trait UPickleCoproductSchemaTranslation {
                 value: T,
                 informedBy: Subtype.Aux[ T, ST, D, DN, DV, N, STS ],
             ) : Out = {
-                informedBy.fromSuper( value ).map( stVal => {
+                informedBy.fromSuper( value ).flatMap( stVal => {
                     given encoder : Writer[ ST ] = st.translate( informedBy.schema )
                     informedBy.fromSuper( value ).flatMap( st => {
                         Try( writeJs( st ) ).toOption

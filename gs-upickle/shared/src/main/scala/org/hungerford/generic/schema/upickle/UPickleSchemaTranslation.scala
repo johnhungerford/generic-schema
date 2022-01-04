@@ -2,7 +2,8 @@ package org.hungerford.generic.schema.upickle
 
 trait UPickleSchemaTranslation
   extends UPickleProductTranslation
-    with UPickleSingletonSchemaTranslation {
+    with UPickleSingletonSchemaTranslation
+    with UPickleCoproductSchemaTranslation {
 
 }
 

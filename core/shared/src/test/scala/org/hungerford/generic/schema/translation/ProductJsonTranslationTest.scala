@@ -124,7 +124,7 @@ object ProductTranslationTestSchemata {
 
 import ProductTranslationTestSchemata.*
 
-abstract class ProductTranslationTest[ OtherSchema[ _ ] ](
+abstract class ProductJsonTranslationTest[ OtherSchema[ _ ] ](
     using
     intSch: OtherSchema[ Int ],
     strSch: OtherSchema[ String ],
@@ -138,8 +138,6 @@ abstract class ProductTranslationTest[ OtherSchema[ _ ] ](
     transOutsideIns: SchemaTranslator[ Outside, outsideSchUsingInside.Shape, OtherSchema ],
     transOutsideDer: SchemaTranslator[ Outside, outsideSchemaDerived.Shape, OtherSchema ],
 ) extends AnyFlatSpecLike with Matchers {
-
-    trait TranslatorProxy[ T, S, OtherSchema[ _ ] ] extends SchemaTranslator[ T, S, OtherSchema ]
 
     def writeJson[ T ]( value: T, schm: OtherSchema[ T ] ): String
 

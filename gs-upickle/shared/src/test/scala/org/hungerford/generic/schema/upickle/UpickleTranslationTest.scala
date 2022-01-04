@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.upickle
 
-import org.hungerford.generic.schema.translation.{CoproductJsonTranslationTest, ProductJsonTranslationTest, SchemaTranslator, SchemaTranslatorTest, SingletonJsonTranslationTest}
+import org.hungerford.generic.schema.translation.{CoproductJsonTranslationTest, ProductJsonTranslationTest, SchemaTranslator, PrimitiveSchemaTranslatorTest, SingletonJsonTranslationTest}
 import ujson.Value
 import upickle.default.*
 
@@ -10,7 +10,7 @@ import scala.util.Try
 import UPickleSchemaTranslation.given
 
 class UPicklePrimitiveTranslationTest
-  extends SchemaTranslatorTest[ ReadWriter ]
+  extends PrimitiveSchemaTranslatorTest[ ReadWriter ]
 
 class UpickleProductTranslationTest
   extends ProductJsonTranslationTest[ ReadWriter ] {

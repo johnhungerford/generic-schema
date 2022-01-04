@@ -33,7 +33,7 @@ abstract class SingletonJsonTranslationTest[ OtherSchema[ _ ] ]
     it should "translate a singleton to a value that can be encoded and decoded" in {
         writeJson( TestSingleton, tsOSchema ) shouldBe """"TestSingleton""""
 
-        readJson( "TestSingleton", tsOSchema ) shouldBe Some( TestSingleton )
+        readJson( "\"TestSingleton\"", tsOSchema ) shouldBe Some( TestSingleton )
     }
 
     it should "translate a singleton within a coproduct" in {
@@ -41,7 +41,7 @@ abstract class SingletonJsonTranslationTest[ OtherSchema[ _ ] ]
 
         writeJson( testVal, stOSchema ) shouldBe """"SubT""""
 
-        readJson[ SuperT ]( "SubT", stOSchema ) shouldBe Some( SubT )
+        readJson[ SuperT ]( "\"SubT\"", stOSchema ) shouldBe Some( SubT )
     }
 
 }

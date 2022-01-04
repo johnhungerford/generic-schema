@@ -3,6 +3,8 @@ package org.hungerford.generic.schema.circe
 import org.hungerford.generic.schema.translation.{SchemaTranslator, SingletonJsonTranslationTest}
 import org.hungerford.generic.schema.Schema
 import io.circe.*
+import io.circe.parser.*
+
 import CirceSchemaTranslation.given
 
 class CirceSingletonSchemaTranslationTest
@@ -21,7 +23,9 @@ class CirceSingletonSchemaTranslationTest
 
     def readJson[ T ]( json: String, schm: Codec[ T ] ): Option[ T ] = {
         given Codec[ T ] = schm
-        schm( Json.fromString( json ).hcursor ).toOption
+        parse( json ).toOption flatMap { circeJson =>
+            schm( circeJson.hcursor ).toOption
+        }
     }
 
 }

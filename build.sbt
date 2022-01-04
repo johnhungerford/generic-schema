@@ -149,7 +149,7 @@ lazy val gsCirce = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-circe"
       commonSettings,
       publishSettings,
       disableBuild,
-      libraryDependencies ++= circeCore.value,
+      libraryDependencies ++= circeCore.value ++ circeParser.value,
   )
 
 lazy val gsTapir = ( crossProject( JSPlatform, JVMPlatform ) in file( "gs-tapir" ) )

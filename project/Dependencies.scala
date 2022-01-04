@@ -37,7 +37,7 @@ object Dependencies {
     ) )
 
     val circeParser = Def.setting( Seq(
-        "io.circe" %%% "circe-parser" % circeVersion,
+        "io.circe" %%% "circe-parser" % circeVersion % "test",
     ) )
 
     val upickle = Def.setting( Seq( "com.lihaoyi" %%% "upickle" % upickleVersion ) )

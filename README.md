@@ -106,6 +106,16 @@ val userDataSchema = Schema.productBuilder[UserData]
 
 ### Translation to third party codecs/schemas
 
+The principle motivation behind this project is to allow you to generate a single, 
+comprehensive description of a data types that can inform a variety of different 
+I/O tasks, like serialization and documentation, with guaranteed consistency.
+
+In order to support this without making generic-schema itself responsible for 
+serialization and API doc generation, it supports translation to type classes from 
+other libraries that can be used for these purposes. Currently supported are 
+json codecs from Circe and uPickle, as well as Tapir's own `Schema` type, which it 
+uses to describe input and output values in its endpoint definitions.
+
 #### Circe
 ```scala
 import org.hungerford.generic.schema.translation.SchemaTranslator
@@ -156,6 +166,7 @@ val req = HttpRequest("http://example.url", Get, None)
 
 println(write(req))
 // {"url":"http://example.url","method":"Get","string_body":[]}
+// Note that by default uPickle serializes Options differently from circe
 
 read[HttpRequest]("""{"url":"http://another.url","method":"Post","string_body":["hello world"]}""")
 // HttpRequest("http://another.url", Post, Some("hello world"))
@@ -191,7 +202,6 @@ import org.hungerford.generic.schema.circe.CirceSchemaTranslation.given
 import io.circe.*
 
 import sttp.tapir.{*, Schema as TapirSchema}
-import sttp.tapir.json.circe.*
 import sttp.tapir.json.circe.*
 
 import sttp.tapir.openapi.OpenAPI
@@ -240,5 +250,64 @@ println(userDataSpec)
 // ...
 //
 // ...
-
 ```
+
+### Automatic derivation
+
+Schemas can be derived, or derived and then built
+
+```scala
+import org.hungerford.generic.schema.Default.dsl.*
+
+val httpRequestSchema = Schema.derived[HttpRequest]
+
+// OR
+
+val httpRequestSchema = Schema.derivedBuilder[HttpRequest]
+  .description("Http method for a REST request")
+  .examples(Get, Post, Put, Delete)
+  .build
+
+val userDataSchema = Schema.derived[UserData]
+
+// OR
+
+// Since the field "userData" will automatically be recognized as a regular
+// product field, we need to update the schema to make it function as an
+// open product
+val userDataSchema = Schema.derivedBuilder[UserData]
+  .removeField("userData")
+  .additionalFields[String].primitive
+  .construct(((id, name), af) => UserData(id, name, af))
+  .deconstruct(ud => ((ud.userId, ud.userName), ud.userData))
+  .build
+```
+
+### Easy modification of nested types
+
+One motivating use case for this project is the difficulty of generating a custom 
+schema for a type without much boilerplate and without having to include the schema 
+library as a dependency when defining the code (e.g., using annotations to 
+associate schema information with classes and their fields).
+
+Using type safe component selectors, we can easily retrieve and update fields 
+and subtypes, however deeply these may be nested:
+
+```scala
+import org.hungerford.generic.schema.Default.dsl.*
+
+// Update the description and the singleton identifier of the Put
+// subtype of HttpMethod (this will have the effect of serializing
+// HttpRequest("someurl", Put, None) as {"url":"someurl","method":"Upsert"})
+val updatedHttpRequestSchema =
+    httpRequestSchema.modifyComponent("method" / "Put")(
+        _.withDescription("Create or update a record")
+          .modifySchema(_.withName("Upsert"))
+    )
+
+// Retrieve the "method" field description from the new http request schema
+// defined above, and extract its schema
+val updatedHttpMethodSchema = updatedHttpRequestSchema("method").schema
+```
+
+

@@ -24,7 +24,7 @@ class CirceSingletonSchemaTranslationTest
     def readJson[ T ]( json: String, schm: Codec[ T ] ): Option[ T ] = {
         given Codec[ T ] = schm
         parse( json ).toOption flatMap { circeJson =>
-            schm( circeJson.hcursor ).toOption
+            ( circeJson.as[ T ] ).toOption
         }
     }
 

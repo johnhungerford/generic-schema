@@ -107,6 +107,41 @@ val userDataSchema = Schema.productBuilder[UserData]
 ### Translation to third party codecs/schemas
 
 #### Circe
+```scala
+import org.hungerford.generic.schema.translation.SchemaTranslator
+import org.hungerford.generic.schema.circe.CirceSchemaTranslation.given
+import io.circe.*
+import io.circe.parser.*
+
+given httpRequestCodec : Codec[HttpRequest] =
+    SchemaTranslator.translate(httpRequestSchema)
+
+val req = HttpRequest("http://example.url", Get, None)
+
+println(req.asJson.noSpaces.toString)
+// {"url":"http://example.url","method":"Get","string_body":[]}
+
+parse("""{"url":"http://another.url","method":"Post","string_body":["hello world"]}""")
+  .toOption.get.as[HttpRequest]
+// HttpRequest("http://another.url", Post, Some("hello world"))
+
+val userDataCodec : Codec[UserData] =
+    SchemaTranslator.translate(userDataSchema)
+
+val ud = UserData(
+    UUID.randomUUID(),
+    "john_doe",
+    Map("interests" -> "skiing, golf", "height" -> "5\'2\"", "email" -> "john.doe@gmail.com")
+)
+
+println(ud.asJson.noSpaces.toString)
+// {"id":"a2c51aa1-6951-40d6-9be8-2ed98fbaffe6","name":"john_doe","interests":"skiing, golf","height":"5\'2\"","email":"john.doe@gmail.com"}
+
+parse("""{"pets":"cat, dog, hamster", "name":"jane_doe", "phone_number":"444-444-4444","id":""1cfde5d9-0876-4669-9131-09b3cdb8df4c 
+}""")
+  .toOption.get.as[UserData]
+// UserData(1cfde5d9-0876-4669-9131-09b3cdb8df4c, "jane_doe", Map("pets" -> "cat, dog, hamster", "phone_number" -> "444-444-4444"))
+```
 
 #### Upickle
 ```scala
@@ -140,6 +175,70 @@ println(write(ud))
 read[UserData]("""{"pets":"cat, dog, hamster", "name":"jane_doe", "phone_number":"444-444-4444","id":""1cfde5d9-0876-4669-9131-09b3cdb8df4c 
 }""")
 // UserData(1cfde5d9-0876-4669-9131-09b3cdb8df4c, "jane_doe", Map("pets" -> "cat, dog, hamster", "phone_number" -> "444-444-4444"))
+```
 
+#### Tapir schema
+
+A single generic schema instance can derive both a tapir-supported
+json codec and a tapir schema, making it easy to establish consistency 
+between your REST API definition and your implementation.
+
+```scala
+import org.hungerford.generic.schema.translation.SchemaTranslator
+import org.hungerford.generic.schema.tapir.TapirSchemaTranslation.given
+import org.hungerford.generic.schema.circe.CirceSchemaTranslation.given
+
+import io.circe.*
+
+import sttp.tapir.{*, Schema as TapirSchema}
+import sttp.tapir.json.circe.*
+import sttp.tapir.json.circe.*
+
+import sttp.tapir.openapi.OpenAPI
+import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
+import sttp.tapir.openapi.circe.yaml._
+
+given httpRequestTapir : TapirSchema[HttpRequest] =
+    SchemaTranslator.translate(httpRequestSchema)
+
+// Needed for tapir's jsonBody input
+given httpRequestCodec : Codec[HttpRequest] =
+    SchemaTranslator.translate(httpRequestSchema)
+
+// An imagined REST endpoint to remotely execute an http request
+val remoteHttpEndpoint = endpoint
+  .post
+  .in("remote-http")
+  .in(jsonBody[ HttpRequest ])
+
+val remoteHttpSpec = OpenAPIDocsInterpreter()
+  .toOpenAPI( remoteHttpEndpoint, "Transactions", "1.0" )
+  .toYaml
+
+println(apiSpec)
+// ...
+//
+// ...
+
+given userDataTapir : TapirSchema[UserData] =
+    SchemaTranslator.translate(userDataSchema)
+
+given userDataCodec : Codec[UserData] =
+    SchemaTranslator.translate(userDataSchema)
+
+// REST endpoint to get user data by id
+val userDataEndpoint = endpoint
+  .get
+  .in("users" / path[UUID]("id") / "data")
+  .out(jsonBody[UserData])
+
+val userDataSpec = OpenAPIDocsInterpreter()
+  .toOpenAPI( userDataEndpoint, "Transactions", "1.0" )
+  .toYaml
+
+println(userDataSpec)
+// ...
+//
+// ...
 
 ```

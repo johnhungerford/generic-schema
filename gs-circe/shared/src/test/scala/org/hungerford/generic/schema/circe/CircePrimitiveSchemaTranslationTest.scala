@@ -10,4 +10,5 @@ given [ T ](
     dec : Decoder[ T ],
 ) : Codec[ T ] = Codec.from( dec, enc )
 
-class CircePrimitiveSchemaTranslationTest extends PrimitiveSchemaTranslatorTest[ Codec ]
+class CircePrimitiveSchemaTranslationTest
+  extends PrimitiveSchemaTranslatorTest[ Codec ]

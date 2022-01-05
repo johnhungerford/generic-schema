@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.product.field.{BuildableFieldBuilder, Field, FieldBuilder, FieldName, FieldRemover, FieldReplacer, FieldRetriever, UniqueFieldNames}
-import org.hungerford.generic.schema.{ComplexSchema, NoSchema, Schema}
+import org.hungerford.generic.schema.{ComplexSchema, NoSchema, Primitive, Schema}
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.selector.{AmbigSelector, ComponentRetriever, ComponentUpdater, FieldSelector, Selector}
@@ -384,6 +384,9 @@ case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, NewAF, C, DC
         )
     }
 
+    def primitive : ProductSchemaBuilder[ T, R, RV, NewAF, Unit, NewC, NewDC ] = {
+        fromSchema[ Unit ]( Primitive[NewAF]() )
+    }
 }
 
 case class FieldUpdater[ F, N <: FieldName, S, T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](

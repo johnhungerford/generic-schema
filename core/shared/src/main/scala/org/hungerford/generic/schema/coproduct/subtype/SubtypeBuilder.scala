@@ -3,7 +3,8 @@ package org.hungerford.generic.schema.coproduct.subtype
 import org.hungerford.generic.schema.coproduct.ValidDiscriminator
 import org.hungerford.generic.schema.coproduct.subtype.SubtypeBuilder.empty
 import org.hungerford.generic.schema.product.field.FieldBuilderWithSchemaWithoutName
-import org.hungerford.generic.schema.{NoSchema, Primitive, Schema}
+import org.hungerford.generic.schema.singleton.SingletonShape
+import org.hungerford.generic.schema.{ComplexSchema, NoSchema, Primitive, Schema}
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.types.Sub
 
@@ -29,6 +30,14 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, TS, FS, N, S, Sch ] (
 
     def primitive : SubtypeBuilder[ T, ST, D, DN, DV, TS, FS, N, Unit, Schema.Aux[ ST, Unit ] ] =
         fromSchema( Primitive[ ST ]() )
+
+    def singleton[ TN <: TypeName, SV <: Singleton & ST ](
+        using
+        ev1 : Sub.Aux[ST, Singleton, SV],
+        ev2 : Sub.Aux[N, TypeName, TN],
+        vo : ValueOf[ SV ],
+    ) : SubtypeBuilder[ T, ST, D, DN, DV, TS, FS, N, SingletonShape[SV, TN], Schema.Aux[ ST, SingletonShape[SV, TN] ] ] =
+        fromSchema( ComplexSchema( SingletonShape[ SV, TN ]( ev2(tn), vo.value ) ) )
 
     def toSuper( fn : ST => T ) : SubtypeBuilder[ T, ST, D, DN, DV, ST => T, FS, N, S, Sch ] =
         copy[ T, ST, D, DN, DV, ST => T, FS, N, S, Sch ]( ts = fn )

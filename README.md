@@ -1,5 +1,8 @@
 # Generic Schema
 
+A library for generating comprehensive, fully-typed descriptions of data types in 
+Scala 3.
+
 ## Features
 
 ### Schema building API
@@ -38,7 +41,7 @@ val httpMethodSchema = Schema.coproductBuilder[HttpMethod]
       )
   .buildSubtype[Delete.type](
       _.typeName("Delete")
-        .singleton()
+        .singleton
         .fromSuper({ case Delete => Some(Delete); case _ => None })
         .build
       )
@@ -49,9 +52,6 @@ val httpMethodSchema = Schema.coproductBuilder[HttpMethod]
 
 ```scala
 case class HttpRequest(url: String, method: HttpMethod, body: Option[String])
-
-// fully typed given instance of HttpMethod schema defined above
-import httpMethodSchema.givenSchema
 
 val httpRequestSchema = Schema.productBuilder[HttpRequest]
   .name("HttpRequest")
@@ -69,7 +69,7 @@ val httpRequestSchema = Schema.productBuilder[HttpRequest]
   .addField(
       Field.builder[HttpMethod]
         .fieldName("method")
-        .fromSchema // uses given instance imported from httpMethodSchema above
+        .fromSchema(httpMethodSchema)
         .build
   )
   .addField(
@@ -225,9 +225,33 @@ val remoteHttpSpec = OpenAPIDocsInterpreter()
   .toOpenAPI( remoteHttpEndpoint, "Transactions", "1.0" )
   .toYaml
 
-println(apiSpec)
+println(remoteHttpSpec)
 // ...
-//
+//  schemas:
+//    HttpMethod:
+//      type: string
+//      description: Http method for a REST request
+//      example: Get
+//      enum:
+//      - Get
+//      - Post
+//      - Put
+//      - Delete
+//    HttpRequest:
+//      required:
+//      - url
+//      - method
+//      type: object
+//      properties:
+//        url:
+//          type: string
+//          pattern: |
+//            [-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)
+//        method:
+//          $ref: '#/components/schemas/HttpMethod'
+//        string_body:
+//          type: string
+//      description: Simple REST request model
 // ...
 
 given userDataTapir : TapirSchema[UserData] =
@@ -248,9 +272,23 @@ val userDataSpec = OpenAPIDocsInterpreter()
 
 println(userDataSpec)
 // ...
-//
+//  schemas:
+//    UserData:
+//      required:
+//      - id
+//      - name
+//      type: object
+//      properties:
+//        id:
+//          type: string
+//          format: uuid
+//        name:
+//          type: string
+//      description: Data type for describing arbitrary metadata associated with a user
 // ...
 ```
+Note that tapir does not support open products with fixed fields, so the `UserData`
+entry in the above open api spec is missing an `additionalProperties` schema.
 
 ### Automatic derivation
 

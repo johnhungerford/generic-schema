@@ -109,6 +109,8 @@ lazy val root = ( project in file( "." ) )
       core.projects( JSPlatform ),
       gsUPickle.projects( JVMPlatform ),
       gsUPickle.projects( JSPlatform ),
+      gsCirce.projects( JVMPlatform ),
+      gsCirce.projects( JSPlatform ),
       gsTapir.projects( JVMPlatform ),
       gsTapir.projects( JSPlatform ),
   )

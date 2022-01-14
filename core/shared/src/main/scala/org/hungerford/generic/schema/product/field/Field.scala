@@ -36,7 +36,8 @@ sealed case class FieldCase[ T, F, N <: FieldName, S ] private[ schema ] (
 }
 
 object Field {
-    type Aux[ T, F, N <: FieldName, S ] = Field[ F, T ] { type Name = N; type Shape = S }
+    type Aux[ T, F, N <: FieldName, S ] = Field[ T, F ] { type Name = N; type Shape = S }
+    type Ctx[ T ] = [ X ] =>> Field[ T, X ]
 
     def apply[ T, F, N <: FieldName, S ](
         name : N,

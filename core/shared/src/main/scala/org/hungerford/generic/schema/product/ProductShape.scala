@@ -9,18 +9,24 @@ import org.hungerford.generic.schema.validator.Validator
 import scala.language.higherKinds
 
 
-case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
+trait ValidAfExtr[ T, AF, AFE ]
+
+object ValidAfExtr {
+    given [ T, AF ] : ValidAfExtr[ T, AF, T => AF ]
+    given [ T ] : ValidAfExtr[ T, Nothing, Unit ]
+}
+
+case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
     fieldDescriptions : Rt,
     additionalFieldsSchema : Schema.Aux[ AFt, AFSt ],
+    private[ schema ] val afExtractor : AFEt,
     private[ schema ] val constructor : C,
-    private[ schema ] val deconstructor : DC,
 )(
     using
-    fieldsConstraint : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
+    fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], Rt, RVt ],
     uniqueFields : UniqueFieldNames[ Rt ],
-    lengther : TupleIntLength[ Rt ],
     prodConst : ProductConstructor[ C, RVt, AFt, T ],
-    prodDeconst : ProductDeconstructor[ DC, RVt, AFt, T ],
+    afExtrEv : ValidAfExtr[ T, AFt, AFEt ],
 ) {
 
     // Field descriptions
@@ -32,13 +38,9 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
 
     type AFS = AFSt
 
+    type AFE = AFEt
+
     type Cons = C
-
-    type Decons = DC
-
-    def construct : C = constructor
-
-    def deconstruct : DC = deconstructor
 
     lazy val size : Int = fieldDescriptions.size
 
@@ -61,27 +63,11 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
         using
         fg : FieldGetter[ N, R, RV ],
     ) : fg.Out = fg.get( prodDeconst.deconstruct( deconstructor )( from )._1 )
+
+    def construct : C = constructor
+
+    def extractAdditionalFields(
+        using
+        ev : AFE =:= (T => AF)
+    ) : T => AF = ev( afExtractor )
 }
-
-
-trait TupleIntLength[ L <: Tuple ] {
-    def length : Int
-}
-
-object TupleIntLength {
-    def apply[ L <: Tuple ]( implicit ev : TupleIntLength[ L ] ) : TupleIntLength[ L ] = ev
-
-    implicit def hnilLength : TupleIntLength[ EmptyTuple ] = new TupleIntLength[EmptyTuple] {
-        override def length : Int = 0
-    }
-
-    implicit def generalLength[ T, Tail <: Tuple ]( implicit ev : TupleIntLength[ Tail ] ) : TupleIntLength[ T *: Tail ] = {
-        new TupleIntLength[ T *: Tail] {
-            override def length : Int = 1 + ev.length
-        }
-    }
-}
-
-
-
-

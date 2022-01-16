@@ -40,4 +40,16 @@ object ProductDeconstructor[ T, R ] {
         override def deconstruct( value: T, informedBy: H *: Tail ): HRes *: TailRes =
             hdc.deconstruct( value, informedBy.head ) *: tdc.deconstruct( value, informedBy.tail )
     }
+
+    given [ T, H, TailHead <: Tuple, TailHeadRes <: Tuple ](
+        using
+        hEv : NotGiven[ ProductDeconstructor[ T, H ] ],
+        tdc : ProductDeconstructor[ T, TailHead, TailHeadRes ]
+    ) : ProductDeconstructor[ T, H *: TailHead *: EmptyTuple ] with {
+        type Res = TailHeadRes
+
+        override def deconstruct(
+            value: T, informedBy: H *: TailHead *: EmptyTuple
+        ): TailHeadRes = tdc.deconstruct( value, informedBy.tail.head )
+    }
 }

@@ -9,18 +9,19 @@ import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 
 import scala.collection.immutable.NewVectorIterator
 
-case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C ](
-   private[ schema ] val nm : Option[ String ] = None,
-   private[ schema ] val desc : Option[ String ] = None,
-   private[ schema ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-   private[ schema ] val exs : Seq[ T ] = Nil,
-   private[ schema ] val dep : Boolean = false,
-   private[ schema ] val aftSch : Schema.Aux[ AF, AFS ],
-   private[ schema ] val fieldDescs : R,
-   private[ schema ] val constr : C,
+case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
+    private[ schema ] val nm : Option[ String ] = None,
+    private[ schema ] val desc : Option[ String ] = None,
+    private[ schema ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
+    private[ schema ] val exs : Seq[ T ] = Nil,
+    private[ schema ] val dep : Boolean = false,
+    private[ schema ] val aftSch : Schema.Aux[ AF, AFS ],
+    private[ schema ] val afe : AFE,
+    private[ schema ] val fieldDescs : R,
+    private[ schema ] val constr : C,
 )(
-   using
-   fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
+    using
+    fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
 ) {
    def name( name : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, C ] = copy( nm = Some( name ) )
    def description( description : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, C ] = copy( desc = Some( description ) )
@@ -85,20 +86,11 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C ](
         this,
     )
 
-   def additionalFields[ F ](
+   def additionalFields[ NewAF ](
        using
-       afChoice : ConstrUpdateChoice[ RV, RV, AF, F, C ],
-   ) : AdditionalFieldsBuilder[ T, R, RV, AF, F, C, afChoice.Constr, afChoice.Deconstr ] =
-       AdditionalFieldsBuilder[ T, R, RV, AF, F, C, afChoice.Constr, afChoice.Deconstr ](
-           nm,
-           desc,
-           vals,
-           exs,
-           dep,
-           fieldDescs,
-           constr,
-           decons,
-       )
+       afChoice : ConstrUpdateChoice[ RV, RV, AF, NewAF, C ],
+   ) : AdditionalFieldsBuilder[ T, R, RV, AF, AFS, AFE, C, NewAF ] =
+       AdditionalFieldsBuilder[ T, R, RV, AF, AFS, AFE, C, NewAF ]( this )
 
    def construct(
        using
@@ -250,36 +242,35 @@ object ConstrUpdateChoice extends LowPriorityCUCs {
     }
 }
 
-case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, NewAF, C, NewC ](
-   private[ product ] val nm : Option[ String ] = None,
-   private[ product ] val desc : Option[ String ] = None,
-   private[ product ] val vals : Set[ Validator[ T ] ] = Set.empty[ Validator[ T ] ],
-   private[ product ] val exs : Seq[ T ] = Nil,
-   private[ product ] val dep : Boolean = false,
-   private[ product ] val fieldDescs : R,
-   private[ product ] val constr : C,
+case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, NewAF, NewC ](
+   private[ product ] val builder : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ]
 )(
    using
    fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
    val afChoice : ConstrUpdateChoice.Aux[ RV, RV, AF, NewAF, C, NewC ],
 ) {
     def fromSchema[ S ](
+        extract : T => NewAF,
+    )(
         implicit schema : Schema.Aux[ NewAF, S ],
-    ) : ProductSchemaBuilder[ T, R, RV, NewAF, S, NewC ] = {
-        ProductSchemaBuilder[ T, R, RV, NewAF, S, NewC ](
-            nm,
-            desc,
-            vals,
-            exs,
-            dep,
+    ) : ProductSchemaBuilder[ T, R, RV, NewAF, S, T => NewAF, NewC ] = {
+        ProductSchemaBuilder[ T, R, RV, NewAF, S, T => NewAF, NewC ](
+            builder.nm,
+            builder.desc,
+            builder.vals,
+            builder.exs,
+            builder.dep,
             schema,
-            fieldDescs,
-            afChoice.constructor( constr ),
+            extract,
+            builder.fieldDescs,
+            afChoice.constructor( builder.constr ),
         )
     }
 
-    def primitive : ProductSchemaBuilder[ T, R, RV, NewAF, Unit, NewC ] = {
-        fromSchema[ Unit ]( Primitive[NewAF]() )
+    def primitive(
+        extract: T => NewAF,
+    ) : ProductSchemaBuilder[ T, R, RV, NewAF, Unit, T => NewAF, NewC ] = {
+        fromSchema[ Unit ]( extract )( Primitive[NewAF]() )
     }
 }
 

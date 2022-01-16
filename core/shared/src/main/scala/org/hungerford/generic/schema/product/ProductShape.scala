@@ -12,8 +12,8 @@ import scala.language.higherKinds
 trait ValidAfExtr[ T, AF, AFE ]
 
 object ValidAfExtr {
-    given [ T, AF ] : ValidAfExtr[ T, AF, T => AF ]
-    given [ T ] : ValidAfExtr[ T, Nothing, Unit ]
+    given [ T, AF ] : ValidAfExtr[ T, AF, T => AF ] with {}
+    given [ T ] : ValidAfExtr[ T, Nothing, Unit ] with {}
 }
 
 case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
@@ -48,7 +48,7 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
         def getFieldNames[ FDs <: Tuple ]( fds : FDs, fns : Set[ String ] = Set.empty ) : Set[ String ] = {
             fds match {
                 case EmptyTuple => fns
-                case FieldCase( name, _, _, _, _, _, _ ) *: next =>
+                case FieldCase( name, _, _, _, _, _, _, _ ) *: next =>
                     getFieldNames( next, fns + name )
                 case _ => ???
             }
@@ -66,8 +66,24 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
 
     def construct : C = constructor
 
+    def extractNamedFields(
+        value : T,
+    )(
+        using
+        decons : ProductDeconstructor[ T, R ]
+    ) : decons.Res = decons.deconstruct( value, fieldDescriptions )
+
     def extractAdditionalFields(
+        value : T,
+    )(
         using
         ev : AFE =:= (T => AF)
-    ) : T => AF = ev( afExtractor )
+    ) : AF = ev( afExtractor )( value )
+
+    def extract(
+        value : T,
+    )(
+        using
+        decons : ProductDeconstructor[ T, (AFE, R) ],
+    ) : decons.Res = decons.deconstruct( value, (afExtractor, fieldDescriptions) )
 }

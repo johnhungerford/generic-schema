@@ -1,7 +1,6 @@
 package org.hungerford.generic.schema.product.constructor
 
 import org.hungerford.generic.schema.types.Last
-import org.hungerford.generic.schema.product.LowestPriorityDeconstructorChoosers
 
 trait ProductConstructor[ C, R <: Tuple, AF, T ] {
     def convert( from : C ) : (R, Map[ String, AF ]) => T

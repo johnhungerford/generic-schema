@@ -2,7 +2,6 @@ package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.coproduct.subtype.Subtype
 import org.hungerford.generic.schema.{Primitive, Schema, SchemaRebuilder}
-import org.hungerford.generic.schema.translation.SchemaFranslator
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.Field.Aux
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
@@ -19,17 +18,26 @@ type FieldName = Stringleton
 sealed trait Field[ T, F ] {
     type Name <: FieldName
     type Shape
+
+    def fieldName : Name
+    def extractor : T => F
+    def schema : Schema.Aux[ F, Shape ]
+    def description : Option[ String ]
+    def validators : Set[ Validator[ F ] ]
+    def default : Option[ F ]
+    def examples : Seq[ F ]
+    def deprecated : Boolean
 }
 
 sealed case class FieldCase[ T, F, N <: FieldName, S ] private[ schema ] (
-    fieldName : N,
-    extractor : T => F,
-    schema : Schema.Aux[ F, S ],
-    description : Option[ String ] = None,
-    validators : Set[ Validator[ F ] ] = Set.empty[ Validator[ F ] ],
-    default : Option[ F ] = None,
-    examples : Seq[ F ] = Nil,
-    deprecated : Boolean = false,
+    override val fieldName : N,
+    override val extractor : T => F,
+    override val schema : Schema.Aux[ F, S ],
+    override val description : Option[ String ] = None,
+    override val validators : Set[ Validator[ F ] ] = Set.empty[ Validator[ F ] ],
+    override val default : Option[ F ] = None,
+    override val examples : Seq[ F ] = Nil,
+    override val deprecated : Boolean = false,
 ) extends Field[ T, F ] {
     type Name = N
     type Shape = S
@@ -57,7 +65,7 @@ trait FieldDsl {
     }
 
     extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
-        def apply[ Sel <: Fuple, Inner ](
+        def apply[ Sel <: Tuple, Inner ](
             selector : Selector[ Sel ],
         )(
             using
@@ -77,13 +85,14 @@ trait FieldDsl {
             modifier : Schema.Aux[ F, S ] => Schema.Aux[ F, NewS ],
         ) : Field.Aux[ T, F, N, NewS ] = FieldCase[ T, F, N, NewS ](
             field.fieldName,
+            field.extractor,
             modifier( field.schema ),
             field.description,
             field.validators,
         )
 
     extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
-        def modifyComponent[ Sel <: Fuple, Inner ](
+        def modifyComponent[ Sel <: Tuple, Inner ](
             selector : Selector[ Sel ],
         )(
             using
@@ -92,7 +101,7 @@ trait FieldDsl {
             ComponentUpdater.Updater( field )
 
     extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
-        def rebuild : BuildableFieldBuilder[ T, F, N, S ] = FieldBuilder.from( field )
+        def rebuild : FieldBuilder[ T, F, N, Schema.Aux[ F, S ], S, T => F ] = FieldBuilder.from( field )
 
     extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
         def withName[ N1 <: FieldName ]( name : N1 ) : Field.Aux[ T, F, N1, S ] =
@@ -108,7 +117,7 @@ trait FieldDsl {
             field match { case fc : FieldCase[ T, F, N, S ] @unchecked => fc.copy[ T, F, N, S ]( description = None ) }
     extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
         def withValidators( vals : Validator[ F ]* ) : Field.Aux[ T, F, N, S ] =
-            field match { case fc : FieldCase[ F, N, S ] @unchecked => fc.copy[ T, F, N, S ]( validators = vals.toSet ) }
+            field match { case fc : FieldCase[ T, F, N, S ] @unchecked => fc.copy[ T, F, N, S ]( validators = vals.toSet ) }
     extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
         def addValidators( vals : Validator[ F ]* ) : Field.Aux[ T, F, N, S ] =
             field match { case fc : FieldCase[ T, F, N, S ] @unchecked => fc.copy[ T, F, N, S ]( validators = fc.validators ++ vals.toSet ) }
@@ -121,29 +130,29 @@ trait FieldDsl {
     extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
         def withoutDefault : Field.Aux[ T, F, N, S ] =
             field match { case fc : FieldCase[ T, F, N, S ] @unchecked => fc.copy[ T, F, N, S ]( default = None ) }
-    extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ F, N, S ] )
+    extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
         def withExamples( exs : F* ) : Field.Aux[ T, F, N, S ] =
             field match { case fc : FieldCase[ T, F, N, S ] @unchecked => fc.copy[ T, F, N, S ]( examples = exs ) }
-    extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ F, N, S ] )
+    extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
         def addExamples( exs : F* ) : Field.Aux[ T, F, N, S ] =
             field match { case fc : FieldCase[ T, F, N, S ] @unchecked => fc.copy[ T, F, N, S ]( examples = fc.examples ++ exs ) }
-    extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ F, N, S ] )
+    extension [ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] )
         def withoutExamples : Field.Aux[ T, F, N, S ] =
             field match { case fc : FieldCase[ T, F, N, S ] @unchecked => fc.copy[ T, F, N, S ]( examples = Nil ) }
 
-    extension ( field : Field.type ) def builder[ F ] : FieldBuilderWithoutSchemaOrName[ F ] = FieldBuilder[ F ]
+    extension ( field : Field.type ) def builder[ T, F ] : FieldBuilder[ T, F, Unit, Unit, Nothing, Unit ] = FieldBuilder[ T, F ]
 
     class FromSchema[ T, F ] {
-        def apply[ N <: FieldName ]( fieldName : N )( using sch : Schema[ F ] ) : Field.Aux[ T, F, N, sch.Shape ] = {
-            FieldCase[ T, F, N, sch.Shape ]( fieldName, sch )
+        def apply[ N <: FieldName ]( fieldName : N, extract : T => F )( using sch : Schema[ F ] ) : Field.Aux[ T, F, N, sch.Shape ] = {
+            FieldCase[ T, F, N, sch.Shape ]( fieldName, extract, sch )
         }
     }
 
-    extension ( field : Field.type ) def fromSchema[ T, F ] : FromSchema[ T, F ] = new FromSchema[ F ]
+    extension ( field : Field.type ) def fromSchema[ T, F ] : FromSchema[ T, F ] = new FromSchema[ T, F ]
 
     class FromPrimitive[ T, F ] {
-        def apply[ N <: FieldName ]( fieldName : N ) : Field.Aux[ T, F, N, Unit ] = {
-            FieldCase[ T, F, N, Unit ]( fieldName, Primitive[ F ]() )
+        def apply[ N <: FieldName ]( fieldName : N, extract : T => F ) : Field.Aux[ T, F, N, Unit ] = {
+            FieldCase[ T, F, N, Unit ]( fieldName, extract, Primitive[ F ]() )
         }
     }
 

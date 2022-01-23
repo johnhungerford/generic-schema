@@ -1,6 +1,7 @@
 package org.hungerford.generic.schema.product.constructor
 
 import org.hungerford.generic.schema.product.field.Field
+import scala.util.NotGiven
 
 trait ProductDeconstructor[ T, Fs ] {
     type Res
@@ -8,13 +9,13 @@ trait ProductDeconstructor[ T, Fs ] {
     def deconstruct( value : T, informedBy : Fs ) : Res
 }
 
-object ProductDeconstructor[ T, R ] {
+object ProductDeconstructor {
     type Aux[ T, Fs, R ] = ProductDeconstructor[ T, Fs ] { type Res = R }
 
-    given extractor[ T, F ] : ProductDeconstructor[ T, T => F ] with {
-        type Res = F
+    given extractor[ T, F ] : ProductDeconstructor[ T, T => Map[ String, F ] ] with {
+        type Res = Map[ String, F ]
 
-        override def deconstruct( value: T, informedBy: T => F ): F = informedBy( value )
+        override def deconstruct( value: T, informedBy: T => Map[ String, F ] ): Map[ String, F ] = informedBy( value )
     }
 
     given field[ T, F ] : ProductDeconstructor[ T, Field[ T, F ] ] with {
@@ -41,10 +42,10 @@ object ProductDeconstructor[ T, R ] {
             hdc.deconstruct( value, informedBy.head ) *: tdc.deconstruct( value, informedBy.tail )
     }
 
-    given [ T, H, TailHead <: Tuple, TailHeadRes <: Tuple ](
+    given noAfDeconstructor[ T, H, TailHead <: Tuple, TailHeadRes <: Tuple ](
         using
         hEv : NotGiven[ ProductDeconstructor[ T, H ] ],
-        tdc : ProductDeconstructor[ T, TailHead, TailHeadRes ]
+        tdc : ProductDeconstructor.Aux[ T, TailHead, TailHeadRes ]
     ) : ProductDeconstructor[ T, H *: TailHead *: EmptyTuple ] with {
         type Res = TailHeadRes
 

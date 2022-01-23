@@ -66,8 +66,8 @@ object FieldReplacer extends LowPriorityFieldReplacers {
     type Aux[ N <: FieldName, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS, O <: Tuple ] =
         FieldReplacer[ N, R, NewT, NewF, NewN, NewS ] { type Out = O }
     
-    given [ OldT, OldF, OldN <: FieldName, OldS, NewT, NewF, NewN <: FieldName, NewS, Tail <: Tuple ] : FieldReplacer.Aux[ OldN, Field.Aux[ OldT, OldN, OldS ] *: Tail, NewT, NewN, NewS, Field.Aux[ NewT, NewN, NewS ] *: Tail ] = {
-            new FieldReplacer[  OldN, Field.Aux[ OldT, OldF, OldN, OldS ] *: Tail, NewT, NewN, NewS ] {
+    given [ OldT, OldF, OldN <: FieldName, OldS, NewT, NewF, NewN <: FieldName, NewS, Tail <: Tuple ] : FieldReplacer.Aux[ OldN, Field.Aux[ OldT, OldF, OldN, OldS ] *: Tail, NewT, NewF, NewN, NewS, Field.Aux[ NewT, NewF, NewN, NewS ] *: Tail ] = {
+            new FieldReplacer[  OldN, Field.Aux[ OldT, OldF, OldN, OldS ] *: Tail, NewT, NewF, NewN, NewS ] {
                 type Out = Field.Aux[ NewT, NewF, NewN, NewS ] *: Tail
 
                 def replace(

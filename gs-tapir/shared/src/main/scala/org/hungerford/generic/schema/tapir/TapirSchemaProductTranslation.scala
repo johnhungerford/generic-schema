@@ -18,16 +18,16 @@ trait TapirSchemaProductTranslation
 
     override def fieldsInit[ T ] : TapirFields[ T ] = List.empty[ SProductField[ T ] ]
 
-    given translatedFieldAdder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
+    given translatedFieldAdder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
         using
         vt : TapirValidatorTranslation[ F ],
     ) :
-        TranslatedFieldAdder[ T, F, N, S, R, RV, AF, AFS, C, DC ] with {
+        TranslatedFieldAdder[ T, F, N, S, R, RV, AF, AFS, AFE, C ] with {
             override def addTranslatedField(
-                field: Field.Aux[F, N, S],
-                fieldSchema: TapirSchema[F],
-                to: TapirFields[T],
-                informedBy: Schema.Aux[T, ProductShape[T, R, RV, AF, AFS, C, DC]],
+                field: Field.Aux[ T, F, N, S],
+                fieldSchema: TapirSchema[ F ],
+                to: TapirFields[ T ],
+                informedBy: Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
             )(
                 using
                 fg: FieldGetter.Aux[N, R, RV, F],
@@ -42,11 +42,11 @@ trait TapirSchemaProductTranslation
         }
 
     // TODO: use type class for this
-    override def addAdditionalFields[ T, AF, AFS, R <: Tuple, RV <: Tuple, C, DC ](
+    override def addAdditionalFields[ T, AF, AFS, AFE, R <: Tuple, RV <: Tuple, C ](
         additionalFields : Schema.Aux[ AF, AFS ],
         additionalFieldsTranslated : TapirSchema[ AF ],
         to : TapirFields[ T ],
-        informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ],
+        informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
     ) : TapirFields[ T ] = to
 
     override def build[ T ]( fields : TapirFields[ T ], schema : Schema[ T ] ) : TapirSchema[ T ] = {

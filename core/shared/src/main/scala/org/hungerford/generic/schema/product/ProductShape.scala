@@ -12,7 +12,7 @@ import scala.language.higherKinds
 trait ValidAfExtr[ T, AF, AFE ]
 
 object ValidAfExtr {
-    given [ T, AF ] : ValidAfExtr[ T, AF, T => AF ] with {}
+    given [ T, AF ] : ValidAfExtr[ T, AF, T => Map[ String, AF ] ] with {}
     given [ T ] : ValidAfExtr[ T, Nothing, Unit ] with {}
 }
 
@@ -62,7 +62,8 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
     )(
         using
         fg : FieldGetter[ N, R, RV ],
-    ) : fg.Out = fg.get( prodDeconst.deconstruct( deconstructor )( from )._1 )
+        pd : ProductDeconstructor.Aux[ T, R, RV]
+    ) : fg.Out = fg.get( pd.deconstruct( from, fieldDescriptions ) )
 
     def construct : C = constructor
 
@@ -77,8 +78,8 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
         value : T,
     )(
         using
-        ev : AFE =:= (T => AF)
-    ) : AF = ev( afExtractor )( value )
+        ev : AFE =:= (T => Map[ String, AF ])
+    ) : Map[ String, AF ] = ev( afExtractor )( value )
 
     def extract(
         value : T,

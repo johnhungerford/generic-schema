@@ -176,50 +176,48 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
         coreFd.tail.tail.head.fieldName shouldBe "bool"
     }
 
-//    it should "be able to update nested fields using a selector" in {
-//        case class Core( int : Int, str : String, bool : Boolean )
-//        case class InnerClass( core : Core )
-//        case class OuterClass( inner : InnerClass )
-//
-//        import org.hungerford.generic.schema.selector.Selector.*
-//
-//        val sch = Schema.derivedBuilder[ OuterClass ]
-//          .modifyComponent( "inner" / "core" / "str" )(
-//              v => FieldBuilder.from( v ).name( "string_field" ).build,
-//          )
-//          .build
-//
-//        val outerFd = sch.shape.fieldDescriptions
-//        val innerFd = outerFd.head.schema.shape.fieldDescriptions
-//        val coreFd = innerFd.head.schema.shape.fieldDescriptions
-//
-//        coreFd.tail.head.fieldName shouldBe "string_field"
-//    }
+    it should "be able to update nested fields using a selector" in {
+        case class Core( int : Int, str : String, bool : Boolean )
+        case class InnerClass( core : Core )
+        case class OuterClass( inner : InnerClass )
 
-//    it should "be able to build nested products using givens" in {
-//        case class Core( int : Int, str : String, bool : Boolean )
-//        case class Inner( core : Core )
-//        case class Outer( inner : Inner )
-//
-//        val coreSch = Schema.derivedBuilder[ Core ]
-//          .rebuildField( "str" )( _.fieldName( "string_field" ).build )
-//          .build
-//        import coreSch.givenSchema
-//
-//        val innerSch = Schema.productBuilder[ Inner ]
-//          .addField( FieldBuilder[ Core ].fieldName( "core_field" ).fromSchema.build )
-//          .construct( Inner.apply )
-//          .deconstruct( v => v.core )
-//          .build
-//        import innerSch.givenSchema
-//
-//        val outerSch = Schema.productBuilder[ Outer ]
-//          .addField( FieldBuilder[ Inner ].fieldName( "inner" ).fromSchema.build )
-//          .construct( Outer.apply )
-//          .deconstruct( v => v.inner )
-//          .build
-//
-//        outerSch.shape.fieldDescriptions.head.schema.shape.fieldDescriptions.head.schema.shape.fieldDescriptions.tail.head.fieldName shouldBe "string_field"
-//    }
+        import org.hungerford.generic.schema.selector.Selector.*
+
+        val sch = Schema.derivedBuilder[ OuterClass ]
+          .modifyComponent( "inner" / "core" / "str" )(
+              v => FieldBuilder.from( v ).name( "string_field" ).build,
+          )
+          .build
+
+        val outerFd = sch.shape.fieldDescriptions
+        val innerFd = outerFd.head.schema.shape.fieldDescriptions
+        val coreFd = innerFd.head.schema.shape.fieldDescriptions
+
+        coreFd.tail.head.fieldName shouldBe "string_field"
+    }
+
+    it should "be able to build nested products using givens" in {
+        case class Core( int : Int, str : String, bool : Boolean )
+        case class Inner( core : Core )
+        case class Outer( inner : Inner )
+
+        val coreSch = Schema.derivedBuilder[ Core ]
+          .rebuildField( "str" )( _.name( "string_field" ).build )
+          .build
+        import coreSch.givenSchema
+
+        val innerSch = Schema.productBuilder[ Inner ]
+          .addField( FieldBuilder[ Inner, Core ].name( "core_field" ).extractor( _.core ).fromSchema.build )
+          .construct( Inner.apply )
+          .build
+        import innerSch.givenSchema
+
+        val outerSch = Schema.productBuilder[ Outer ]
+          .addField( FieldBuilder[ Outer, Inner ].extractor( _.inner ).name( "inner" ).fromSchema.build )
+          .construct( Outer.apply )
+          .build
+
+        outerSch.shape.fieldDescriptions.head.schema.shape.fieldDescriptions.head.schema.shape.fieldDescriptions.tail.head.fieldName shouldBe "string_field"
+    }
 
 }

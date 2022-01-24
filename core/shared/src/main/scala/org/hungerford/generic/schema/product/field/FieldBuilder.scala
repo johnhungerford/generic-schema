@@ -41,7 +41,7 @@ case class FieldBuilder[ T, F, N, Sch, S, E ](
 }
 
 object FieldBuilder {
-    extension [ T, F, N <: FieldName, S, E ]( fieldBuilder : FieldBuilder[ T, F, N, Schema.Aux[ F, S ], S, T => F ] )
+    extension [ T, F, N <: FieldName, Sch <: Schema.Aux[ F, S ], S, E ]( fieldBuilder : FieldBuilder[ T, F, N, Sch, S, T => F ] )
         def build : Field.Aux[ T, F, N, S ] =
             FieldCase[ T, F, N, S ](
                 fieldBuilder.nm,

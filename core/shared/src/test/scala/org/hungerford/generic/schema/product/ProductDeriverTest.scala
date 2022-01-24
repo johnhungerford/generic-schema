@@ -24,13 +24,15 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
         product.fieldNames shouldBe Set( "int" )
 
         val manualProduct = ProductSchemaBuilder[ Test ]
-          .addField( FieldBuilder[ Int ].fieldName( "int" ).fromSchema.build )
+          .addField( FieldBuilder[ Test, Int ].name( "int" ).extractor( _.int ).fromSchema.build )
           .construct( v => Test( v ) )
-          .deconstruct( v => v.int )
           .build
           .shape
 
-        product.fieldDescriptions shouldBe manualProduct.fieldDescriptions
+        product.fieldDescriptions.size shouldBe manualProduct.fieldDescriptions.size
+        product.fieldDescriptions.head.fieldName shouldBe manualProduct.fieldDescriptions.head.fieldName
+        product.fieldDescriptions.head.description shouldBe manualProduct.fieldDescriptions.head.description
+        product.fieldDescriptions.head.extractor( Test( 25 ) ) shouldBe manualProduct.fieldDescriptions.head.extractor( Test( 25 ) )
     }
 
     it should "derive a ProductShape from a case class type by constructing primitives" in {
@@ -43,13 +45,15 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
         product.fieldNames shouldBe Set( "int" )
 
         val manualProduct = ProductSchemaBuilder[ Test ]
-          .addField( FieldBuilder[ Int ].fieldName( "int" ).primitive.build )
+          .addField( FieldBuilder[ Test, Int ].name( "int" ).extractor( _.int ).primitive.build )
           .construct( t => Test(t ) )
-          .deconstruct( v => v.int )
           .build
           .shape
 
-        product.fieldDescriptions shouldBe manualProduct.fieldDescriptions
+        product.fieldDescriptions.size shouldBe manualProduct.fieldDescriptions.size
+        product.fieldDescriptions.head.fieldName shouldBe manualProduct.fieldDescriptions.head.fieldName
+        product.fieldDescriptions.head.description shouldBe manualProduct.fieldDescriptions.head.description
+        product.fieldDescriptions.head.extractor( Test( 25 ) ) shouldBe manualProduct.fieldDescriptions.head.extractor( Test( 25 ) )
     }
 
     it should "derive a big product" in {

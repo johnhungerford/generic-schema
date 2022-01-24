@@ -36,7 +36,7 @@ object ProductDeriver {
         mirror : MirrorProduct[ T, RVt, L ],
         mirEv : NotGiven[ mirror.type <:< Mirror.Singleton ],
         zip : Zipper.Aux[ L, RVt, LRV ],
-        fieldDeriver : FieldDeriver.Aux[ LRV, T => RVt, Rt ],
+        fieldDeriver : FieldDeriver.Aux[ (T, LRV), T => RVt, Rt ],
         valEv : CtxWrapTuplesConstraint[ Field.Ctx[ T ], Rt, RVt ],
         uniq : UniqueFieldNames[ Rt ],
         cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
@@ -129,7 +129,7 @@ object FieldDeriver {
             }
     }
 
-    inline given hnilFDFieldDeriver[ Extr ] : FieldDeriver[ EmptyTuple, Extr ] with {
+    inline given hnilFDFieldDeriver[ T, Extr ] : FieldDeriver[ (T, EmptyTuple), Extr ] with {
             type Out = EmptyTuple
 
             override def derive( extractor : Extr ) : EmptyTuple = EmptyTuple
@@ -138,9 +138,9 @@ object FieldDeriver {
     inline given hlistFDFieldDeriver[ N <: FieldName, T, F, S, VTail <: Tuple, TTail <: Tuple, Res <: Tuple ](
         using
         fdFieldDeriver : FieldDeriver.Aux[ (T, N, F), T => F, Field.Aux[ T, F, N, S ] ],
-        next : FieldDeriver.Aux[ TTail, T => VTail, Res ],
-    ) : FieldDeriver.Aux[ (T, N, F) *: TTail, T => F *: VTail, Field.Aux[ T, F, N, S ] *: Res ] = {
-        new FieldDeriver[ (T, N, F) *: TTail, T => F *: VTail ] {
+        next : FieldDeriver.Aux[ (T, TTail), T => VTail, Res ],
+    ) : FieldDeriver.Aux[ (T, (N, F) *: TTail), T => F *: VTail, Field.Aux[ T, F, N, S ] *: Res ] = {
+        new FieldDeriver[ (T, (N, F) *: TTail), T => F *: VTail ] {
             override type Out = Field.Aux[ T, F, N, S ] *: Res
 
             override def derive( extractor : T => F *: VTail ) : Field.Aux[ T, F, N, S ] *: Res = {

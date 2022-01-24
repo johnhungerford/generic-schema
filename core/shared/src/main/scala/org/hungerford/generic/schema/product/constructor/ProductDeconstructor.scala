@@ -18,10 +18,10 @@ object ProductDeconstructor {
         override def deconstruct( value: T, informedBy: T => Map[ String, F ] ): Map[ String, F ] = informedBy( value )
     }
 
-    given field[ T, F ] : ProductDeconstructor[ T, Field[ T, F ] ] with {
+    given field[ T, F, FD <: Field[ T, F ] ] : ProductDeconstructor[ T, FD ] with {
         type Res = F
 
-        override def deconstruct( value : T, informedBy : Field[ T, F ] ) : F =
+        override def deconstruct( value : T, informedBy : FD ) : F =
             informedBy.extractor( value )
     }
 

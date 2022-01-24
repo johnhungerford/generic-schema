@@ -65,7 +65,7 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
         unq : UniqueFieldNames[ NewR ],
         ctx : CtxWrapTuplesConstraint[ Field.Ctx[ T ], NewR, RV ],
         pc : ProductConstructor[ C, RV, AF, T ],
-        pdc : ProductDeconstructor[ T, (AF, RV) ],
+        pdc : ProductDeconstructor[ T, (AF, R) ],
         afeEv : ValidAfExtr[ T, AF, AFE ],
     ) : ComponentUpdater.Aux[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ N ], Field.Aux[ T, F, N, FS ], Field.Aux[ T, F, NewN, NewFS ], Schema.Aux[ T, ProductShape[ T, NewR, RV, AF, AFS, AFE, C ] ] ] = {
         new ComponentUpdater[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ N ], Field.Aux[ T, F, N, FS ], Field.Aux[ T, F, NewN, NewFS ] ] {

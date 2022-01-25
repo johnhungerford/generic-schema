@@ -57,8 +57,9 @@ val httpRequestSchema = Schema.productBuilder[HttpRequest]
   .name("HttpRequest")
   .description("Simple REST request model")
   .addField(
-      Field.builder[String]
-        .fieldName("url")
+      Field.builder[HttpRequest, String]
+        .name("url")
+        .extractor(_.url)
         .description("Destination URL for REST request")
         .examples("http://foo.bar.org:8080", "https://host.name/endpoint")
         .primitive
@@ -67,21 +68,22 @@ val httpRequestSchema = Schema.productBuilder[HttpRequest]
         .build
   )
   .addField(
-      Field.builder[HttpMethod]
-        .fieldName("method")
+      Field.builder[HttpRequest, HttpMethod]
+        .name("method")
+        .extractor(_.method)
         .fromSchema(httpMethodSchema)
         .build
   )
   .addField(
-      Field.builder[Option[String]]
-        .fieldName("string_body")
+      Field.builder[HttpRequest, Option[String]]
+        .name("string_body")
+        .extractor(_.body)
         .primitive
         .description("Optional body of the REST request")
         .examples(None, Some("""{"json":"payload"}"""), Some("Simple text body"))
         .build
   )
   .construct((url, method, body) => HttpRequest(url, method, body))
-  .deconstruct(req => (req.url, req.method, req.body))
   .build
 
 ```
@@ -95,11 +97,10 @@ case class UserData(userId: UUID, userName: String, userData: Map[String, String
 val userDataSchema = Schema.productBuilder[UserData]
   .name("UserData")
   .description("Data type for describing arbitrary metadata associated with a user")
-  .addField(Field.primitive[UUID]("id"))
-  .addField(Field.primitive[String]("name"))
-  .additionalFields[String].primitive
+  .addField(Field.primitive[UserData, UUID]("id", _.userId))
+  .addField(Field.primitive[UserData, String]("name", _.userName))
+  .additionalFields[String].primitive(_.userData)
   .construct(((id, name), af) => UserData(id, name, af))
-  .deconstruct(ud => ((ud.userId, ud.userName), ud.userData))
   .build
 
 ```
@@ -129,10 +130,12 @@ given httpRequestCodec : Codec[HttpRequest] =
 val req = HttpRequest("http://example.url", Get, None)
 
 println(req.asJson.noSpaces.toString)
+// output:
 // {"url":"http://example.url","method":"Get","string_body":[]}
 
 parse("""{"url":"http://another.url","method":"Post","string_body":["hello world"]}""")
   .toOption.get.as[HttpRequest]
+// result:
 // HttpRequest("http://another.url", Post, Some("hello world"))
 
 val userDataCodec : Codec[UserData] =
@@ -145,11 +148,13 @@ val ud = UserData(
 )
 
 println(ud.asJson.noSpaces.toString)
+// output:
 // {"id":"a2c51aa1-6951-40d6-9be8-2ed98fbaffe6","name":"john_doe","interests":"skiing, golf","height":"5\'2\"","email":"john.doe@gmail.com"}
 
 parse("""{"pets":"cat, dog, hamster", "name":"jane_doe", "phone_number":"444-444-4444","id":""1cfde5d9-0876-4669-9131-09b3cdb8df4c 
 }""")
   .toOption.get.as[UserData]
+// result:
 // UserData(1cfde5d9-0876-4669-9131-09b3cdb8df4c, "jane_doe", Map("pets" -> "cat, dog, hamster", "phone_number" -> "444-444-4444"))
 ```
 
@@ -169,6 +174,7 @@ println(write(req))
 // Note that by default uPickle serializes Options differently from circe
 
 read[HttpRequest]("""{"url":"http://another.url","method":"Post","string_body":["hello world"]}""")
+// result:
 // HttpRequest("http://another.url", Post, Some("hello world"))
 
 val userDataRW : ReadWriter[UserData] =
@@ -185,6 +191,7 @@ println(write(ud))
 
 read[UserData]("""{"pets":"cat, dog, hamster", "name":"jane_doe", "phone_number":"444-444-4444","id":""1cfde5d9-0876-4669-9131-09b3cdb8df4c 
 }""")
+// result:
 // UserData(1cfde5d9-0876-4669-9131-09b3cdb8df4c, "jane_doe", Map("pets" -> "cat, dog, hamster", "phone_number" -> "444-444-4444"))
 ```
 
@@ -226,6 +233,7 @@ val remoteHttpSpec = OpenAPIDocsInterpreter()
   .toYaml
 
 println(remoteHttpSpec)
+// output:
 // ...
 //  schemas:
 //    HttpMethod:
@@ -271,6 +279,7 @@ val userDataSpec = OpenAPIDocsInterpreter()
   .toYaml
 
 println(userDataSpec)
+// output:
 // ...
 //  schemas:
 //    UserData:

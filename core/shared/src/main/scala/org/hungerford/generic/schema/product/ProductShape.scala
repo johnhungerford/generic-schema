@@ -67,6 +67,13 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
 
     def construct : C = constructor
 
+    def deconstruct(
+        value : T,
+    )(
+        using
+        dec : ProductDeconstructor[ T, (AFE, R) ]
+    ) : dec.Res = dec.deconstruct( value, (afExtractor, fieldDescriptions) )
+
     def extractNamedFields(
         value : T,
     )(

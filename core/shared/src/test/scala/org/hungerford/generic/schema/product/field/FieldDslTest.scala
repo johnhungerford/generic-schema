@@ -32,27 +32,27 @@ class FieldDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Ma
             Field.builder[ Int, Int ].name( "test-name" ).extractor( fn ).fromSchema.build shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
         }
 
-//        val sch = Schema.derived[ TC ]
-//        import sch.givenSchema
-//
-//        Field.fromSchema[ TC ]( "test-name" )
+        val sch = Schema.derived[ TC ]
+        import sch.givenSchema
+
+        Field.fromSchema[ Int, TC ]( "test-name", v => TC( v, v.toString ) )
     }
 
-//    it should "allow modifying a field description" in {
-//        val field = {
-//            import TestFieldDsl.{*, given}
-//
-//            Field.fromSchema[ TC, TC ]( "test-name", v => v )( using Schema.derived[ TC ] )
-//        }
-//
-//        assertDoesNotCompile( """field.withDescription( "test-description" )""" )
-//        assertDoesNotCompile( """field.withName( "new-name" )""" )
-//
-//        import TestFieldDsl.{*, given}
-//
-//        field.withDescription( "test-description" ).description shouldBe Some( "test-description" )
-//        field.withName( "new-name" ).fieldName shouldBe "new-name"
-//        field.rebuildSchema( _.rebuildField( "int" )( _.fieldName( "int_field" ).build ).build )
-//    }
+    it should "allow modifying a field description" in {
+        val field = {
+            import TestFieldDsl.{*, given}
+
+            Field.fromSchema[ TC, TC ]( "test-name", v => v )( using Schema.derived[ TC ] )
+        }
+
+        assertDoesNotCompile( """field.withDescription( "test-description" )""" )
+        assertDoesNotCompile( """field.withName( "new-name" )""" )
+
+        import TestFieldDsl.{*, given}
+
+        field.withDescription( "test-description" ).description shouldBe Some( "test-description" )
+        field.withName( "new-name" ).fieldName shouldBe "new-name"
+        field.rebuildSchema( _.rebuildField( "int" )( _.name( "int_field" ).build ).build )
+    }
 
 }

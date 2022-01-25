@@ -3,9 +3,10 @@ package org.hungerford.generic.schema.tapir
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
+import org.hungerford.generic.schema.product.constructor.ProductDeconstructor
 import org.hungerford.generic.schema.product.field.Field.Aux
 import org.hungerford.generic.schema.product.field.FieldGetter.Aux
-import org.hungerford.generic.schema.product.field.{Field, FieldGetter, FieldName, TranslatedFieldDescription}
+import org.hungerford.generic.schema.product.field.{Field, FieldGetter, FieldName}
 import org.hungerford.generic.schema.product.translation.FieldBuildingProductSchemaTranslation
 import sttp.tapir.Schema as TapirSchema
 import sttp.tapir.SchemaType.{SProduct, SProductField}
@@ -21,6 +22,7 @@ trait TapirSchemaProductTranslation
     given translatedFieldAdder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
         using
         vt : TapirValidatorTranslation[ F ],
+        ev : ProductDeconstructor.Aux[ T, R, RV ],
     ) :
         TranslatedFieldAdder[ T, F, N, S, R, RV, AF, AFS, AFE, C ] with {
             override def addTranslatedField(

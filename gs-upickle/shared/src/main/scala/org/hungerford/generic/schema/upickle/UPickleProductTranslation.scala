@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.upickle
 
-import org.hungerford.generic.schema.product.field.TranslatedFieldDescription
+import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.product.translation.BiMapProductTranslation
 import ujson.Value
 import upickle.default.*
@@ -43,13 +43,13 @@ trait UPickleProductTranslation
        ujson.Obj( bvSeq.head, bvSeq : _* )
    }
 
-   override def extractField[ T ](
-       from : Value,
-       using : TranslatedFieldDescription[ T, ReadWriter ],
-   ) : T = {
-       val fieldValue : Value = from.obj( `using`.fieldName )
-       val rw : ReadWriter[ T ] = using.schema
-       read[ T ]( fieldValue )( rw )
+    protected def extractField[ T, F ](
+        from : Value.Value,
+        field : Field[ T, F ],
+        schema : ReadWriter[ F ],
+    ) : F = {
+       val fieldValue : Value = from.obj( field.fieldName )
+       read[ F ]( fieldValue )( schema )
    }
 
    override def extractAdditionalFields[ T ]( from : Value, informedBy : ReadWriter[ T ] ) : Map[ String, T ] = {
@@ -59,9 +59,14 @@ trait UPickleProductTranslation
        }
    }
 
-   override def writeField[ T ]( value : T, to : ListMap[ String, Value.Value ], informedBy : TranslatedFieldDescription[ T, ReadWriter ] ) : ListMap[ String, Value ] = {
-       val valueJson : Value.Value = writeJs( value )( informedBy.schema )
-       to + ( (informedBy.fieldName, valueJson) )
+    protected def writeField[ T, F ](
+        value : F,
+        to : ListMap[ String, Value.Value ],
+        field : Field[ T, F ],
+        schema : ReadWriter[ F ],
+    ) : ListMap[ String, Value.Value ] = {
+       val valueJson : Value.Value = writeJs( value )( schema )
+       to + ( (field.fieldName, valueJson) )
    }
 
    override def writeAdditionalFields[ T ]( from : Map[ String, T ], to : ListMap[ String, Value ], informedBy : ReadWriter[ T ] ) : ListMap[ String, Value ] = {

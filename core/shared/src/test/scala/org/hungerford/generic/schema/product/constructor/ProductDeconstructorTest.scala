@@ -19,5 +19,12 @@ class ProductDeconstructorTest extends AnyFlatSpecLike with org.scalatest.matche
         assertCompiles( """summon[ProductDeconstructor[Int, (Unit, (Field.Aux[Int, String, "str", Unit], Field.Aux[Int, Boolean, "bool", Unit]))]]""" )
         assertCompiles( """summon[ProductDeconstructor[Int, (Unit, (Field.Aux[Int, Int, "int", Unit], Field.Aux[Int, String, "str", Unit], Field.Aux[Int, Boolean, "bool", Unit]))]]""" )
     }
+
+    it should "provide an instance for a non-empty tuple of fields that agree with parent type" in {
+        assertCompiles( """summon[ProductDeconstructor[Int, (Field[Int, String], Field[Int, Boolean])]]""" )
+        assertCompiles( """summon[ProductDeconstructor[Int, (Field.Aux[Int, String, "str", Unit], Field.Aux[Int, Boolean, "bool", Unit])]]""" )
+        assertCompiles( """summon[ProductDeconstructor[Int, (Field.Aux[Int, Int, "int", Unit], Field.Aux[Int, String, "str", Unit], Field.Aux[Int, Boolean, "bool", Unit])]]""" )
+
+    }
     
 }

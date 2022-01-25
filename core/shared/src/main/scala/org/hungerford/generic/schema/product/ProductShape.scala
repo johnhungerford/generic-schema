@@ -62,7 +62,7 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
     )(
         using
         fg : FieldGetter[ N, R, RV ],
-        pd : ProductDeconstructor.Aux[ T, R, RV]
+        pd : ProductDeconstructor.Aux[ T, R, RV ]
     ) : fg.Out = fg.get( pd.deconstruct( from, fieldDescriptions ) )
 
     def construct : C = constructor

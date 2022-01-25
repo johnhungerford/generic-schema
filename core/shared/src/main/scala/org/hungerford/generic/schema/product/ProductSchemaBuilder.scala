@@ -39,9 +39,9 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
        using
        fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
        uniq : UniqueFieldNames[ Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ] ],
-   ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, Unit, Unit ] = {
+   ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ] = {
        val newFieldDescs = fieldDescs ++ (fd *: EmptyTuple)
-       copy[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, Unit, Unit ]( fieldDescs = newFieldDescs, constr = () )
+       copy[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ]( fieldDescs = newFieldDescs, constr = () )
    }
 
    def removeField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple ](
@@ -50,9 +50,9 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
        using
        rm : FieldRemover.Aux[ N, R, NewR ],
        fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], NewR, NewRV ],
-   ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, Unit, Unit ] = {
+   ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, AFE, Unit ] = {
        val newFields = rm.remove( fieldDescs )
-       copy[ T, NewR, NewRV, AF, AFS, Unit, Unit ](
+       copy[ T, NewR, NewRV, AF, AFS, AFE, Unit ](
            fieldDescs = newFields,
            constr = (),
        )

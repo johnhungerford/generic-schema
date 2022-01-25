@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema
 
 import org.scalatest.flatspec.AnyFlatSpecLike
-import org.hungerford.generic.schema.product.field.{Field, FieldDsl}
+import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldDsl}
 import org.hungerford.generic.schema.selector.SelectorDsl
 
 class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
@@ -14,10 +14,9 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
     it should "allow building schemas" in {
         assertDoesNotCompile( """Schema.primitiveBuilder[ Int ].description( "test-description" ).build""" )
         assertDoesNotCompile( """Schema.productBuilder[ TestCase ]
-                                |          .addField( Field.builder[ Int ].fieldName( "int" ).primitive.build )
-                                |          .addField( Field.builder[ String ].fieldName( "str" ).primitive.build )
+                                |          .addField( Field.builder[ TestCase, Int ].extractor( _.int ).name( "int" ).primitive.build )
+                                |          .addField( Field.builder[ TestCase, String ].extractor( _.str ).name( "str" ).primitive.build )
                                 |          .construct( (int, str) => TestCase( int, str ) )
-                                |          .deconstruct( v => (v.int, v.str) )
                                 |          .build""".stripMargin )
         assertDoesNotCompile( """Schema.derivedBuilder[ TestCase ].build""" )
         assertDoesNotCompile( """Schema.derived[ TestCase ]""" )
@@ -25,11 +24,11 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
         import TestSchemaDsl.*
 
         Schema.primitiveBuilder[ Int ].description( "test-description" ).build
+
         Schema.productBuilder[ TestCase ]
-          .addField( Field.builder[ Int ].fieldName( "int" ).primitive.build )
-          .addField( Field.builder[ String ].fieldName( "str" ).primitive.build )
+          .addField( Field.builder[ TestCase, Int ].name( "int" ).extractor( _.int ).primitive.build )
+          .addField( Field.builder[ TestCase, String ].name( "str" ).extractor( _.str ).primitive.build )
           .construct( (int, str) => TestCase( int, str ) )
-          .deconstruct( v => (v.int, v.str) )
           .build
         Schema.derivedBuilder[ TestCase ].build
         Schema.derived[ TestCase ]
@@ -74,7 +73,6 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
 
         sch.rebuild.removeField( "int" )
           .construct( str => TestCase( 5, str ) )
-          .deconstruct( _.str )
           .build
 
     }
@@ -103,7 +101,7 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
 
         val newSch = sch.modifyComponent( "st" / "SubT2" / "SubT2B" / "nst" / "NSub2" / "flt" )(
             _.rebuild
-              .fieldName( "NEW_NAME" )
+              .name( "NEW_NAME" )
               .description( "test-description" )
               .build
         )

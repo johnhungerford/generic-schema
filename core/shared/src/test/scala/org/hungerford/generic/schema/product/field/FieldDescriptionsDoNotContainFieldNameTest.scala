@@ -8,11 +8,11 @@ class FieldDescriptionsDoNotContainFieldNameTest extends AnyFlatSpecLike with Ma
     behavior of "FieldDescriptionsDoNotContainFieldNameTest"
 
     it should "provide an implicit instance for a 1-tuple without the fieldname" in {
-        assertCompiles( """summon[ FieldDescriptionsDoNotContainFieldName[ "name", Field.Aux[ Int, "other_name", Unit ] *: EmptyTuple ] ]""" )
+        assertCompiles( """summon[ FieldDescriptionsDoNotContainFieldName[ "name", Field.Aux[ Int, Int, "other_name", Unit ] *: EmptyTuple ] ]""" )
     }
 
     it should "fail to provide an implicit instance for a 1-tuple with the same fieldname" in {
-        assertDoesNotCompile( """summon[ FieldDescriptionsDoNotContainFieldName[ "name", Field.Aux[ Int, "name", Unit ] *: EmptyTuple ] ]""" )
+        assertDoesNotCompile( """summon[ FieldDescriptionsDoNotContainFieldName[ "name", Field.Aux[ Int, Int, "name", Unit ] *: EmptyTuple ] ]""" )
     }
 
 }

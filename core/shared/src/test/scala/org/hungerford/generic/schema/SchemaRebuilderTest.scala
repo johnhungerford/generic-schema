@@ -16,15 +16,13 @@ class SchemaRebuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sh
         val sch = Schema.derivedBuilder[ Prod ]
           .removeField( "str" )
           .construct( i => Prod( i, i.toString ) )
-          .deconstruct( _.int )
           .build
 
         sch.shape.fieldDescriptions.size shouldBe 1
 
         val sch2 = sch.rebuild
-          .addField( Field.builder[ String ].fieldName( "str" ).primitive.build )
+          .addField( Field.builder[ Prod, String ].name( "str" ).primitive.extractor( _.str ).build )
           .construct( (i, s) => Prod( i, s ) )
-          .deconstruct( p => (p.int, p.str) )
           .build
 
         sch2.shape.fieldDescriptions.size shouldBe 2

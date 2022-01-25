@@ -9,18 +9,24 @@ import org.hungerford.generic.schema.validator.Validator
 import scala.language.higherKinds
 
 
-case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
+trait ValidAfExtr[ T, AF, AFE ]
+
+object ValidAfExtr {
+    given [ T, AF ] : ValidAfExtr[ T, AF, T => Map[ String, AF ] ] with {}
+    given [ T ] : ValidAfExtr[ T, Nothing, Unit ] with {}
+}
+
+case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
     fieldDescriptions : Rt,
     additionalFieldsSchema : Schema.Aux[ AFt, AFSt ],
+    private[ schema ] val afExtractor : AFEt,
     private[ schema ] val constructor : C,
-    private[ schema ] val deconstructor : DC,
 )(
     using
-    fieldsConstraint : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
+    fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], Rt, RVt ],
     uniqueFields : UniqueFieldNames[ Rt ],
-    lengther : TupleIntLength[ Rt ],
     prodConst : ProductConstructor[ C, RVt, AFt, T ],
-    prodDeconst : ProductDeconstructor[ DC, RVt, AFt, T ],
+    afExtrEv : ValidAfExtr[ T, AFt, AFEt ],
 ) {
 
     // Field descriptions
@@ -32,13 +38,9 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
 
     type AFS = AFSt
 
+    type AFE = AFEt
+
     type Cons = C
-
-    type Decons = DC
-
-    def construct : C = constructor
-
-    def deconstruct : DC = deconstructor
 
     lazy val size : Int = fieldDescriptions.size
 
@@ -46,7 +48,7 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
         def getFieldNames[ FDs <: Tuple ]( fds : FDs, fns : Set[ String ] = Set.empty ) : Set[ String ] = {
             fds match {
                 case EmptyTuple => fns
-                case FieldCase( name, _, _, _, _, _, _ ) *: next =>
+                case FieldCase( name, _, _, _, _, _, _, _ ) *: next =>
                     getFieldNames( next, fns + name )
                 case _ => ???
             }
@@ -60,28 +62,36 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, C, DC ](
     )(
         using
         fg : FieldGetter[ N, R, RV ],
-    ) : fg.Out = fg.get( prodDeconst.deconstruct( deconstructor )( from )._1 )
+        pd : ProductDeconstructor.Aux[ T, R, RV ]
+    ) : fg.Out = fg.get( pd.deconstruct( from, fieldDescriptions ) )
+
+    def construct : C = constructor
+
+    def deconstruct(
+        value : T,
+    )(
+        using
+        dec : ProductDeconstructor[ T, (AFE, R) ]
+    ) : dec.Res = dec.deconstruct( value, (afExtractor, fieldDescriptions) )
+
+    def extractNamedFields(
+        value : T,
+    )(
+        using
+        decons : ProductDeconstructor[ T, R ]
+    ) : decons.Res = decons.deconstruct( value, fieldDescriptions )
+
+    def extractAdditionalFields(
+        value : T,
+    )(
+        using
+        ev : AFE =:= (T => Map[ String, AF ])
+    ) : Map[ String, AF ] = ev( afExtractor )( value )
+
+    def extract(
+        value : T,
+    )(
+        using
+        decons : ProductDeconstructor[ T, (AFE, R) ],
+    ) : decons.Res = decons.deconstruct( value, (afExtractor, fieldDescriptions) )
 }
-
-
-trait TupleIntLength[ L <: Tuple ] {
-    def length : Int
-}
-
-object TupleIntLength {
-    def apply[ L <: Tuple ]( implicit ev : TupleIntLength[ L ] ) : TupleIntLength[ L ] = ev
-
-    implicit def hnilLength : TupleIntLength[ EmptyTuple ] = new TupleIntLength[EmptyTuple] {
-        override def length : Int = 0
-    }
-
-    implicit def generalLength[ T, Tail <: Tuple ]( implicit ev : TupleIntLength[ Tail ] ) : TupleIntLength[ T *: Tail ] = {
-        new TupleIntLength[ T *: Tail] {
-            override def length : Int = 1 + ev.length
-        }
-    }
-}
-
-
-
-

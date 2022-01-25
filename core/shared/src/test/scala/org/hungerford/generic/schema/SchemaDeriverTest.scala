@@ -17,15 +17,21 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
         import org.hungerford.generic.schema.primitives.Primitives.given
 
         val testSchema = Schema.productBuilder[ Test ]
-          .addField( FieldBuilder[ Int ].fieldName( "int" ).fromSchema.build )
-          .addField( FieldBuilder[ String ].fieldName( "str" ).fromSchema.build )
+          .addField( FieldBuilder[ Test, Int ].name( "int" ).extractor( _.int ).fromSchema.build )
+          .addField( FieldBuilder[ Test, String ].name( "str" ).extractor( _.str ).fromSchema.build )
           .construct( ( int, str ) => Test( int, str ) )
-          .deconstruct( value => (value.int, value.str) )
           .build
 
         val newTestRes = SchemaDeriver.schema[ Test ]
 
-        newTestRes.shape.fieldDescriptions shouldBe testSchema.shape.fieldDescriptions
+        newTestRes.shape.fieldDescriptions.size shouldBe testSchema.shape.fieldDescriptions.size
+        newTestRes.shape.fieldDescriptions.head.fieldName shouldBe testSchema.shape.fieldDescriptions.head.fieldName
+        newTestRes.shape.fieldDescriptions.head.description shouldBe testSchema.shape.fieldDescriptions.head.description
+        newTestRes.shape.fieldDescriptions.head.extractor( Test( 5, "hello" ) ) shouldBe testSchema.shape.fieldDescriptions.head.extractor( Test( 5, "hello" ) )
+        newTestRes.shape.fieldDescriptions.tail.head.fieldName shouldBe testSchema.shape.fieldDescriptions.tail.head.fieldName
+        newTestRes.shape.fieldDescriptions.tail.head.description shouldBe testSchema.shape.fieldDescriptions.tail.head.description
+        newTestRes.shape.fieldDescriptions.tail.head.extractor( Test( 5, "hello" ) ) shouldBe testSchema.shape.fieldDescriptions.tail.head.extractor( Test( 5, "hello" ) )
+
 
     }
 
@@ -55,8 +61,19 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
         val schStDescripts = sch.shape.subtypeDescriptions
         val expStDescripts = expectedSchema.shape.subtypeDescriptions
         schStDescripts.head.typeName shouldBe expStDescripts.head.typeName
-        schStDescripts.head.schema.shape.fieldDescriptions shouldBe expStDescripts.head.schema.shape.fieldDescriptions
+
+        schStDescripts.head.schema.shape.fieldDescriptions.size shouldBe expStDescripts.head.schema.shape.fieldDescriptions.size
+        schStDescripts.head.schema.shape.fieldDescriptions.head.fieldName shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.fieldName
+        schStDescripts.head.schema.shape.fieldDescriptions.head.extractor( SubT1( 5 ) ) shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.extractor( SubT1( 5 ) )
+        schStDescripts.head.schema.shape.fieldDescriptions.head.description shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.description
+        schStDescripts.head.schema.shape.fieldDescriptions.tail shouldBe expStDescripts.head.schema.shape.fieldDescriptions.tail
+
         schStDescripts.tail.head.typeName shouldBe expStDescripts.tail.head.typeName
-        schStDescripts.tail.head.schema.shape.fieldDescriptions shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions
+
+        schStDescripts.tail.head.schema.shape.fieldDescriptions.size shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.size
+        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.fieldName shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.fieldName
+        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.extractor( SubT2( "hello" ) ) shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.extractor( SubT2( "hello" ) )
+        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.description shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.description
+        schStDescripts.tail.head.schema.shape.fieldDescriptions.tail shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.tail
     }
 }

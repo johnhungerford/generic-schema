@@ -16,10 +16,10 @@ object ValidDiscriminator {
 
     given [ D, DN ] : ValidDiscriminator[ D, DN, EmptyTuple ] with {}
 
-    given [ D, DN <: TypeName, DV <: D & Singleton, T, ST, N <: TypeName, STR <: Tuple, STRV <: Tuple, STAF, STAFS, STC, STDC, Tail <: Tuple, FT ](
+    given [ D, DN <: TypeName, DV <: D & Singleton, T, ST, N <: TypeName, STR <: Tuple, STRV <: Tuple, STAF, STAFS, STAFE, STC, Tail <: Tuple, FT ](
         using
         next : ValidDiscriminator[ D, DN, Tail ],
-    ) : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, N, ProductShape[ ST, STR, STRV, STAF, STAFS, STC, STDC ] ] *: Tail ] with {}
+    ) : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, N, ProductShape[ ST, STR, STRV, STAF, STAFS, STAFE, STC ] ] *: Tail ] with {}
 
 }
 

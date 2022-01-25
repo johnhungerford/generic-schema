@@ -25,10 +25,10 @@ object FieldRemover extends LowPriorityFieldRemovers {
     type Aux[ N <: FieldName, R <: Tuple, O <: Tuple ] =
         FieldRemover[ N, R ] { type Out = O }
 
-    given fieldRemover[ T, N <: FieldName, S, Tail <: Tuple ] : FieldRemover.Aux[ N, Field.Aux[ T, N, S ] *: Tail, Tail ] = new FieldRemover[ N, Field.Aux[ T, N, S ] *: Tail ] {
+    given fieldRemover[ T, F, N <: FieldName, S, Tail <: Tuple ] : FieldRemover.Aux[ N, Field.Aux[ T, F, N, S ] *: Tail, Tail ] = new FieldRemover[ N, Field.Aux[ T, F, N, S ] *: Tail ] {
         type Out = Tail
 
-        def remove( fields : Field.Aux[ T, N, S ] *: Tail ) : Tail = fields.tail
+        def remove( fields : Field.Aux[ T, F, N, S ] *: Tail ) : Tail = fields.tail
     }
 
     def remove[ N <: FieldName, R <: Tuple, Res <: Tuple ](
@@ -40,50 +40,50 @@ object FieldRemover extends LowPriorityFieldRemovers {
     ) : rm.Out = rm.remove( from )
 }
 
-trait FieldReplacer[ N <: FieldName, R <: Tuple, NewT, NewN <: FieldName, NewS ] {
+trait FieldReplacer[ N <: FieldName, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS ] {
     type Out <: Tuple
 
-    def replace( fields : R, withField : Field.Aux[ NewT, NewN, NewS ] ) : Out
+    def replace( fields : R, withField : Field.Aux[ NewT, NewF, NewN, NewS ] ) : Out
 }
 
 trait LowPriorityFieldReplacers {
-    given [ N <: FieldName, NewT, NewN <: FieldName, NewS, Head, Tail <: Tuple, Next <: Tuple ](
+    given [ N <: FieldName, NewT, NewF, NewN <: FieldName, NewS, Head, Tail <: Tuple, Next <: Tuple ](
         using
-        next : FieldReplacer.Aux[ N, Tail, NewT, NewN, NewS, Next  ]
-    ) : FieldReplacer.Aux[ N, Head *: Tail, NewT, NewN, NewS, Head *: Next ] = {
-        new FieldReplacer[ N, Head *: Tail, NewT, NewN, NewS ] {
+        next : FieldReplacer.Aux[ N, Tail, NewT, NewF, NewN, NewS, Next  ]
+    ) : FieldReplacer.Aux[ N, Head *: Tail, NewT, NewF, NewN, NewS, Head *: Next ] = {
+        new FieldReplacer[ N, Head *: Tail, NewT, NewF, NewN, NewS ] {
             type Out = Head *: Next
 
             def replace(
                 fields : Head *: Tail,
-                withField : Field.Aux[ NewT, NewN, NewS ],
+                withField : Field.Aux[ NewT, NewF, NewN, NewS ],
             ) : Head *: Next = fields.head *: next.replace( fields.tail, withField )
         }
     }
 }
 
 object FieldReplacer extends LowPriorityFieldReplacers {
-    type Aux[ N <: FieldName, R <: Tuple, T, NewN <: FieldName, S, O <: Tuple ] =
-        FieldReplacer[ N, R, T, NewN, S ] { type Out = O }
+    type Aux[ N <: FieldName, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS, O <: Tuple ] =
+        FieldReplacer[ N, R, NewT, NewF, NewN, NewS ] { type Out = O }
     
-    given [ OldT, OldN <: FieldName, OldS, NewT, NewN <: FieldName, NewS, Tail <: Tuple ] : FieldReplacer.Aux[ OldN, Field.Aux[ OldT, OldN, OldS ] *: Tail, NewT, NewN, NewS, Field.Aux[ NewT, NewN, NewS ] *: Tail ] = {
-            new FieldReplacer[  OldN, Field.Aux[ OldT, OldN, OldS ] *: Tail, NewT, NewN, NewS ] {
-                type Out = Field.Aux[ NewT, NewN, NewS ] *: Tail
+    given [ OldT, OldF, OldN <: FieldName, OldS, NewT, NewF, NewN <: FieldName, NewS, Tail <: Tuple ] : FieldReplacer.Aux[ OldN, Field.Aux[ OldT, OldF, OldN, OldS ] *: Tail, NewT, NewF, NewN, NewS, Field.Aux[ NewT, NewF, NewN, NewS ] *: Tail ] = {
+            new FieldReplacer[  OldN, Field.Aux[ OldT, OldF, OldN, OldS ] *: Tail, NewT, NewF, NewN, NewS ] {
+                type Out = Field.Aux[ NewT, NewF, NewN, NewS ] *: Tail
 
                 def replace(
-                    fields : Field.Aux[ OldT, OldN, OldS ] *: Tail,
-                    withField : Field.Aux[ NewT, NewN, NewS ],
-                ) : Field.Aux[ NewT, NewN, NewS ] *: Tail = withField *: fields.tail
+                    fields : Field.Aux[ OldT, OldF, OldN, OldS ] *: Tail,
+                    withField : Field.Aux[ NewT, NewF, NewN, NewS ],
+                ) : Field.Aux[ NewT, NewF, NewN, NewS ] *: Tail = withField *: fields.tail
             }
         }
 
-    def replace[ N <: FieldName, R <: Tuple, NewT, NewN <: FieldName, NewS ](
+    def replace[ N <: FieldName, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS ](
         fieldName : N,
         from : R,
-        withField : Field.Aux[ NewT, NewN, NewS ],
+        withField : Field.Aux[ NewT, NewF, NewN, NewS ],
     )(
         using
-        replacer : FieldReplacer[ N, R, NewT, NewN, NewS ],
+        replacer : FieldReplacer[ N, R, NewT, NewF, NewN, NewS ],
     ) : replacer.Out = replacer.replace( from, withField )
 }
 
@@ -111,12 +111,12 @@ object FieldRetriever extends LowPriorityFieldRetrievers {
     type Aux[ N <: FieldName, R <: Tuple, F ] =
         FieldRetriever[ N, R ] { type Field = F }
 
-    given [ N <: FieldName, T, S, Tail <: Tuple ] :
-      FieldRetriever.Aux[ N, Field.Aux[ T, N, S ] *: Tail, Field.Aux[ T, N, S ] ] = {
-        new FieldRetriever[ N, Field.Aux[ T, N, S ] *: Tail ] {
-            type Field = Field.Aux[ T, N, S ]
+    given [ N <: FieldName, T, F, S, Tail <: Tuple ] :
+      FieldRetriever.Aux[ N, Field.Aux[ T, F, N, S ] *: Tail, Field.Aux[ T, F, N, S ] ] = {
+        new FieldRetriever[ N, Field.Aux[ T, F, N, S ] *: Tail ] {
+            type Field = Field.Aux[ T, F, N, S ]
 
-            override def retrieve( from : Field.Aux[ T, N, S ] *: Tail ) : Field.Aux[ T, N, S ] =
+            override def retrieve( from : Field.Aux[ T, F, N, S ] *: Tail ) : Field.Aux[ T, F, N, S ] =
                 from.head
         }
     }

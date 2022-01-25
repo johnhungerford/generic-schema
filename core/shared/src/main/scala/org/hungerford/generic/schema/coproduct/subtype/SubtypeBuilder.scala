@@ -2,7 +2,6 @@ package org.hungerford.generic.schema.coproduct.subtype
 
 import org.hungerford.generic.schema.coproduct.ValidDiscriminator
 import org.hungerford.generic.schema.coproduct.subtype.SubtypeBuilder.empty
-import org.hungerford.generic.schema.product.field.FieldBuilderWithSchemaWithoutName
 import org.hungerford.generic.schema.singleton.SingletonShape
 import org.hungerford.generic.schema.{ComplexSchema, NoSchema, Primitive, Schema}
 import org.hungerford.generic.schema.validator.Validator

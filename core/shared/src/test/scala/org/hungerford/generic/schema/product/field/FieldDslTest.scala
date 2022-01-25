@@ -15,32 +15,34 @@ class FieldDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Ma
 
     it should "allow building a field description" in {
         // Haven't imported dsl
-        assertDoesNotCompile( """Field.primitive[ Int ]( "test-name" )""" )
-        assertDoesNotCompile( """Field.fromSchema[ Int ]( "test-name" )( using Primitive[ Int ]() )""" )
+        assertDoesNotCompile( """Field.primitive[ Int, Int ]( "test-name", v => v )""" )
+        assertDoesNotCompile( """Field.fromSchema[ Int, Int ]( "test-name", v => v )( using Primitive[ Int ]() )""" )
         assertDoesNotCompile( """Schema.derived[ TC ]""" )
 
         import TestFieldDsl.*
 
-        Field.primitive[ Int ]( "test-name" ) shouldBe FieldCase[ Int, "test-name", Unit ]( "test-name", Primitive[ Int ]() )
-        Field.fromSchema[ Int ]( "test-name" )( using Primitive[ Int ]() ) shouldBe FieldCase[ Int, "test-name", Unit ]( "test-name", Primitive[ Int ]() )
+        val fn : Int => Int = v => v
+
+        Field.primitive[ Int, Int ]( "test-name", fn ) shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]() )
+        Field.fromSchema[ Int, Int ]( "test-name", fn )( using Primitive[ Int ]() ) shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]() )
         {
             import org.hungerford.generic.schema.primitives.Primitives.given
 
-            Field.fromSchema[ Int ]( "test-name" ) shouldBe FieldCase[ Int, "test-name", Unit ]( "test-name", Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
-            Field.builder[ Int ].fieldName( "test-name" ).fromSchema.build shouldBe FieldCase[ Int, "test-name", Unit ]( "test-name", Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
+            Field.fromSchema[ Int, Int ]( "test-name", fn ) shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
+            Field.builder[ Int, Int ].name( "test-name" ).extractor( fn ).fromSchema.build shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
         }
 
         val sch = Schema.derived[ TC ]
         import sch.givenSchema
 
-        Field.fromSchema[ TC ]( "test-name" )
+        Field.fromSchema[ Int, TC ]( "test-name", v => TC( v, v.toString ) )
     }
 
     it should "allow modifying a field description" in {
         val field = {
             import TestFieldDsl.{*, given}
 
-            Field.fromSchema[ TC ]( "test-name" )( using Schema.derived[ TC ] )
+            Field.fromSchema[ TC, TC ]( "test-name", v => v )( using Schema.derived[ TC ] )
         }
 
         assertDoesNotCompile( """field.withDescription( "test-description" )""" )
@@ -50,7 +52,7 @@ class FieldDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Ma
 
         field.withDescription( "test-description" ).description shouldBe Some( "test-description" )
         field.withName( "new-name" ).fieldName shouldBe "new-name"
-        field.rebuildSchema( _.rebuildField( "int" )( _.fieldName( "int_field" ).build ).build )
+        field.rebuildSchema( _.rebuildField( "int" )( _.name( "int_field" ).build ).build )
     }
 
 }

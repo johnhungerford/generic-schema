@@ -22,7 +22,7 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     it should "update a schema's field using a selector" in {
         val newSch = ComponentUpdater.update( oneSch )( Selector.field( "str" ) ){ field =>
             FieldBuilder.from( field )
-              .fieldName( "string_field" )
+              .name( "string_field" )
               .build
         }
 
@@ -32,7 +32,7 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     it should "update a schema's nested field using a selector" in {
         val newSch = ComponentUpdater.update( twoSch )( Selector.field( "one" ) / "str" ){ field =>
             FieldBuilder.from( field )
-              .fieldName( "string_field_2" )
+              .name( "string_field_2" )
               .build
         }
 
@@ -43,7 +43,7 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     it should "update a highly nested field using a selector" in {
         val newSch = ComponentUpdater.update( fiveSch )( Selector.field( "four" ) / "three" / "two" / "one" / "str" ) { field =>
             FieldBuilder.from( field )
-              .fieldName( "string_field_5" )
+              .name( "string_field_5" )
               .build
         }
 
@@ -58,7 +58,7 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         import Selector.given
         val newSch = ComponentUpdater.update( fiveSch )( "four" / "three" / "two" / "one" / "str" ) { field =>
             FieldBuilder.from( field )
-              .fieldName( "string_field_5" )
+              .name( "string_field_5" )
               .build
         }
 

@@ -12,8 +12,9 @@ class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
     behavior of "FieldDescriptionBuilder"
 
     it should "be able to build a field description using a primitive" in {
-        val field = FieldBuilder[ Int ]
-          .fieldName( "name" )
+        val field = FieldBuilder[ Double, Int ]
+          .name( "name" )
+          .extractor( _.toInt )
           .primitive
           .build
 
@@ -21,13 +22,15 @@ class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
         field.schema.shape shouldBe ()
         field.schema.genericDescription.isEmpty shouldBe true
         field.schema.genericValidators.isEmpty shouldBe true
+        field.extractor( 25D ) shouldBe 25
     }
 
     it should "be able to build a field description using given schemas" in {
         import org.hungerford.generic.schema.primitives.Primitives.given
 
-        val field = FieldBuilder[ Int ]
-          .fieldName( "name" )
+        val field = FieldBuilder[ String, Int ]
+          .name( "name" )
+          .extractor( _.toInt )
           .fromSchema
           .build
 
@@ -35,25 +38,27 @@ class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
         field.schema.shape shouldBe ()
         field.schema.genericDescription.isEmpty shouldBe false
         field.schema.genericValidators.isEmpty shouldBe true
+        field.extractor( "25" ) shouldBe 25
     }
 
     it should "be able to build a field description by building a schema from scratch" in {
         case class TestClass( intField : Int, strField : String )
 
-        val field = FieldBuilder[ TestClass ]
-          .fieldName( "test_class" )
+        val field = FieldBuilder[ String, TestClass ]
+          .name( "test_class" )
+          .extractor( v => TestClass( v.toInt, v ) )
           .fromSchema( Schema.productBuilder[ TestClass ]
             .description( "generic-description" )
-            .addField( FieldBuilder[ Int ].fieldName( "int" ).primitive.build )
-            .addField( FieldBuilder[ String ].fieldName( "str" ).primitive.build )
+            .addField( FieldBuilder[ TestClass, Int ].name( "int" ).extractor( _.intField ).primitive.build )
+            .addField( FieldBuilder[ TestClass, String ].name( "str" ).extractor( _.strField ).primitive.build )
             .construct( (int, str) => TestClass( int, str ) )
-            .deconstruct( value => (value.intField, value.strField) )
             .build
           )
           .description( "test-description" )
           .build
 
         field.fieldName shouldBe "test_class"
+        field.extractor( "25" ) shouldBe TestClass( 25, "25" )
         field.description shouldBe Some( "test-description" )
         field.validators.isEmpty shouldBe true
         field.schema.genericDescription shouldBe Some( "generic-description" )
@@ -63,8 +68,9 @@ class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be able to rebuild a field description and update data without erasing" in {
-        val originalField = FieldBuilder[ Int ]
-          .fieldName( "name" )
+        val originalField = FieldBuilder[ Int, Int ]
+          .extractor( v => v )
+          .name( "name" )
           .primitive
           .description( "old-description" )
           .build
@@ -72,12 +78,13 @@ class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
         import org.hungerford.generic.schema.primitives.Primitives.given
 
         val newField = FieldBuilder.from( originalField )
-          .fieldName( "new_name" )
+          .name( "new_name" )
           .fromSchema
           .build
 
         newField.fieldName shouldBe "new_name"
         newField.description shouldBe Some( "old-description" )
+        newField.extractor( 25 ) shouldBe 25
         newField.validators.isEmpty shouldBe true
         newField.schema.genericDescription.isEmpty shouldBe false
     }

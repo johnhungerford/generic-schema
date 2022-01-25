@@ -2,7 +2,7 @@ package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape}
 import org.hungerford.generic.schema.product.field.Field
-import org.hungerford.generic.schema.product.{ProductDeriver, ProductSchemaBuilder, ProductShape, TupleIntLength}
+import org.hungerford.generic.schema.product.{ProductDeriver, ProductSchemaBuilder, ProductShape}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.validator.Validator
 
@@ -53,24 +53,24 @@ trait SchemaRebuilder[ T, S ] {
 object SchemaRebuilder {
     type Aux[ T, S, B ] = SchemaRebuilder[ T, S ] { type Builder = B }
 
-    given productRebuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
+    given productRebuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
         using
-        ctx : CtxWrapTuplesConstraint[ Field, R, RV ],
-    ) : SchemaRebuilder.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ], ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ] ] = {
-        new SchemaRebuilder[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ] {
-            type Builder = ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ]
+        ctx : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
+    ) : SchemaRebuilder.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ] = {
+        new SchemaRebuilder[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] {
+            type Builder = ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ]
 
-            def rebuild( schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC ] ]) : Builder = {
-                ProductSchemaBuilder[ T, R, RV, AF, AFS, C, DC ](
+            def rebuild( schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ]) : Builder = {
+                ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ](
                     schema.name,
                     schema.genericDescription,
                     schema.genericValidators,
                     schema.genericExamples,
                     schema.deprecated,
                     schema.shape.additionalFieldsSchema,
+                    schema.shape.afExtractor,
                     schema.shape.fieldDescriptions,
                     schema.shape.constructor,
-                    schema.shape.deconstructor,
                 )
             }
         }

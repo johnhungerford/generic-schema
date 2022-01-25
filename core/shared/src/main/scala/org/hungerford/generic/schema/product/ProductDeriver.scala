@@ -19,7 +19,7 @@ object ProductDeriver {
     type Aux[ T, Out0 ] = ProductDeriver[ T ] { type Out = Out0 }
 
     type DerivedPShape[ T, R <: Tuple, RV <: Tuple ] =
-        ProductShape[ T, R, RV, Nothing, Unit, RV => T, T => RV ]
+        ProductShape[ T, R, RV, Nothing, Unit, Unit, RV => T ]
 
     def apply[ T ](
         using
@@ -36,21 +36,22 @@ object ProductDeriver {
         mirror : MirrorProduct[ T, RVt, L ],
         mirEv : NotGiven[ mirror.type <:< Mirror.Singleton ],
         zip : Zipper.Aux[ L, RVt, LRV ],
-        fieldDeriver : FieldDeriver.Aux[ LRV, Rt ],
-        lengther : TupleIntLength[ Rt ],
-        valEv : CtxWrapTuplesConstraint[ Field, Rt, RVt ],
+        fieldDeriver : FieldDeriver.Aux[ (T, LRV), T => RVt, Rt ],
+        valEv : CtxWrapTuplesConstraint[ Field.Ctx[ T ], Rt, RVt ],
         uniq : UniqueFieldNames[ Rt ],
         cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
-        dcType : ProductDeconstructor[ T => RVt, RVt, Nothing, T ],
     ) : ProductDeriver[ T ] with {
             override type Out = DerivedPShape[ T, Rt, RVt ]
 
             override def derive : DerivedPShape[ T, Rt, RVt ] = {
-                ProductShape[ T, Rt, RVt, Nothing, Unit, RVt => T, T => RVt ](
-                    fieldDescriptions = fieldDeriver.derive,
+                val extractor : T => RVt = ( t : T ) =>
+                    Tuple.fromProduct( t ).asInstanceOf[ RVt ]
+
+                ProductShape[ T, Rt, RVt, Nothing, Unit, Unit, RVt => T ](
+                    fieldDescriptions = fieldDeriver.derive( extractor ),
                     additionalFieldsSchema = NoSchema,
-                    rv => mirror.fromProduct( rv ),
-                    ( value : T ) => Tuple.fromProductTyped[ T ]( value )( using mirror ),
+                    afExtractor = (),
+                    constructor = rv => mirror.fromProduct( rv ),
                 )
             }
     }
@@ -107,40 +108,46 @@ object ProductDeriver {
 //    }
 //}
 
-trait FieldDeriver[ T ] extends Deriver[ T ]
+trait FieldDeriver[ T, Extr ] {
+    type Out
+
+    def derive( extractor : Extr ) : Out
+}
 
 object FieldDeriver {
-    type Aux[ T, FS ] = FieldDeriver[ T ] { type Out = FS }
+    type Aux[ T, Extr, FS ] = FieldDeriver[ T, Extr ] { type Out = FS }
 
-    inline given fd[ T, N <: FieldName, S ](
+    inline given fd[ T, F, N <: FieldName, S ](
         using
-        provider : SchemaProvider.Aux[ T, S ],
-    ) : FieldDeriver.Aux[ (N, T), Field.Aux[ T, N, S ] ] = new FieldDeriver[ (N, T) ] {
-            override type Out = Field.Aux[ T, N, S ]
+        provider : SchemaProvider.Aux[ F, S ],
+    ) : FieldDeriver.Aux[ (T, N, F), T => F, Field.Aux[ T, F, N, S ] ] = new FieldDeriver[ (T, N, F), T => F ] {
+            override type Out = Field.Aux[ T, F, N, S ]
 
-            override def derive : Out = {
+            override def derive( extr : T => F ) : Out = {
                 val fn = constValue[ N ]
-                FieldCase[ T, N, S ]( fn, provider.provide )
+                FieldCase[ T, F, N, S ]( fn, extr, provider.provide )
             }
     }
 
-    inline given hnilFDFieldDeriver : FieldDeriver[ EmptyTuple ] with {
+    inline given hnilFDFieldDeriver[ T, Extr ] : FieldDeriver[ (T, EmptyTuple), Extr ] with {
             type Out = EmptyTuple
 
-            override def derive : EmptyTuple = EmptyTuple
+            override def derive( extractor : Extr ) : EmptyTuple = EmptyTuple
         }
 
-    inline given hlistFDFieldDeriver[ N <: FieldName, T, S, TTail <: Tuple, Res <: Tuple ](
+    inline given hlistFDFieldDeriver[ N <: FieldName, T, F, S, VTail <: Tuple, TTail <: Tuple, Res <: Tuple ](
         using
-        fdFieldDeriver : FieldDeriver.Aux[ (N, T), Field.Aux[ T, N, S ] ],
-        next : FieldDeriver.Aux[ TTail, Res ],
-    ) : FieldDeriver.Aux[ (N, T) *: TTail, Field.Aux[ T, N, S ] *: Res ] = {
-        new FieldDeriver[ (N, T) *: TTail ] {
-            override type Out = Field.Aux[ T, N, S ] *: Res
+        fdFieldDeriver : FieldDeriver.Aux[ (T, N, F), T => F, Field.Aux[ T, F, N, S ] ],
+        next : FieldDeriver.Aux[ (T, TTail), T => VTail, Res ],
+    ) : FieldDeriver.Aux[ (T, (N, F) *: TTail), T => F *: VTail, Field.Aux[ T, F, N, S ] *: Res ] = {
+        new FieldDeriver[ (T, (N, F) *: TTail), T => F *: VTail ] {
+            override type Out = Field.Aux[ T, F, N, S ] *: Res
 
-            override def derive : Field.Aux[ T, N, S ] *: Res = {
-                val headRes : Field.Aux[ T, N, S ] = fdFieldDeriver.derive
-                headRes *: next.derive
+            override def derive( extractor : T => F *: VTail ) : Field.Aux[ T, F, N, S ] *: Res = {
+                val headExtr : T => F = ( t : T ) => extractor( t ).head
+                val headRes : Field.Aux[ T, F, N, S ] = fdFieldDeriver.derive( headExtr )
+                val tailExtr : T => VTail = ( t : T ) => extractor( t ).tail
+                headRes *: next.derive( tailExtr )
             }
         }
     }

@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
-import org.hungerford.generic.schema.product.field.Field.AuxS
+import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.{NoSchema, Primitive, Schema, SchemaDeriver, SchemaProvider}
 import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, UniqueFieldNames}
 import org.hungerford.generic.schema.product.translation.{BiMapProductTranslation, Decoder, Encoder}
@@ -21,45 +21,42 @@ object ProductTranslationTestSchemata {
     case class NoAF( intField: Int, strField: String )
 
     val noAfSchema = Schema.productBuilder[ NoAF ]
-      .addField( FieldBuilder[ Int ].primitive.fieldName( "int_field" ).build )
-      .addField( FieldBuilder[ String ].primitive.fieldName( "str_field" ).build )
+      .addField( FieldBuilder[ NoAF, Int ].primitive.name( "int_field" ).extractor( _.intField ).build )
+      .addField( FieldBuilder[ NoAF, String ].primitive.name( "str_field" ).extractor( _.strField ).build )
       .construct(
           ( int, str ) => {
               NoAF( int, str )
           }
       )
-      .deconstruct( value => (value.intField, value.strField) )
       .build
 
     case class HasAF( str: String, bool: Boolean, other: Map[ String, Double ] )
 
     val hasAfSchema = Schema.productBuilder[ HasAF ]
-      .additionalFields[ Double ].fromSchema( Schema.primitive )
-      .addField( FieldBuilder[ String ].primitive.fieldName( "str_field" ).build )
-      .addField( FieldBuilder[ Boolean ].primitive.fieldName( "bool_field" ).build )
+      .additionalFields[ Double ].fromSchema( _.other )( Schema.primitive )
+      .addField( FieldBuilder[ HasAF, String ].primitive.name( "str_field" ).extractor( _.str ).build )
+      .addField( FieldBuilder[ HasAF, Boolean ].primitive.name( "bool_field" ).extractor( _.bool ).build )
       .construct(
           ( tup, af: Map[ String, Double ] ) => {
               val (str: String, bool: Boolean) = tup
               HasAF( str, bool, af )
           }
-          )
-      .deconstruct( value => ((value.str, value.bool), value.other) )
+       )
       .build
 
     val hasAfPrimitiveSch = {
         import org.hungerford.generic.schema.primitives.Primitives.given
 
         Schema.productBuilder[ HasAF ]
-          .addField( FieldBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
-          .addField( FieldBuilder[ Boolean ].fromSchema.fieldName( "bool_field" ).build )
-          .additionalFields[ Double ].fromSchema( Schema.primitive )
+          .addField( FieldBuilder[ HasAF, String ].fromSchema.name( "str_field" ).extractor( _.str ).build )
+          .addField( FieldBuilder[ HasAF, Boolean ].fromSchema.name( "bool_field" ).extractor( _.bool ).build )
+          .additionalFields[ Double ].fromSchema( _.other )( Schema.primitive )
           .construct(
               ( tup, af ) => {
                   val (str: String, bool: Boolean) = tup
                   HasAF( str, bool, af )
               }
-              )
-          .deconstruct( value => ((value.str, value.bool), value.other) )
+          )
           .build
     }
 
@@ -71,20 +68,19 @@ object ProductTranslationTestSchemata {
 
         Schema.productBuilder[ Outside ]
           .addField(
-              FieldBuilder[ Inside ]
-                .fieldName( "inside_field" )
+              FieldBuilder[ Outside, Inside ]
+                .name( "inside_field" )
+                .extractor( _.inside )
                 .fromSchema(
                     Schema.productBuilder[ Inside ].addField(
-                        FieldBuilder[ String ].fromSchema.fieldName( "str_field" ).build
-                        )
+                        FieldBuilder[ Inside, String ].extractor( _.str ).fromSchema.name( "str_field" ).build
+                       )
                       .construct( str => Inside( str ) )
-                      .deconstruct( value => value.str )
                       .build
                     )
                 .build
               )
           .construct( inside => Outside( inside ) )
-          .deconstruct( value => value.inside )
           .build
     }
 
@@ -92,13 +88,12 @@ object ProductTranslationTestSchemata {
         import org.hungerford.generic.schema.primitives.Primitives.given
 
         Schema.productBuilder[ Inside ]
-          .addField( FieldBuilder[ String ].fromSchema.fieldName( "str_field" ).build )
+          .addField( FieldBuilder[ Inside, String ].extractor( _.str ).fromSchema.name( "str_field" ).build )
           .construct(
               str => {
                   Inside( str )
               }
-              )
-          .deconstruct( value => value.str )
+           )
           .build
     }
 
@@ -106,13 +101,12 @@ object ProductTranslationTestSchemata {
         import org.hungerford.generic.schema.primitives.Primitives.given
 
         Schema.productBuilder[ Outside ]
-          .addField( FieldBuilder[ Inside ].fromSchema( insideSchema ).fieldName( "inside_field" ).build )
+          .addField( FieldBuilder[ Outside, Inside ].extractor( _.inside ).fromSchema( insideSchema ).name( "inside_field" ).build )
           .construct(
               inside => {
                   Outside( inside )
               }
           )
-          .deconstruct( value => value.inside )
           .build
     }
 

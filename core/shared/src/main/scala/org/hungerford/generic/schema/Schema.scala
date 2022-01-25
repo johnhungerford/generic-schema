@@ -203,9 +203,9 @@ trait SchemaDsl {
         def productBuilder[ T ] : ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ] =
             ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ](
                 aftSch = NoSchema,
+                afe = (),
                 fieldDescs = EmptyTuple,
                 constr = (),
-                decons = (),
             )
 
     extension ( sch : Schema.type )

@@ -123,9 +123,8 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
         case class SubC(int: Int)
 
         val subcSch = ProductSchemaBuilder[ SubC ]
-          .addField( FieldBuilder[ Int ].fieldName( "int" ).primitive.build )
+          .addField( FieldBuilder[ SubC, Int ].name( "int" ).primitive.extractor( _.int ).build )
           .construct( SubC.apply )
-          .deconstruct( _.int )
           .build
 
         val b1 = SubtypeBuilder.empty[ SuperC, SubC, Int, "int" ]

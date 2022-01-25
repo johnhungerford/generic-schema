@@ -19,6 +19,8 @@ class FieldGetterTest extends AnyFlatSpecLike with Matchers {
 
         val tcTuple = sch.shape.deconstruct( tc )
 
+        tcTuple shouldBe ( 5, "hello", true )
+
         FieldGetter.get( tcTuple, "int", sch.shape.fieldDescriptions ) shouldBe 5
         FieldGetter.get( tcTuple, "str", sch.shape.fieldDescriptions ) shouldBe "hello"
         FieldGetter.get( tcTuple, "bool", sch.shape.fieldDescriptions ) shouldBe true

@@ -56,9 +56,8 @@ case class HttpRequest(url: String, method: HttpMethod, body: Option[String])
 val httpRequestSchema = Schema.productBuilder[HttpRequest]
   .name("HttpRequest")
   .description("Simple REST request model")
-  .addField(
-      Field.builder[HttpRequest, String]
-        .name("url")
+  .buildField[String](
+      _.name("url")
         .extractor(_.url)
         .description("Destination URL for REST request")
         .examples("http://foo.bar.org:8080", "https://host.name/endpoint")
@@ -67,16 +66,14 @@ val httpRequestSchema = Schema.productBuilder[HttpRequest]
 """))
         .build
   )
-  .addField(
-      Field.builder[HttpRequest, HttpMethod]
-        .name("method")
+  .buildField[HttpMethod](
+      _.name("method")
         .extractor(_.method)
         .fromSchema(httpMethodSchema)
         .build
   )
-  .addField(
-      Field.builder[HttpRequest, Option[String]]
-        .name("string_body")
+  .buildField[Option[String]](
+      _.name("string_body")
         .extractor(_.body)
         .primitive
         .description("Optional body of the REST request")
@@ -326,7 +323,6 @@ val userDataSchema = Schema.derivedBuilder[UserData]
   .removeField("userData")
   .additionalFields[String].primitive
   .construct(((id, name), af) => UserData(id, name, af))
-  .deconstruct(ud => ((ud.userId, ud.userName), ud.userData))
   .build
 ```
 

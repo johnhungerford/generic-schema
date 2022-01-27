@@ -41,6 +41,8 @@ case class FieldBuilder[ T, F, N, Sch, S, E ](
 }
 
 object FieldBuilder {
+    type Empty[ T, F ] = FieldBuilder[ T, F, Unit, Unit, Nothing, Unit ]
+    
     extension [ T, F, N <: FieldName, Sch <: Schema.Aux[ F, S ], S, E ]( fieldBuilder : FieldBuilder[ T, F, N, Sch, S, T => F ] )
         def build : Field.Aux[ T, F, N, S ] =
             FieldCase[ T, F, N, S ](
@@ -54,7 +56,7 @@ object FieldBuilder {
                 fieldBuilder.dep,
             )
 
-    def apply[ T, F ] : FieldBuilder[ T, F, Unit, Unit, Nothing, Unit ] =
+    def apply[ T, F ] : Empty[ T, F ] =
         FieldBuilder[ T, F, Unit, Unit, Nothing, Unit ]((),(),(),None,Set.empty[Validator[F]],Nil,None,false)
 
     def from[ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] ) : FieldBuilder[ T, F, N, Schema.Aux[ F, S ], S, T => F ] =

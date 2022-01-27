@@ -48,10 +48,39 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           )
     }
 
+    it should "be able to build fields" in {
+        Schema.productBuilder[ TestCase ]
+          .buildField[ Int ](
+              _.fromSchema( Schema.primitive )
+                .name( "some name" )
+                .extractor( _.int )
+                .build
+              )
+          .buildField[ String ](
+              _.fromSchema( Schema.primitive )
+                .name( "some other name" )
+                .extractor( _.str )
+                .build
+              )
+          .buildField[ Boolean ](
+              _.fromSchema( Schema.primitive )
+                .description( "test description" )
+                .name( "bool" )
+                .extractor( _ => true )
+                .build
+              )
+          .buildField(
+              _.fromSchema( Schema.primitive )
+                .name( "and another" )
+                .extractor( _ => BigInt( "12345678987654321" ) )
+                .build
+              )
+    }
+
     it should "be able to add constructor and build" in {
         Schema.productBuilder[ TestCase ]
-          .addField( FieldBuilder[ TestCase, Int ].primitive.name( "int" ).extractor( _.int ).build )
-          .addField( FieldBuilder[ TestCase, String ].primitive.name( "str" ).extractor( _.str ).build )
+          .buildField[ Int ]( _.primitive.name( "int" ).extractor( _.int ).build )
+          .buildField[ String ]( _.primitive.name( "str" ).extractor( _.str ).build )
           .construct( (int, str) => TestCase( int, str ) )
           .build
     }

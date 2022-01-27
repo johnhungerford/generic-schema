@@ -23,49 +23,51 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
     using
     fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
 ) {
-   def name( name : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( nm = Some( name ) )
-   def description( description : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( desc = Some( description ) )
-   def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] =
-       validate ( validator +: otherValidators )
-   def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( vals = validators.toSet )
-   def examples( example : T, otherExamples : T* ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] =
-     examples( example +: otherExamples )
-   def examples( examples : Seq[ T ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( exs = examples.toSeq )
-   def deprecate : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( dep = true )
+    def name( name : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( nm = Some( name ) )
+    def description( description : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( desc = Some( description ) )
+    def validate( validator : Validator[ T ], otherValidators : Validator[ T ]* ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] =
+        validate ( validator +: otherValidators )
 
-   def addField[ F, N <: FieldName, S ](
-       fd : Field.Aux[ T, F, N, S ],
-   )(
-       using
-       fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
-       uniq : UniqueFieldNames[ Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ] ],
-   ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ] = {
-       val newFieldDescs = fieldDescs ++ (fd *: EmptyTuple)
-       copy[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ]( fieldDescs = newFieldDescs, constr = () )
-   }
+    def validate( validators : Iterable[ Validator[ T ] ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( vals = validators.toSet )
+    def examples( example : T, otherExamples : T* ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = examples( example +: otherExamples )
+    def examples( examples : Seq[ T ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( exs = examples.toSeq )
+    def deprecate : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( dep = true )
+    def addField[ F, N <: FieldName, S ](
+        fd : Field.Aux[ T, F, N, S ],
+    )(
+        using
+        fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
+        uniq : UniqueFieldNames[ Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ] ],
+    ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ] = {
+        val newFieldDescs = fieldDescs ++ (fd *: EmptyTuple)
+        copy[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ]( fieldDescs = newFieldDescs, constr = () )
+    }
 
-   def removeField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple ](
-       fieldName : N,
-   )(
-       using
-       rm : FieldRemover.Aux[ N, R, NewR ],
-       fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], NewR, NewRV ],
-   ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, AFE, Unit ] = {
-       val newFields = rm.remove( fieldDescs )
-       copy[ T, NewR, NewRV, AF, AFS, AFE, Unit ](
-           fieldDescs = newFields,
-           constr = (),
-       )
-   }
+    def buildField[ F ] : ProductFieldBuilder[ T, F, R, RV, AF, AFS, AFE, C ] =
+        ProductFieldBuilder[ T, F, R, RV, AF, AFS, AFE, C ]( this )
 
-   def rebuildField[ N <: FieldName, F, S ](
-       fieldName : N,
-   )(
-       using
-       fr : FieldRetriever.Aux[ N, R, Field.Aux[ T, F, N, S ] ]
-   ) : FieldUpdater[F, N, S, T, R, RV, AF, AFS, AFE, C ] = FieldUpdater[F, N, S, T, R, RV, AF, AFS, AFE, C ](
-      fr.retrieve( fieldDescs ),
-      this
+    def removeField[ N <: FieldName, NewR <: Tuple, NewRV <: Tuple ](
+        fieldName : N,
+    )(
+        using
+        rm : FieldRemover.Aux[ N, R, NewR ],
+        fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], NewR, NewRV ],
+    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, AFE, Unit ] = {
+        val newFields = rm.remove( fieldDescs )
+        copy[ T, NewR, NewRV, AF, AFS, AFE, Unit ](
+            fieldDescs = newFields,
+            constr = (),
+        )
+    }
+
+    def rebuildField[ N <: FieldName, F, S ](
+        fieldName : N,
+    )(
+        using
+        fr : FieldRetriever.Aux[ N, R, Field.Aux[ T, F, N, S ] ]
+    ) : FieldUpdater[F, N, S, T, R, RV, AF, AFS, AFE, C ] = FieldUpdater[F, N, S, T, R, RV, AF, AFS, AFE, C ](
+        fr.retrieve( fieldDescs ),
+        this
     )
 
     def modifyComponent[ Sel <: Tuple, F, N <: FieldName, FS, Inner ](
@@ -283,6 +285,19 @@ case class FieldComponentUpdater[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, F
     ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, AFE, C ] = {
         cu.update( builder )( updater )
     }
+}
+
+case class ProductFieldBuilder[ T, F, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
+    builder : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ],
+) {
+    def apply[ N <: FieldName, S ](
+        build : FieldBuilder.Empty[ T, F ] => Field.Aux[ T, F, N, S ],
+    )(
+        using
+        fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
+        uniq : UniqueFieldNames[ Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ] ],
+    ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ] =
+        builder.addField[ F, N, S ]( build( FieldBuilder[ T, F ] ) )
 }
 
 object ProductSchemaBuilder {

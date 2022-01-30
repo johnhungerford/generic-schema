@@ -89,17 +89,17 @@ object IntEquiv {
     given eq9 : IntEquiv[ 9 ] with { type N = Nat._9 }
     given eq10 : IntEquiv[ 10 ] with { type N = Nat._10 }
     given eq11 : IntEquiv[ 11 ] with { type N = Nat._11 }
-    given eq12 : IntEquiv[ 11 ] with { type N = Nat._12 }
-    given eq13 : IntEquiv[ 11 ] with { type N = Nat._13 }
-    given eq14 : IntEquiv[ 11 ] with { type N = Nat._14 }
-    given eq15 : IntEquiv[ 11 ] with { type N = Nat._15 }
-    given eq16 : IntEquiv[ 11 ] with { type N = Nat._16 }
-    given eq17 : IntEquiv[ 11 ] with { type N = Nat._17 }
-    given eq18 : IntEquiv[ 11 ] with { type N = Nat._18 }
-    given eq19 : IntEquiv[ 11 ] with { type N = Nat._19 }
-    given eq20 : IntEquiv[ 11 ] with { type N = Nat._20 }
-    given eq21 : IntEquiv[ 11 ] with { type N = Nat._21 }
-    given eq22 : IntEquiv[ 11 ] with { type N = Nat._22 }
+    given eq12 : IntEquiv[ 12 ] with { type N = Nat._12 }
+    given eq13 : IntEquiv[ 13 ] with { type N = Nat._13 }
+    given eq14 : IntEquiv[ 14 ] with { type N = Nat._14 }
+    given eq15 : IntEquiv[ 15 ] with { type N = Nat._15 }
+    given eq16 : IntEquiv[ 16 ] with { type N = Nat._16 }
+    given eq17 : IntEquiv[ 17 ] with { type N = Nat._17 }
+    given eq18 : IntEquiv[ 18 ] with { type N = Nat._18 }
+    given eq19 : IntEquiv[ 19 ] with { type N = Nat._19 }
+    given eq20 : IntEquiv[ 20 ] with { type N = Nat._20 }
+    given eq21 : IntEquiv[ 21 ] with { type N = Nat._21 }
+    given eq22 : IntEquiv[ 22 ] with { type N = Nat._22 }
 
 
 }

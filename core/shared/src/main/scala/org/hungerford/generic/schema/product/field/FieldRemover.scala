@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.types.Remover
+import org.hungerford.generic.schema.types.{Remover, Replacer}
 
 trait FieldRemover[ N <: Singleton, R <: Tuple ] {
     type Out <: Tuple
@@ -50,7 +50,7 @@ object FieldRemover extends LowPriorityFieldRemovers {
     ) : rm.Out = rm.remove( from )
 }
 
-trait FieldReplacer[ N <: FieldName, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS ] {
+trait FieldReplacer[ N <: Singleton, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS ] {
     type Out <: Tuple
 
     def replace( fields : R, withField : Field.Aux[ NewT, NewF, NewN, NewS ] ) : Out
@@ -73,7 +73,7 @@ trait LowPriorityFieldReplacers {
 }
 
 object FieldReplacer extends LowPriorityFieldReplacers {
-    type Aux[ N <: FieldName, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS, O <: Tuple ] =
+    type Aux[ N <: Singleton, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS, O <: Tuple ] =
         FieldReplacer[ N, R, NewT, NewF, NewN, NewS ] { type Out = O }
     
     given [ OldT, OldF, OldN <: FieldName, OldS, NewT, NewF, NewN <: FieldName, NewS, Tail <: Tuple ] : FieldReplacer.Aux[ OldN, Field.Aux[ OldT, OldF, OldN, OldS ] *: Tail, NewT, NewF, NewN, NewS, Field.Aux[ NewT, NewF, NewN, NewS ] *: Tail ] = {
@@ -87,8 +87,20 @@ object FieldReplacer extends LowPriorityFieldReplacers {
             }
         }
 
-    def replace[ N <: FieldName, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS ](
-        fieldName : N,
+    given fieldReplacerByIndex[ I <: Int & Singleton, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS, Res <: Tuple ](
+        using
+        rp : Replacer.Aux[ I, R, Field.Aux[ NewT, NewF, NewN, NewS ], Res ],
+    ) : FieldReplacer[ I, R, NewT, NewF, NewN, NewS ] with {
+        type Out = Res
+
+        def replace(
+            fields : R,
+            withField : Field.Aux[ NewT, NewF, NewN, NewS ],
+        ) : Res = rp.replace( fields, withField )
+    }
+
+    def replace[ N <: Singleton, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS ](
+        identifier : N,
         from : R,
         withField : Field.Aux[ NewT, NewF, NewN, NewS ],
     )(

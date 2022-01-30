@@ -37,4 +37,24 @@ class FieldRemoverTest extends AnyFlatSpecLike with Matchers {
           res2.tail.head.fieldName shouldBe "str"
      }
 
+     it should "remove a field based on index" in {
+          val res = FieldRemover.remove( 0, fields )
+
+          res.size shouldBe 2
+          res.head.fieldName shouldBe "str"
+          res.tail.head.fieldName shouldBe "bool"
+
+          val res1 = FieldRemover.remove( 1, fields )
+
+          res1.size shouldBe 2
+          res1.head.fieldName shouldBe "int"
+          res1.tail.head.fieldName shouldBe "bool"
+
+          val res2 = FieldRemover.remove( 2, fields )
+
+          res2.size shouldBe 2
+          res2.head.fieldName shouldBe "int"
+          res2.tail.head.fieldName shouldBe "str"
+     }
+
 }

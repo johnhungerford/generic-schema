@@ -12,4 +12,12 @@ class GenericSchemaDsl( conf : SchemaConfiguration )
 
     given SchemaConfiguration = conf
 
+    val Schema = org.hungerford.generic.schema.Schema
+    type Schema[ T ] = org.hungerford.generic.schema.Schema[ T ]
+
+    val Field = org.hungerford.generic.schema.product.field.Field
+    type Field[ T, F ] = org.hungerford.generic.schema.product.field.Field[ T, F ]
+
+    val Subtype = org.hungerford.generic.schema.coproduct.subtype.Subtype
+    type Subtype[ T, St, Discr ] = org.hungerford.generic.schema.coproduct.subtype.Subtype[ T, St, Discr ]
 }

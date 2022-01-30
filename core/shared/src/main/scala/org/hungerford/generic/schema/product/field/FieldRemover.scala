@@ -1,8 +1,9 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.product.ProductShape
+import org.hungerford.generic.schema.types.Remover
 
-trait FieldRemover[ N <: FieldName, R <: Tuple ] {
+trait FieldRemover[ N <: Singleton, R <: Tuple ] {
     type Out <: Tuple
   
     def remove( fields : R ) : Out
@@ -22,7 +23,7 @@ trait LowPriorityFieldRemovers {
 }
 
 object FieldRemover extends LowPriorityFieldRemovers {
-    type Aux[ N <: FieldName, R <: Tuple, O <: Tuple ] =
+    type Aux[ N <: Singleton, R <: Tuple, O <: Tuple ] =
         FieldRemover[ N, R ] { type Out = O }
 
     given fieldRemover[ T, F, N <: FieldName, S, Tail <: Tuple ] : FieldRemover.Aux[ N, Field.Aux[ T, F, N, S ] *: Tail, Tail ] = new FieldRemover[ N, Field.Aux[ T, F, N, S ] *: Tail ] {
@@ -31,7 +32,16 @@ object FieldRemover extends LowPriorityFieldRemovers {
         def remove( fields : Field.Aux[ T, F, N, S ] *: Tail ) : Tail = fields.tail
     }
 
-    def remove[ N <: FieldName, R <: Tuple, Res <: Tuple ](
+    given fieldRemoverByIndex[ I <: Int & Singleton, R <: Tuple, Res <: Tuple ](
+        using
+        fr : Remover.Aux[ I, R, Res ],
+    ) : FieldRemover[ I, R ] with {
+        type Out = Res
+
+        def remove( fields : R ) : Res = fr.remove( fields )
+    }
+
+    def remove[ N <: Singleton, R <: Tuple, Res <: Tuple ](
         fieldName : N,
         from : R,
     )(

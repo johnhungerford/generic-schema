@@ -28,6 +28,16 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         fld.schema.shape shouldBe ()
     }
 
+    it should "retrieve a nested field by index" in {
+        val innerSch = Schema.derived[ Inner ]
+        val fld = ComponentRetriever.retrieve( sch )( Selector.field( 1 ) /- 0 /- 1 )
+        summon[ fld.type <:< Field[ Innerest, Double ] ]
+        fld.fieldName shouldBe "dbl"
+        fld.description shouldBe None
+        fld.validators shouldBe Set.empty[ Validator[ Double ] ]
+        fld.schema.shape shouldBe ()
+    }
+
     sealed trait OuterT
     final case class SubT() extends OuterT
     sealed trait InnerT extends OuterT

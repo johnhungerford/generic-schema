@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.types.{Remover, Replacer}
+import org.hungerford.generic.schema.types.{Nat, Remover, Replacer, Retriever}
 
 trait FieldRemover[ N <: Singleton, R <: Tuple ] {
     type Out <: Tuple
@@ -109,14 +109,14 @@ object FieldReplacer extends LowPriorityFieldReplacers {
     ) : replacer.Out = replacer.replace( from, withField )
 }
 
-trait FieldRetriever[ N <: FieldName, R <: Tuple ] {
+trait FieldRetriever[ N <: Singleton, R <: Tuple ] {
     type Field
 
     def retrieve( from : R ) : Field
 }
 
 trait LowPriorityFieldRetrievers {
-    given [ N <: FieldName, Head, Tail <: Tuple, Next ](
+    given [ N <: Singleton, Head, Tail <: Tuple, Next ](
         using
         next : FieldRetriever.Aux[ N, Tail, Next ],
     ) : FieldRetriever.Aux[ N, Head *: Tail, Next ] = {
@@ -130,7 +130,7 @@ trait LowPriorityFieldRetrievers {
 }
 
 object FieldRetriever extends LowPriorityFieldRetrievers {
-    type Aux[ N <: FieldName, R <: Tuple, F ] =
+    type Aux[ N <: Singleton, R <: Tuple, F ] =
         FieldRetriever[ N, R ] { type Field = F }
 
     given [ N <: FieldName, T, F, S, Tail <: Tuple ] :
@@ -143,7 +143,18 @@ object FieldRetriever extends LowPriorityFieldRetrievers {
         }
     }
 
-    def retrieve[ N <: FieldName, R <: Tuple ](
+    given fieldRetrieverByIndex[ I <: Int & Singleton, N <: Nat, R <: Tuple, T, F, Nm <: FieldName, S ](
+        using
+        ev : Nat.IntA[ I, N ],
+        rt : Retriever.Aux[ N, R, Field.Aux[ T, F, Nm, S ] ],
+    ) : FieldRetriever[ I, R ] with {
+        type Field = Field.Aux[ T, F, Nm, S ]
+
+        override def retrieve( from : R ) : Field.Aux[ T, F, Nm, S ] =
+            rt.retrieve( from )
+    }
+
+    def retrieve[ N <: Singleton, R <: Tuple ](
         fieldName : N,
         fields : R,
     )(

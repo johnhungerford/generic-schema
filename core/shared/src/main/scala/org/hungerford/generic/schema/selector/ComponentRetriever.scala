@@ -15,7 +15,7 @@ trait ComponentRetriever[ Outer, Sel ] {
 }
 
 trait LowPriorityComponentRetrievers {
-    given ambigFieldRetriever[ Outer, N <: FieldName, I ](
+    given ambigFieldRetriever[ Outer, N <: Singleton, I ](
         using
         fr : ComponentRetriever.Aux[ Outer, FieldSelector[ N ], I ],
     ) : ComponentRetriever[ Outer, AmbigSelector[ N ] ] with {
@@ -24,7 +24,7 @@ trait LowPriorityComponentRetrievers {
         override def retrieve( from : Outer ) : I = fr.retrieve( from )
     }
 
-    given ambigSubTypeRetriever[ Outer, N <: FieldName, I ](
+    given ambigSubTypeRetriever[ Outer, N <: Singleton, I ](
         using
         fr : ComponentRetriever.Aux[ Outer, SubTypeSelector[ N ], I ],
     ) : ComponentRetriever[ Outer, AmbigSelector[ N ] ] with {
@@ -66,24 +66,24 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         }
     }
 
-    given fromProductSchema[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, SelN <: FieldName, F, S ](
+    given fromProductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, S ](
         using
-        fr : FieldRetriever.Aux[ SelN, R, Field.Aux[ T, F, SelN, S ] ],
+        fr : FieldRetriever.Aux[ SelN, R, Field.Aux[ T, F, N, S ] ],
     ) : ComponentRetriever[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ SelN ] ] with {
-        override type Inner = Field.Aux[ T, F, SelN, S ]
+        override type Inner = Field.Aux[ T, F, N, S ]
 
-        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Field.Aux[ T, F, SelN, S ] = {
+        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Field.Aux[ T, F, N, S ] = {
             fr.retrieve( from.shape.fieldDescriptions )
         }
     }
 
-    given fromProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, SelN <: FieldName, F, S ](
+    given fromProductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, S ](
         using
-        fr : FieldRetriever.Aux[ SelN, R, Field.Aux[ T, F, SelN, S ] ],
+        fr : FieldRetriever.Aux[ SelN, R, Field.Aux[ T, F, N, S ] ],
     ) : ComponentRetriever[ ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ], FieldSelector[ SelN ] ] with {
-        override type Inner = Field.Aux[ T, F, SelN, S ]
+        override type Inner = Field.Aux[ T, F, N, S ]
 
-        override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ) : Field.Aux[ T, F, SelN, S ] = {
+        override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ) : Field.Aux[ T, F, N, S ] = {
             fr.retrieve( from.fieldDescs )
         }
     }

@@ -19,8 +19,18 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     case class Five( dbl : Double, map : Map[ Int, String ], four : Four )
     val fiveSch = Schema.derived[ Five ]
 
-    it should "update a schema's field using a selector" in {
+    it should "update a schema's field using a selector by name" in {
         val newSch = ComponentUpdater.update( oneSch )( Selector.field( "str" ) ){ field =>
+            FieldBuilder.from( field )
+              .name( "string_field" )
+              .build
+        }
+
+        newSch.shape.fieldNames shouldBe Set( "string_field" )
+    }
+
+    it should "update a schema's field using a selector by index" in {
+        val newSch = ComponentUpdater.update( oneSch )( Selector.field( 0 ) ){ field =>
             FieldBuilder.from( field )
               .name( "string_field" )
               .build
@@ -31,6 +41,17 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
 
     it should "update a schema's nested field using a selector" in {
         val newSch = ComponentUpdater.update( twoSch )( Selector.field( "one" ) / "str" ){ field =>
+            FieldBuilder.from( field )
+              .name( "string_field_2" )
+              .build
+        }
+
+        newSch.shape.fieldNames shouldBe Set( "one" )
+        newSch.shape.fieldDescriptions.head.schema.shape.fieldNames shouldBe Set( "string_field_2" )
+    }
+
+    it should "update a schema's nested field using a selector by index" in {
+        val newSch = ComponentUpdater.update( twoSch )( Selector.field( 0 ) / 0 ){ field =>
             FieldBuilder.from( field )
               .name( "string_field_2" )
               .build
@@ -54,9 +75,38 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         oneS.shape.fieldDescriptions.head.fieldName shouldBe "string_field_5"
     }
 
+    it should "update a highly nested field using a selector by index" in {
+        val newSch = ComponentUpdater.update( fiveSch )( Selector.field( 2 ) / 1 / 0 / 0 / 0 ) { field =>
+            FieldBuilder.from( field )
+              .name( "string_field_5" )
+              .build
+        }
+
+        val fourS = newSch.shape.fieldDescriptions.tail.tail.head.schema
+        val threeS = fourS.shape.fieldDescriptions.tail.head.schema
+        val twoS = threeS.shape.fieldDescriptions.head.schema
+        val oneS = twoS.shape.fieldDescriptions.head.schema
+        oneS.shape.fieldDescriptions.head.fieldName shouldBe "string_field_5"
+    }
+
     it should "update a highly nest field using an ambiguous selector" in {
         import Selector.given
         val newSch = ComponentUpdater.update( fiveSch )( "four" / "three" / "two" / "one" / "str" ) { field =>
+            FieldBuilder.from( field )
+              .name( "string_field_5" )
+              .build
+        }
+
+        val fourS = newSch.shape.fieldDescriptions.tail.tail.head.schema
+        val threeS = fourS.shape.fieldDescriptions.tail.head.schema
+        val twoS = threeS.shape.fieldDescriptions.head.schema
+        val oneS = twoS.shape.fieldDescriptions.head.schema
+        oneS.shape.fieldDescriptions.head.fieldName shouldBe "string_field_5"
+    }
+
+    it should "update a highly nest field using an ambiguous selector by index" in {
+        import Selector.given
+        val newSch = ComponentUpdater.update( fiveSch )( Selector.field( 2 ) / 1 / 0 / 0 / 0 ) { field =>
             FieldBuilder.from( field )
               .name( "string_field_5" )
               .build
@@ -95,6 +145,22 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         newSch.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
     }
 
+    it should "update a subtype by index" in {
+        val sch = Schema.derived[ OuterT ]
+
+        val newSch = ComponentUpdater.update( sch )( Selector.subtype( 1 ) ) { subtype =>
+            SubtypeBuilder.from( subtype )
+              .typeName( "NEW-NAME" )
+              .fromSchema( Schema.primitive[ InnerT ] )
+              .build
+        }
+
+        newSch.shape.subtypeDescriptions.size shouldBe 2
+        newSch.shape.subtypeDescriptions.head.typeName shouldBe "SubT"
+        newSch.shape.subtypeDescriptions.tail.head.typeName shouldBe "NEW-NAME"
+        newSch.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
+    }
+
     it should "update from a subtype" in {
         val st = Schema.derived[ OuterT ]( "InnerT" )
 
@@ -114,10 +180,45 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         newSt.schema.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
     }
 
+    it should "update from a subtype by index" in {
+        val st = Schema.derived[ OuterT ]( "InnerT" )
+
+        st.schema.shape.subtypeDescriptions.tail.head.typeName shouldBe "SubT2"
+        st.schema.shape.subtypeDescriptions.tail.head.schema.shape should not be( () )
+
+        val newSt = ComponentUpdater.update( st )( Selector.subtype( 1 ) ) { subtype =>
+            SubtypeBuilder.from( subtype )
+              .typeName( "NEW-NAME" )
+              .fromSchema( Schema.primitive )
+              .build
+        }
+
+        newSt.schema.shape.subtypeDescriptions.size shouldBe 3
+        newSt.schema.shape.subtypeDescriptions.head.typeName shouldBe "SubT1"
+        newSt.schema.shape.subtypeDescriptions.tail.head.typeName shouldBe "NEW-NAME"
+        newSt.schema.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
+    }
+
     it should "update from a coproduct schema builder" in {
         val schBuilder = Schema.derivedBuilder[ OuterT ]
 
         val newSch = ComponentUpdater.update( schBuilder )( Selector.subtype( "InnerT" ) ) { subtype =>
+            SubtypeBuilder.from( subtype )
+              .typeName( "NEW-NAME" )
+              .fromSchema( Schema.primitive[ InnerT ] )
+              .build
+        }
+
+        newSch.sts.size shouldBe 2
+        newSch.sts.head.typeName shouldBe "SubT"
+        newSch.sts.tail.head.typeName shouldBe "NEW-NAME"
+        newSch.sts.tail.head.schema.shape shouldBe ()
+    }
+
+    it should "update from a coproduct schema builder by index" in {
+        val schBuilder = Schema.derivedBuilder[ OuterT ]
+
+        val newSch = ComponentUpdater.update( schBuilder )( Selector.subtype( 1 ) ) { subtype =>
             SubtypeBuilder.from( subtype )
               .typeName( "NEW-NAME" )
               .fromSchema( Schema.primitive[ InnerT ] )

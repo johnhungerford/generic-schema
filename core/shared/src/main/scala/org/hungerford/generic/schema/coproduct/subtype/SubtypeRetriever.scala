@@ -1,10 +1,11 @@
 package org.hungerford.generic.schema.coproduct.subtype
 
 import org.hungerford.generic.schema.coproduct.subtype
+import org.hungerford.generic.schema.types.{Nat, Retriever}
 
 import scala.util.NotGiven
 
-trait SubtypeRetriever[ N <: TypeName, R <: Tuple ] {
+trait SubtypeRetriever[ N <: Singleton, R <: Tuple ] {
     type Subtype
 
     def retrieve( from : R ) : Subtype
@@ -25,9 +26,9 @@ trait LowPrioritySubtypeRetrievers {
 }
 
 object SubtypeRetriever extends LowPrioritySubtypeRetrievers {
-    type Aux[ N <: TypeName, R <: Tuple, ST ] = SubtypeRetriever[ N, R ] { type Subtype = ST }
+    type Aux[ N <: Singleton, R <: Tuple, ST ] = SubtypeRetriever[ N, R ] { type Subtype = ST }
 
-    def apply[ N <: TypeName, R <: Tuple ](
+    def apply[ N <: Singleton, R <: Tuple ](
         using
         str : SubtypeRetriever[ N, R ],
     ) : SubtypeRetriever.Aux[ N, R, str.Subtype ] = str
@@ -43,7 +44,18 @@ object SubtypeRetriever extends LowPrioritySubtypeRetrievers {
         }
     }
 
-    def retrieve[ N <: TypeName, R <: Tuple ](
+    given retrieverByIndex[ I <: Int & Singleton, N <: Nat, R <: Tuple, Elem ](
+        using
+        ev : Nat.IntA[ I, N ],
+        rt : Retriever.Aux[ N, R, Elem ],
+    ) : SubtypeRetriever[ I, R ] with {
+        type Subtype = Elem
+
+        override def retrieve( from: R ): Subtype = rt.retrieve( from )
+
+    }
+
+    def retrieve[ N <: Singleton, R <: Tuple ](
         typeName : N,
         subtypes : R,
     )(

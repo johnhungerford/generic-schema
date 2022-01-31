@@ -25,7 +25,7 @@ class SelectorTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Ma
     }
 
     it should "build a selector from a string using AmbigSelector" in {
-        import Selector.*
+        import Selector.{*, given}
 
         val something = "ambiguous" /~ "subtype" /- "field"
 

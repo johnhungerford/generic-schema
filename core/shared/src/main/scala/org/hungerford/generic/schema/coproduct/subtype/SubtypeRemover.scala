@@ -1,13 +1,15 @@
 package org.hungerford.generic.schema.coproduct.subtype
 
-trait SubtypeRemover[ N <: TypeName, R <: Tuple ] {
+import org.hungerford.generic.schema.types.{Nat, Remover}
+
+trait SubtypeRemover[ N <: Singleton, R <: Tuple ] {
     type Out <: Tuple
 
     def remove( from : R ) : Out
 }
 
 trait LowPrioritySubtypeRemovers {
-    given notFound[ N <: TypeName, Head, Tail <: Tuple, NextRes <: Tuple ](
+    given notFound[ N <: Singleton, Head, Tail <: Tuple, NextRes <: Tuple ](
         using
         next : SubtypeRemover.Aux[ N, Tail, NextRes ],
     ) : SubtypeRemover[ N, Head *: Tail ] with {
@@ -18,9 +20,9 @@ trait LowPrioritySubtypeRemovers {
 }
 
 object SubtypeRemover extends LowPrioritySubtypeRemovers {
-    type Aux[ N <: TypeName, R <: Tuple, O ] = SubtypeRemover[ N, R ] { type Out = O }
+    type Aux[ N <: Singleton, R <: Tuple, O ] = SubtypeRemover[ N, R ] { type Out = O }
 
-    def apply[ N <: TypeName, R <: Tuple ](
+    def apply[ N <: Singleton, R <: Tuple ](
         using
         str : SubtypeRemover[ N, R ],
     ) : SubtypeRemover.Aux[ N, R, str.Out ] = str
@@ -34,7 +36,18 @@ object SubtypeRemover extends LowPrioritySubtypeRemovers {
          def remove( from: SubT *: Tail ): Out = from.tail
     }
 
-    def remove[ N <: TypeName, R <: Tuple ](
+    given subtypeRemoverByIndex[ I <: Int & Singleton, N <: Nat, R <: Tuple, Res <: Tuple ](
+        using
+        ev : Nat.IntA[ I, N ],
+        rp : Remover.Aux[ N, R, Res ],
+    ) : SubtypeRemover[ I, R ] with {
+        type Out = Res
+
+        override def remove( from: R ) : Res =
+            rp.remove( from )
+    }
+
+    def remove[ N <: Singleton, R <: Tuple ](
         typeName : N,
         from : R,
     )(

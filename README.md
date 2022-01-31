@@ -347,10 +347,18 @@ val updatedHttpRequestSchema =
         _.withDescription("Create or update a record")
           .modifySchema(_.withName("Upsert"))
     )
+    
+// OR
+
+// Update as above, using fields and subtypes indices instead of
+// field names. The `select` method is needed here.
+val updatedHttpRequestSchema =
+    httpRequestSchema.modifyComponent(select(1) / 2)(
+        _.withDescription("Create or update a record")
+          .modifySchema(_.withName("Upsert"))
+        )
 
 // Retrieve the "method" field description from the new http request schema
 // defined above, and extract its schema
 val updatedHttpMethodSchema = updatedHttpRequestSchema("method").schema
 ```
-
-

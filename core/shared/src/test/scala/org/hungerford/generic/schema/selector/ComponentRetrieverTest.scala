@@ -18,7 +18,7 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
 
     val sch = Schema.derived[ Outer ]
 
-    it should "retrieve a nested field" in {
+    it should "retrieve a nested field by name" in {
         val innerSch = Schema.derived[ Inner ]
         val fld = ComponentRetriever.retrieve( sch )( Selector.field( "inner" ) /- "innerest" /- "dbl" )
         summon[ fld.type <:< Field[ Innerest, Double ] ]
@@ -46,7 +46,7 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
     sealed trait CoreT extends InnerT
     final case class SubT3(str : String) extends CoreT
 
-    it should "retrieve a nested subtype" in {
+    it should "retrieve a nested subtype by name" in {
         val sch = Schema.derived[ OuterT ]
 
         val st = ComponentRetriever.retrieve( sch )( Selector.subtype( "InnerT" ) /~ "CoreT" /~ "SubT3" )
@@ -57,10 +57,28 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         st.schema.shape.fieldDescriptions.head.fieldName shouldBe "str"
     }
 
-    it should "retrieve a subtype from a schema builder" in {
+    it should "retrieve a nested subtype by index" in {
+        val sch = Schema.derived[ OuterT ]
+
+        val st = ComponentRetriever.retrieve( sch )( Selector.subtype( 1 ) /~ 2 /~ 0 )
+        summon[ st.type <:< Subtype[ CoreT, SubT3, Unit ] ]
+        st.typeName shouldBe "SubT3"
+        st.description shouldBe None
+        st.validators shouldBe Set.empty[ Validator[ SubT3 ] ]
+        st.schema.shape.fieldDescriptions.head.fieldName shouldBe "str"
+    }
+
+    it should "retrieve a subtype from a schema builder by name" in {
         val schBuilder = Schema.derivedBuilder[ OuterT ]
 
         val st = ComponentRetriever.retrieve( schBuilder )( Selector.subtype( "InnerT" ) )
+        st.typeName shouldBe "InnerT"
+    }
+
+    it should "retrieve a subtype from a schema builder by index" in {
+        val schBuilder = Schema.derivedBuilder[ OuterT ]
+
+        val st = ComponentRetriever.retrieve( schBuilder )( Selector.subtype( 1 ) )
         st.typeName shouldBe "InnerT"
     }
 

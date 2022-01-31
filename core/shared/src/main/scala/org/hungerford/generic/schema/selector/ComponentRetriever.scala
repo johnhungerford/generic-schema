@@ -100,18 +100,18 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         }
     }
 
-    given fromCoproductSchema[ T, R <: Tuple, RV <: Tuple, D, DN, SelN <: TypeName, ST, DV, STS ](
+    given fromCoproductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, D, DN, N <: TypeName, ST, DV, STS ](
         using
-        fr : SubtypeRetriever.Aux[ SelN, R, Subtype.Aux[ T, ST, D, DN, DV, SelN, STS] ],
+        fr : SubtypeRetriever.Aux[ SelN, R, Subtype.Aux[ T, ST, D, DN, DV, N, STS] ],
     ) : ComponentRetriever[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ] ] with {
-        override type Inner = Subtype.Aux[ T, ST, D, DN, DV, SelN, STS]
+        override type Inner = Subtype.Aux[ T, ST, D, DN, DV, N, STS]
 
         override def retrieve( from : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ) : Inner = {
             fr.retrieve( from.shape.subtypeDescriptions )
         }
     }
 
-    given fromCoproductSchemaBuilder[ T, R <: Tuple, D, DN, SelN <: TypeName,  ST ](
+    given fromCoproductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, D, DN, ST ](
         using
         fr : SubtypeRetriever.Aux[ SelN, R, ST ],
     ) : ComponentRetriever[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ] ] with {

@@ -114,4 +114,29 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
         newSc.description shouldBe Some( "test-description" )
     }
 
+    it should "allow retrieval and modification of deeply nested component involving both products and coproducts by index" in {
+        import TestSchemaDsl.*
+        import org.hungerford.generic.schema.selector.Selector.field
+
+        val sch = Schema.derived[ Wrapper ]
+
+        val subComponent = sch( field( 0 ) / 1 / 1 / 0 / 1 / 0 )
+        subComponent.fieldName shouldBe "flt"
+        subComponent.schema.shape shouldBe ()
+        subComponent.description shouldBe None
+
+        val newSch = sch.modifyComponent( field( 0 ) / 1 / 1 / 0 / 1 / 0 )(
+            _.rebuild
+              .name( "NEW_NAME" )
+              .description( "test-description" )
+              .build
+            )
+
+        val newSc = newSch( field( 0 ) / 1 / 1 / 0 / 1 / 0 )
+
+        newSc.fieldName shouldBe "NEW_NAME"
+        newSc.schema.shape shouldBe ()
+        newSc.description shouldBe Some( "test-description" )
+    }
+
 }

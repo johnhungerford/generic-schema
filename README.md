@@ -106,7 +106,8 @@ val userDataSchema = Schema.productBuilder[UserData]
 
 The principle motivation behind this project is to allow you to generate a single, 
 comprehensive description of a data types that can inform a variety of different 
-I/O tasks, like serialization and documentation, with guaranteed consistency.
+I/O tasks like serialization and documentation generation with guaranteed 
+consistency.
 
 In order to support this without making generic-schema itself responsible for 
 serialization and API doc generation, it supports translation to type classes from 
@@ -311,11 +312,11 @@ val httpRequestSchema = Schema.derivedBuilder[HttpRequest]
   .description("Http method for a REST request")
   .examples(Get, Post, Put, Delete)
   .build
+```
 
-val userDataSchema = Schema.derived[UserData]
+Convert a derived product to an open product:
 
-// OR
-
+```scala
 // Since the field "userData" will automatically be recognized as a regular
 // product field, we need to update the schema to make it function as an
 // open product
@@ -348,10 +349,11 @@ val updatedHttpRequestSchema =
           .modifySchema(_.withName("Upsert"))
     )
     
-// OR
+// --- OR ---
 
-// Update as above, using fields and subtypes indices instead of
-// field names. The `select` method is needed here.
+// Same as above, but using indices instead field and subtype names. 
+// The `select` method is needed here because `/` is a predefined method
+// on Int.
 val updatedHttpRequestSchema =
     httpRequestSchema.modifyComponent(select(1) / 2)(
         _.withDescription("Create or update a record")

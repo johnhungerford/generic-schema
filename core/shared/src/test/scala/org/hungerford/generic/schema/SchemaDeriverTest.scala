@@ -130,12 +130,12 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
     it should "handle recursive cases with multiple different recursed types" in {
         case class Outer( field1 : Int, field2 : Inner1 )
         case class Inner1( field1 : Inner2, field2 : String )
-        case class Inner2( field1 : Boolan, field2 : Inner1, field3 : Inner3 )
+        case class Inner2( field1 : Boolean, field2 : Inner1, field3 : Inner3 )
         sealed trait Inner3
         case object Inner3Sub1 extends Inner3
         case class Inner3Sub2( field1 : Double, field2 : Int, field3 : Inner4 ) extends Inner3
         case class Inner3Sub3( field1 : Inner2 ) extends Inner3
-        case class Inner3( field1 : Inner3 )
+        case class Inner4( field1 : Inner3 )
 
         val outerSch = Schema.derived[ Outer ]
 

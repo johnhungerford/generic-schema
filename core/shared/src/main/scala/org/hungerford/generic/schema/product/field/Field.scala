@@ -24,7 +24,7 @@ sealed case class Field[ T, F, N <: FieldName, S ] private[ schema ] (
     override val default : Option[ F ] = None,
     override val examples : Seq[ F ] = Nil,
     override val deprecated : Boolean = false,
-) extends Field.For[ T ] with Field.Of[ F ] with Field.Named[ N ] with Field.Shaped[ F, S ] with Field.Extr[ T, F ]
+) extends Field.Shaped[ F, S ] with Field.OrLazy[ T, F, N ]
 
 sealed case class LazyField[ T, F, N <: FieldName ] private[ schema ] (
     override val fieldName : N,
@@ -34,7 +34,7 @@ sealed case class LazyField[ T, F, N <: FieldName ] private[ schema ] (
     override val default : Option[ F ] = None,
     override val examples : Seq[ F ] = Nil,
     override val deprecated : Boolean = false,
-) extends Field.For[ T ] with Field.Of[ F ] with Field.Named[ N ] with Field.Extr[ T, F ] {
+) extends Field.OrLazy[ T, F, N ] {
     def schema[ S ](
         using
         sch : Schema.Aux[ F, S ]
@@ -69,12 +69,13 @@ object Field {
     sealed trait Named[ N <: FieldName ] extends Field.Field {
         def fieldName : N
     }
-    sealed trait Shaped[ F, S ] extends Field.Field with Of[ F ] {
+    sealed trait Shaped[ F, S ] extends Of[ F ] {
         def schema : Schema.Aux[ F, S ]
     }
-    sealed trait Extr[ T, F ] extends Field.Field with For[ T ] with Of[ F ] {
+    sealed trait Extr[ T, F ] extends For[ T ] with Of[ F ] {
         def extractor : T => F
     }
+    sealed trait OrLazy[ T, F, N <: FieldName ] extends Extr[ T, F ] with Named[ N ]
 }
 
 trait FieldDsl {

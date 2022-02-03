@@ -77,17 +77,17 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
         schStDescripts.tail.head.schema.shape.fieldDescriptions.tail shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.tail
     }
 
-//    it should "handle a simple recursive case" in {
-//        case class Recur( recur : Recur )
-//
-//        val recurSch = Schema.derived[ Recur ]
-//        import recurSch.givenSchema
-//
-//        val innerSch = recurSch( "recur" ).schema
-//
-//        innerSch shouldBe recurSch
-//    }
-//
+    it should "handle a simple recursive case" in {
+        case class Recur( recur : Recur )
+
+        val recurSch = Schema.derived[ Recur ]
+        import recurSch.givenSchema
+
+        val innerSch = recurSch( "recur" ).schema
+
+        innerSch shouldBe recurSch
+    }
+
 //    it should "handle a recursive case nested in products" in {
 //        case class Inner( outer : Outer )
 //        case class Outer( inner : Inner )

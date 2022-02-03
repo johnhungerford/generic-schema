@@ -66,13 +66,13 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         }
     }
 
-    given fromProductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, S ](
+    given fromProductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Fld ](
         using
-        fr : FieldRetriever.Aux[ SelN, R, Field[ T, F, N, S ] ],
+        fr : FieldRetriever.Aux[ SelN, R, Fld ],
     ) : ComponentRetriever[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ SelN ] ] with {
-        override type Inner = Field[ T, F, N, S ]
+        override type Inner = Fld
 
-        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Field[ T, F, N, S ] = {
+        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Fld = {
             fr.retrieve( from.shape.fieldDescriptions )
         }
     }

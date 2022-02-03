@@ -143,6 +143,16 @@ object FieldRetriever extends LowPriorityFieldRetrievers {
         }
     }
 
+    given lz[ N <: FieldName, T, F, Tail <: Tuple ] :
+    FieldRetriever.Aux[ N, LazyField[ T, F, N ] *: Tail, LazyField[ T, F, N ] ] = {
+        new FieldRetriever[ N, LazyField[ T, F, N ] *: Tail ] {
+            type Fld = LazyField[ T, F, N ]
+
+            override def retrieve( from : LazyField[ T, F, N ] *: Tail ) : LazyField[ T, F, N ] =
+                from.head
+        }
+    }
+
     given fieldRetrieverByIndex[ I <: Int & Singleton, N <: Nat, R <: Tuple, T, F, Nm <: FieldName, S ](
         using
         ev : Nat.IntA[ I, N ],

@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{Field, FieldCase, FieldName}
+import org.hungerford.generic.schema.product.field.{Field, FieldName}
 import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Deriver, Zipper}
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider}
@@ -37,7 +37,7 @@ object ProductDeriver {
         mirEv : NotGiven[ mirror.type <:< Mirror.Singleton ],
         zip : Zipper.Aux[ L, RVt, LRV ],
         fieldDeriver : FieldDeriver.Aux[ (T, LRV), T => RVt, Rt ],
-        valEv : CtxWrapTuplesConstraint[ Field.Ctx[ T ], Rt, RVt ],
+        valEv : CtxWrapTuplesConstraint[ Field.Of, Rt, RVt ],
         uniq : UniqueFieldNames[ Rt ],
         cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
     ) : ProductDeriver[ T ] with {
@@ -120,12 +120,12 @@ object FieldDeriver {
     inline given fd[ T, F, N <: FieldName, S ](
         using
         provider : SchemaProvider.Aux[ F, S ],
-    ) : FieldDeriver.Aux[ (T, N, F), T => F, Field.Aux[ T, F, N, S ] ] = new FieldDeriver[ (T, N, F), T => F ] {
-            override type Out = Field.Aux[ T, F, N, S ]
+    ) : FieldDeriver.Aux[ (T, N, F), T => F, Field[ T, F, N, S ] ] = new FieldDeriver[ (T, N, F), T => F ] {
+            override type Out = Field[ T, F, N, S ]
 
             override def derive( extr : T => F ) : Out = {
                 val fn = constValue[ N ]
-                FieldCase[ T, F, N, S ]( fn, extr, provider.provide )
+                Field[ T, F, N, S ]( fn, extr, provider.provide )
             }
     }
 
@@ -137,15 +137,15 @@ object FieldDeriver {
 
     inline given hlistFDFieldDeriver[ N <: FieldName, T, F, S, VTail <: Tuple, TTail <: Tuple, Res <: Tuple ](
         using
-        fdFieldDeriver : FieldDeriver.Aux[ (T, N, F), T => F, Field.Aux[ T, F, N, S ] ],
+        fdFieldDeriver : FieldDeriver.Aux[ (T, N, F), T => F, Field[ T, F, N, S ] ],
         next : FieldDeriver.Aux[ (T, TTail), T => VTail, Res ],
-    ) : FieldDeriver.Aux[ (T, (N, F) *: TTail), T => F *: VTail, Field.Aux[ T, F, N, S ] *: Res ] = {
+    ) : FieldDeriver.Aux[ (T, (N, F) *: TTail), T => F *: VTail, Field[ T, F, N, S ] *: Res ] = {
         new FieldDeriver[ (T, (N, F) *: TTail), T => F *: VTail ] {
-            override type Out = Field.Aux[ T, F, N, S ] *: Res
+            override type Out = Field[ T, F, N, S ] *: Res
 
-            override def derive( extractor : T => F *: VTail ) : Field.Aux[ T, F, N, S ] *: Res = {
+            override def derive( extractor : T => F *: VTail ) : Field[ T, F, N, S ] *: Res = {
                 val headExtr : T => F = ( t : T ) => extractor( t ).head
-                val headRes : Field.Aux[ T, F, N, S ] = fdFieldDeriver.derive( headExtr )
+                val headRes : Field[ T, F, N, S ] = fdFieldDeriver.derive( headExtr )
                 val tailExtr : T => VTail = ( t : T ) => extractor( t ).tail
                 headRes *: next.derive( tailExtr )
             }

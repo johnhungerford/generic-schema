@@ -1,12 +1,13 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.types.Sub
-import org.hungerford.generic.schema.product.field.{Field, FieldCase}
+import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.singleton.SingletonShape
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.{ComplexSchema, Primitive, Schema, SchemaRebuilder}
 import org.hungerford.generic.schema.coproduct.subtype.TypeName
 
+sealed trait Deferred
 
 case class FieldBuilder[ T, F, N, Sch, S, E ](
     private[ schema ] val nm: N,
@@ -25,6 +26,8 @@ case class FieldBuilder[ T, F, N, Sch, S, E ](
     def extractor( extract : T => F ) : FieldBuilder[ T, F, N, Sch, S, T => F ] = copy( extr = extract )
     def fromSchema[ NewS ]( implicit schema: Schema.Aux[ F, NewS ] ) : FieldBuilder[ T, F, N, Schema.Aux[ F, NewS ], NewS, E ] =
         copy( sch = schema )
+    def lazySchema : FieldBuilder[ T, F, N, Unit, Deferred, E ] =
+        copy( sch = () )
     def rebuildSchema(
         using
         ev : Sch <:< Schema.Aux[ F, S ],
@@ -43,9 +46,9 @@ case class FieldBuilder[ T, F, N, Sch, S, E ](
 object FieldBuilder {
     type Empty[ T, F ] = FieldBuilder[ T, F, Unit, Unit, Nothing, Unit ]
     
-    extension [ T, F, N <: FieldName, Sch <: Schema.Aux[ F, S ], S, E ]( fieldBuilder : FieldBuilder[ T, F, N, Sch, S, T => F ] )
-        def build : Field.Aux[ T, F, N, S ] =
-            FieldCase[ T, F, N, S ](
+    extension [ T, F, N <: FieldName, Sch <: Schema.Aux[ F, S ], S ]( fieldBuilder : FieldBuilder[ T, F, N, Sch, S, T => F ] )
+        def build : Field[ T, F, N, S ] =
+            Field[ T, F, N, S ](
                 fieldBuilder.nm,
                 fieldBuilder.extr,
                 fieldBuilder.sch,
@@ -56,14 +59,38 @@ object FieldBuilder {
                 fieldBuilder.dep,
             )
 
+    extension [ T, F, N <: FieldName ]( fieldBuilder : FieldBuilder[ T, F, N, Unit, Deferred, T => F ] )
+        def build : LazyField[ T, F, N ] =
+            LazyField[ T, F, N ](
+                fieldBuilder.nm,
+                fieldBuilder.extr,
+                fieldBuilder.desc,
+                fieldBuilder.vs,
+                fieldBuilder.df,
+                fieldBuilder.exs,
+                fieldBuilder.dep,
+            )
+
     def apply[ T, F ] : Empty[ T, F ] =
         FieldBuilder[ T, F, Unit, Unit, Nothing, Unit ]((),(),(),None,Set.empty[Validator[F]],Nil,None,false)
 
-    def from[ T, F, N <: FieldName, S ]( field : Field.Aux[ T, F, N, S ] ) : FieldBuilder[ T, F, N, Schema.Aux[ F, S ], S, T => F ] =
+    def from[ T, F, N <: FieldName, S ]( field : Field[ T, F, N, S ] ) : FieldBuilder[ T, F, N, Schema.Aux[ F, S ], S, T => F ] =
         FieldBuilder[ T, F, N, Schema.Aux[ F, S ], S, T => F ](
             field.fieldName,
             field.extractor,
             field.schema,
+            field.description,
+            field.validators,
+            field.examples,
+            field.default,
+            field.deprecated,
+        )
+
+    def from[ T, F, N <: FieldName ]( field : LazyField[ T, F, N ] ) : FieldBuilder[ T, F, N, Unit, Deferred, T => F ] =
+        FieldBuilder[ T, F, N, Unit, Deferred, T => F ](
+            field.fieldName,
+            field.extractor,
+            (),
             field.description,
             field.validators,
             field.examples,

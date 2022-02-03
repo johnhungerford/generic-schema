@@ -16,7 +16,7 @@ object FieldDescriptionsDoNotContainFieldName {
         using
         ev : => Ineq[ N, O ],
         nextEv : => FieldDescriptionsDoNotContainFieldName[ N, Next ],
-    ) : FieldDescriptionsDoNotContainFieldName[ N, Field.Aux[ T, F, O, S ] *: Next ] with {}
+    ) : FieldDescriptionsDoNotContainFieldName[ N, Field[ T, F, O, S ] *: Next ] with {}
 }
 
 sealed trait UniqueFieldNames[ R <: Tuple ]
@@ -28,5 +28,5 @@ object UniqueFieldNames {
         using
         ev1 : FieldDescriptionsDoNotContainFieldName[ N, Rest ],
         ev2 : UniqueFieldNames[ Rest ],
-    ) : UniqueFieldNames[ Field.Aux[ T, F, N, S ] *: Rest ] with {}
+    ) : UniqueFieldNames[ Field[ T, F, N, S ] *: Rest ] with {}
 }

@@ -58,32 +58,32 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         using
         ev : NotGiven[ SelR <:< Tuple ],
         fr : selector.ComponentRetriever.Aux[ Schema.Aux[ F, S ], SelR, I ],
-    ) : ComponentRetriever[ Field.Aux[ T, F, N, S ], SelR ] with {
+    ) : ComponentRetriever[ Field[ T, F, N, S ], SelR ] with {
         override type Inner = I
 
-        override def retrieve( from : Field.Aux[ T, F, N, S ] ) : Inner = {
+        override def retrieve( from : Field[ T, F, N, S ] ) : Inner = {
             fr.retrieve( from.schema )
         }
     }
 
     given fromProductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, S ](
         using
-        fr : FieldRetriever.Aux[ SelN, R, Field.Aux[ T, F, N, S ] ],
+        fr : FieldRetriever.Aux[ SelN, R, Field[ T, F, N, S ] ],
     ) : ComponentRetriever[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ SelN ] ] with {
-        override type Inner = Field.Aux[ T, F, N, S ]
+        override type Inner = Field[ T, F, N, S ]
 
-        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Field.Aux[ T, F, N, S ] = {
+        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Field[ T, F, N, S ] = {
             fr.retrieve( from.shape.fieldDescriptions )
         }
     }
 
     given fromProductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, S ](
         using
-        fr : FieldRetriever.Aux[ SelN, R, Field.Aux[ T, F, N, S ] ],
+        fr : FieldRetriever.Aux[ SelN, R, Field[ T, F, N, S ] ],
     ) : ComponentRetriever[ ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ], FieldSelector[ SelN ] ] with {
-        override type Inner = Field.Aux[ T, F, N, S ]
+        override type Inner = Field[ T, F, N, S ]
 
-        override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ) : Field.Aux[ T, F, N, S ] = {
+        override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ) : Field[ T, F, N, S ] = {
             fr.retrieve( from.fieldDescs )
         }
     }

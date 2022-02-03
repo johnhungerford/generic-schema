@@ -21,7 +21,7 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
     private[ schema ] val constr : C,
 )(
     using
-    fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
+    fieldsConstraint : CtxWrapTuplesConstraint[ Field.Of, R, RV ],
 ) {
     def name( name : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( nm = Some( name ) )
     def description( description : String ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( desc = Some( description ) )
@@ -33,14 +33,14 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
     def examples( examples : Seq[ T ] ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( exs = examples.toSeq )
     def deprecate : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = copy( dep = true )
     def addField[ F, N <: FieldName, S ](
-        fd : Field.Aux[ T, F, N, S ],
+        fd : Field[ T, F, N, S ],
     )(
         using
-        fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
-        uniq : UniqueFieldNames[ Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ] ],
-    ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ] = {
+        fc : => CtxWrapTuplesConstraint[ Field.Of, Tuple.Concat[ R, Field[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
+        uniq : UniqueFieldNames[ Tuple.Concat[ R, Field[ T, F, N, S ] *: EmptyTuple ] ],
+    ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ] = {
         val newFieldDescs = fieldDescs ++ (fd *: EmptyTuple)
-        copy[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ]( fieldDescs = newFieldDescs, constr = () )
+        copy[ T, Tuple.Concat[ R, Field[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ]( fieldDescs = newFieldDescs, constr = () )
     }
 
     def buildField[ F ] : ProductFieldBuilder[ T, F, R, RV, AF, AFS, AFE, C ] =
@@ -51,7 +51,7 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
     )(
         using
         rm : FieldRemover.Aux[ N, R, NewR ],
-        fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], NewR, NewRV ],
+        fc : => CtxWrapTuplesConstraint[ Field.Of, NewR, NewRV ],
     ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, AFE, Unit ] = {
         val newFields = rm.remove( fieldDescs )
         copy[ T, NewR, NewRV, AF, AFS, AFE, Unit ](
@@ -64,7 +64,7 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
         fieldName : N,
     )(
         using
-        fr : FieldRetriever.Aux[ N, R, Field.Aux[ T, F, N, S ] ]
+        fr : FieldRetriever.Aux[ N, R, Field[ T, F, N, S ] ]
     ) : FieldUpdater[F, N, S, T, R, RV, AF, AFS, AFE, C ] = FieldUpdater[F, N, S, T, R, RV, AF, AFS, AFE, C ](
         fr.retrieve( fieldDescs ),
         this
@@ -178,7 +178,7 @@ case class ConstructorBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, NewC
 )(
     using
     cType : ConstructorChooser.Aux[ T, RV, AF, NewC ],
-    ctx : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
+    ctx : CtxWrapTuplesConstraint[ Field.Of, R, RV ],
 ) {
     def apply( constructor : NewC ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, NewC ] = {
         bldr.copy[ T, R, RV, AF, AFS, AFE, NewC ]( constr = constructor )
@@ -215,7 +215,7 @@ case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C,
    private[ product ] val builder : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ]
 )(
    using
-   fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
+   fieldsConstraint : CtxWrapTuplesConstraint[ Field.Of, R, RV ],
    val afChoice : ConstrUpdateChoice.Aux[ RV, RV, AF, NewAF, C, NewC ],
 ) {
     def fromSchema[ S ](
@@ -244,15 +244,15 @@ case class AdditionalFieldsBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C,
 }
 
 case class FieldUpdater[ F, N <: FieldName, S, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
-    private[ product ] val field : Field.Aux[ T, F, N, S ],
+    private[ product ] val field : Field[ T, F, N, S ],
     private[ product ] val bldr : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ]
 ) {
     def apply[ NewN <: FieldName, NewS, NewR <: Tuple ](
-        builder: FieldBuilder[ T, F, N, Schema.Aux[ F, S ], S, T => F ] => Field.Aux[ T, F, NewN, NewS ],
+        builder: FieldBuilder[ T, F, N, Schema.Aux[ F, S ], S, T => F ] => Field[ T, F, NewN, NewS ],
     )(
         using
         fr : FieldReplacer.Aux[ N, R, T, F, NewN, NewS, NewR ],
-        ctx : CtxWrapTuplesConstraint[ Field.Ctx[ T ], NewR, RV ],
+        ctx : CtxWrapTuplesConstraint[ Field.Of, NewR, RV ],
     ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, AFE, C ] = {
         val startingBuilder = FieldBuilder.from( field )
         val newField = builder( startingBuilder )
@@ -280,7 +280,7 @@ case class FieldComponentUpdater[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, F
     )(
         using
         fu : FieldReplacer.Aux[ N, R, T, F, NewN, NewFS, NewR ],
-        ctx : CtxWrapTuplesConstraint[ Field.Ctx[ T ], NewR, RV ],
+        ctx : CtxWrapTuplesConstraint[ Field.Of, NewR, RV ],
         cu : => ComponentUpdater.Aux[ ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ], Sel, Inner, NewInner, ProductSchemaBuilder[ T, NewR, RV, AF, AFS, AFE, C ] ],
     ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, AFE, C ] = {
         cu.update( builder )( updater )
@@ -291,12 +291,12 @@ case class ProductFieldBuilder[ T, F, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ]
     builder : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ],
 ) {
     def apply[ N <: FieldName, S ](
-        build : FieldBuilder.Empty[ T, F ] => Field.Aux[ T, F, N, S ],
+        build : FieldBuilder.Empty[ T, F ] => Field[ T, F, N, S ],
     )(
         using
-        fc : => CtxWrapTuplesConstraint[ Field.Ctx[ T ], Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
-        uniq : UniqueFieldNames[ Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ] ],
-    ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field.Aux[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ] =
+        fc : => CtxWrapTuplesConstraint[ Field.Of, Tuple.Concat[ R, Field[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ] ],
+        uniq : UniqueFieldNames[ Tuple.Concat[ R, Field[ T, F, N, S ] *: EmptyTuple ] ],
+    ) : ProductSchemaBuilder[ T, Tuple.Concat[ R, Field[ T, F, N, S ] *: EmptyTuple ], Tuple.Concat[ RV, F *: EmptyTuple ], AF, AFS, AFE, Unit ] =
         builder.addField[ F, N, S ]( build( FieldBuilder[ T, F ] ) )
 }
 
@@ -313,7 +313,7 @@ object ProductSchemaBuilder {
        schema : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
    )(
        using
-       fieldsConstraint : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
+       fieldsConstraint : CtxWrapTuplesConstraint[ Field.Of, R, RV ],
    ) : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] = {
        ProductSchemaBuilder(
            schema.name,

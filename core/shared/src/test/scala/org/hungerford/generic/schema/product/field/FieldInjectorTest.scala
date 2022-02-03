@@ -21,7 +21,7 @@ class FieldInjectorTest extends AnyFlatSpecLike with Matchers {
 
         given [ T, F, N <: FieldName, S ] : FieldInjector[ T, F, N, S, Map[ String, String ] ] = {
             new FieldInjector[ T, F, N, S, Map[ String, String ] ] {
-                def inject( field : Field.Aux[ T, F, N, S ], value : F, into : Map[ String, String ] ) : Map[ String, String ] = {
+                def inject( field : Field[ T, F, N, S ], value : F, into : Map[ String, String ] ) : Map[ String, String ] = {
                     into + (field.fieldName -> value.toString)
                 }
             }

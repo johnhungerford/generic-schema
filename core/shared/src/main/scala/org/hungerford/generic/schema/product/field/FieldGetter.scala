@@ -10,8 +10,8 @@ object FieldGetter {
     type Aux[ N <: FieldName, R <: Tuple, RV <: Tuple, O ] = FieldGetter[ N, R, RV ] { type Out = O }
 
     given [ T, F, N <: FieldName, S, RTail <: Tuple, RVHead, RVTail <: Tuple ] :
-        FieldGetter.Aux[ N, Field.Aux[ T, F, N, S ] *: RTail, RVHead *: RVTail, RVHead ] = {
-        new FieldGetter[ N, Field.Aux[ T, F, N, S ] *: RTail, RVHead *: RVTail ] {
+        FieldGetter.Aux[ N, Field[ T, F, N, S ] *: RTail, RVHead *: RVTail, RVHead ] = {
+        new FieldGetter[ N, Field[ T, F, N, S ] *: RTail, RVHead *: RVTail ] {
             type Out = RVHead
 
             def get( from : RVHead *: RVTail ) : RVHead = from.head

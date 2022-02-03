@@ -21,7 +21,7 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
     it should "retrieve a nested field by name" in {
         val innerSch = Schema.derived[ Inner ]
         val fld = ComponentRetriever.retrieve( sch )( Selector.field( "inner" ) /- "innerest" /- "dbl" )
-        summon[ fld.type <:< Field[ Innerest, Double ] ]
+        summon[ fld.type <:< Field.Extr[ Innerest, Double ] ]
         fld.fieldName shouldBe "dbl"
         fld.description shouldBe None
         fld.validators shouldBe Set.empty[ Validator[ Double ] ]
@@ -31,7 +31,7 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
     it should "retrieve a nested field by index" in {
         val innerSch = Schema.derived[ Inner ]
         val fld = ComponentRetriever.retrieve( sch )( Selector.field( 1 ) /- 0 /- 1 )
-        summon[ fld.type <:< Field[ Innerest, Double ] ]
+        summon[ fld.type <:< Field.Extr[ Innerest, Double ] ]
         fld.fieldName shouldBe "dbl"
         fld.description shouldBe None
         fld.validators shouldBe Set.empty[ Validator[ Double ] ]

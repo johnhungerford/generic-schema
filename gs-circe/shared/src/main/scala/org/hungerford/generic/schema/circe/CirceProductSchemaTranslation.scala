@@ -45,7 +45,7 @@ trait CirceProductSchemaTranslation
         Json.obj( buildableValue.toSeq: _* )
     }
 
-    protected def extractField[ T, F ]( from : Json, field : Field[ T, F ], schema : Codec[ F ] ) : F = {
+    protected def extractField[ T, F ]( from : Json, field : Field.Extr[ T, F ], schema : Codec[ F ] ) : F = {
         schema( from.hcursor.downField( field.fieldName ).focus.get.hcursor )
           .getOrElse( throw new Exception() )
     }
@@ -55,7 +55,7 @@ trait CirceProductSchemaTranslation
         from.as[ Map[ String, T ] ].getOrElse( throw new Exception() )
     }
 
-    protected def writeField[ T, F ]( value : F, to : Map[ String, Json ], field : Field[ T, F ], schema : Codec[ F ] ) : Map[ String, Json ] = {
+    protected def writeField[ F ]( value : F, to : Map[ String, Json ], field : Field.Of[ F ], schema : Codec[ F ] ) : Map[ String, Json ] = {
         val json = schema( value )
         to + (field.fieldName -> json)
     }

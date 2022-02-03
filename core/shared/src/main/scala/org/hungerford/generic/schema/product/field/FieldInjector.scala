@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 import scala.compiletime.{erasedValue, summonInline}
 
 trait FieldInjector[ T, F, N <: FieldName, S, Target ] {    
-    def inject( field : Field.Aux[ T, F, N, S ], value : F, into : Target ) : Target
+    def inject( field : Field[ T, F, N, S ], value : F, into : Target ) : Target
 }
 
 object FieldInjector {
@@ -14,7 +14,7 @@ object FieldInjector {
         into : Target,
     ) : Any = inline fieldDescriptions match {
         case _ : EmptyTuple => into
-        case fds : ( Field.Aux[ t, f, n, s ] *: fs) =>
+        case fds : ( Field[ t, f, n, s ] *: fs) =>
             val injector = summonInline[ FieldInjector[ t, f, n, s, Target ] ]
             type T = t
             type F = f

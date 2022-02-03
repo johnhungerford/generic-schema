@@ -14,7 +14,7 @@ trait ProductSchemaDsl {
             modifier : Schema.Aux[ AF, AFS ] => Schema.Aux[ AF, NewAFS ],
         )(
             using
-            ctx : CtxWrapTuplesConstraint[ Field.Ctx[ T ], R, RV ],
+            ctx : CtxWrapTuplesConstraint[ Field.Of, R, RV ],
             consChoice : ConstrUpdateChoice.Aux[ RV, RV, AF, AF, C, C ],
             uniq : => UniqueFieldNames[ R ],
             pc : ProductConstructor[ C, RV, AF, T ],

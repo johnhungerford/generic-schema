@@ -23,13 +23,13 @@ class FieldDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Ma
 
         val fn : Int => Int = v => v
 
-        Field.primitive[ Int, Int ]( "test-name", fn ) shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]() )
-        Field.fromSchema[ Int, Int ]( "test-name", fn )( using Primitive[ Int ]() ) shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]() )
+        Field.primitive[ Int, Int ]( "test-name", fn ) shouldBe Field[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]() )
+        Field.fromSchema[ Int, Int ]( "test-name", fn )( using Primitive[ Int ]() ) shouldBe Field[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]() )
         {
             import org.hungerford.generic.schema.primitives.Primitives.given
 
-            Field.fromSchema[ Int, Int ]( "test-name", fn ) shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
-            Field.builder[ Int, Int ].name( "test-name" ).extractor( fn ).fromSchema.build shouldBe FieldCase[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
+            Field.fromSchema[ Int, Int ]( "test-name", fn ) shouldBe Field[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
+            Field.builder[ Int, Int ].name( "test-name" ).extractor( fn ).fromSchema.build shouldBe Field[ Int, Int, "test-name", Unit ]( "test-name", fn, Primitive[ Int ]( None, Some( "Integer number between -2147483648 and 2147483647" ) ) )
         }
 
         val sch = Schema.derived[ TC ]

@@ -11,7 +11,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
 
     trait TranslatedFieldAdder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ] {
         def addTranslatedField(
-          field : Field.Aux[ T, F, N, S ],
+          field : Field[ T, F, N, S ],
           fieldSchema : OtherSchema[ F ],
           to : Fields[ T ],
           informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
@@ -22,7 +22,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
     }
 
 //    def addTranslatedField[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, C, DC ](
-//        field : Field.Aux[ F, N, S ],
+//        field : Field[ F, N, S ],
 //        fieldSchema : OtherSchema[ F ],
 //        to : Fields[ T ],
 //        informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, C, DC] ],
@@ -42,7 +42,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
 
     trait FieldBuilder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ] {
         def addField(
-            field : Field.Aux[ T, F, N, S ],
+            field : Field[ T, F, N, S ],
             to : Fields[ T ],
             informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
         ) : Fields[ T ]
@@ -56,7 +56,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
             fg : FieldGetter.Aux[ N, R, RV, F ],
         ) : FieldBuilder[ T, F, N, S, R, RV, AF, AFS, AFE, C ] with {
             override def addField(
-                field : Field.Aux[ T, F, N, S ],
+                field : Field[ T, F, N, S ],
                 to : Fields[ T ],
                 informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
             ) = {
@@ -87,9 +87,9 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
             using
             fb : FieldBuilder[ T, F, N, S, R, RV, AF, AFS, AFE, C ],
             nb : FieldTupleBuilder[ T, Tail, R, RV, AF, AFS, AFE, C ],
-        ) : FieldTupleBuilder[ T, Field.Aux[ T, F, N, S ] *: Tail, R, RV, AF, AFS, AFE, C ] with {
+        ) : FieldTupleBuilder[ T, Field[ T, F, N, S ] *: Tail, R, RV, AF, AFS, AFE, C ] with {
             def addFields(
-                fields : Field.Aux[ T, F, N, S ] *: Tail,
+                fields : Field[ T, F, N, S ] *: Tail,
                 to : Fields[ T ],
                 informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
             ) : Fields[ T ] = {

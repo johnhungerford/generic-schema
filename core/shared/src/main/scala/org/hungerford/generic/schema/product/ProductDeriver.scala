@@ -3,7 +3,7 @@ package org.hungerford.generic.schema.product
 import org.hungerford.generic.schema.product.field.{Field, LazyField, FieldName}
 import org.hungerford.generic.schema.types.{Contains, CtxWrapTuplesConstraint, Deriver, Zipper}
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{NoSchema, Schema, SchemaProvider}
+import org.hungerford.generic.schema.{NoSchema, Schema, RecursiveSchemaProvider}
 
 import scala.compiletime.constValue
 import scala.deriving.Mirror
@@ -124,7 +124,7 @@ object FieldDeriver {
     inline given fd[ T, TsTail <: Tuple, F, N <: FieldName, S ](
         using
         ev : NotGiven[ Contains[ T *: TsTail, F ] ],
-        provider : SchemaProvider.Aux[ F, S ],
+        provider : RecursiveSchemaProvider.Aux[ F, T *: TsTail, S ],
     ) : FieldDeriver.Aux[ (T, TsTail, N, F), T => F, Field[ T, F, N, S ] ] = new FieldDeriver[ (T, TsTail, N, F), T => F ] {
             override type Out = Field[ T, F, N, S ]
 

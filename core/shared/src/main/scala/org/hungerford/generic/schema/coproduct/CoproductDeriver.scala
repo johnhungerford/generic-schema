@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.coproduct
 
-import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaProvider}
+import org.hungerford.generic.schema.{ComplexSchema, RecursiveSchemaProvider, Schema, SchemaProvider}
 import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Deriver, Sub, Zipper}
 import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeCase, ToSuperGenerator, TypeName}
 import org.hungerford.generic.schema.product.ProductDeriver.MirrorProduct
@@ -11,53 +11,54 @@ import scala.util.NotGiven
 import scala.deriving.Mirror
 import scala.compiletime.{constValue, erasedValue, summonInline}
 
-trait CoproductDeriver[ T ] {
+trait CoproductDeriver[ T, TsTail <: Tuple ] {
     type Out
 
     def derive : Out
 }
 
 object CoproductDeriver {
-    type Aux[ T, O ] = CoproductDeriver[ T ] { type Out = O }
+    type Aux[ T, TsTail <: Tuple, O ] = CoproductDeriver[ T, TsTail ] { type Out = O }
 
     def apply[ T ](
         using
-        cd : CoproductDeriver[ T ],
-    ) : CoproductDeriver.Aux[ T, cd.Out ] = cd
+        cd : CoproductDeriver[ T, EmptyTuple ],
+    ) : CoproductDeriver.Aux[ T, EmptyTuple, cd.Out ] = cd
 
-    transparent inline given [ T, Elems <: NonEmptyTuple, ElemLabels <: NonEmptyTuple ](
+    transparent inline given [ T, TsTail <: Tuple, Elems <: NonEmptyTuple, ElemLabels <: NonEmptyTuple ](
         using
         mir : Mirror.Of[ T ],
-        der : CoproductMirDeriver[ T, mir.MirroredElemTypes, mir.MirroredElemLabels ],
+        der : CoproductMirDeriver[ T, TsTail, mir.MirroredElemTypes, mir.MirroredElemLabels ],
         ev1 : mir.MirroredElemTypes =:= Elems,
         ev2 : mir.MirroredElemLabels =:= ElemLabels,
-    ) : CoproductDeriver.Aux[ T, der.Out ] = {
+    ) : CoproductDeriver.Aux[ T, TsTail, der.Out ] = {
 
-        new CoproductDeriver[ T ] {
+        new CoproductDeriver[ T, TsTail ] {
             override type Out = der.Out
             override def derive: der.Out = der.derive
         }
     }
 }
 
-trait CoproductMirDeriver[ T, Elems <: Tuple, ElemLabels <: Tuple ] {
+trait CoproductMirDeriver[ T, TsTail <: Tuple, Elems <: Tuple, ElemLabels <: Tuple ] {
     type Out
 
     def derive : Out
 }
 
 object CoproductMirDeriver {
-    type Aux[ T, Elems <: Tuple, ElemLabels <: Tuple, O ] = CoproductMirDeriver[ T, Elems, ElemLabels ] { type Out = O }
+    type Aux[ T, TsTail <: Tuple, Elems <: Tuple, ElemLabels <: Tuple, O ] =
+        CoproductMirDeriver[ T, TsTail, Elems, ElemLabels ] { type Out = O }
 
-    given [ T, Elems <: Tuple, ElemLabels <: Tuple, R <: Tuple ](
+    given [ T, TsTail <: Tuple, Elems <: Tuple, ElemLabels <: Tuple, R <: Tuple ](
         using
-        der : SubtypesDeriver.Aux[ T, Elems, ElemLabels, R ],
+        der : SubtypesDeriver.Aux[ T, TsTail, Elems, ElemLabels, R ],
         ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, Unit ], R, Elems ],
         uniq : UniqueTypeNames[ R ],
         uniqDv : UniqueDiscriminatorValues[ R ],
         vd : ValidDiscriminator[ Unit, Nothing, R ],
-    ) : CoproductMirDeriver.Aux[ T, Elems, ElemLabels, CoproductShape[ T, R, Elems, Unit, Nothing ] ] = {
-        new CoproductMirDeriver[ T, Elems, ElemLabels ] {
+    ) : CoproductMirDeriver.Aux[ T, TsTail, Elems, ElemLabels, CoproductShape[ T, R, Elems, Unit, Nothing ] ] = {
+        new CoproductMirDeriver[ T, TsTail, Elems, ElemLabels ] {
             type Out = CoproductShape[ T, R, Elems, Unit, Nothing ]
 
             def derive: Out = CoproductShape[ T, R, Elems, Unit, Nothing ](
@@ -70,38 +71,39 @@ object CoproductMirDeriver {
         mir : Mirror.SumOf[ T ] { type MirroredElemTypes = Elems; type MirroredElemLabels = ElemLabels },
     )(
         using
-        cd : CoproductMirDeriver.Aux[ T, Elems, ElemLabels, Res ],
-    ) : CoproductMirDeriver.Aux[ T, Elems, ElemLabels, Res ] = cd
+        cd : CoproductMirDeriver.Aux[ T, EmptyTuple, Elems, ElemLabels, Res ],
+    ) : CoproductMirDeriver.Aux[ T, EmptyTuple, Elems, ElemLabels, Res ] = cd
 }
 
-trait SubtypesDeriver[ T, STs <: Tuple, Ns <: Tuple ] {
+trait SubtypesDeriver[ T, TsTail <: Tuple, STs <: Tuple, Ns <: Tuple ] {
     type Out <: Tuple
 
     def derive( ordinal : Int ) : Out
 }
 
 object SubtypesDeriver {
-    type Aux[ T, STs <: Tuple, Ns <: Tuple, O ] = SubtypesDeriver[ T, STs, Ns ] { type Out = O }
+    type Aux[ T, TsTails <: Tuple, STs <: Tuple, Ns <: Tuple, O ] =
+        SubtypesDeriver[ T, TsTails, STs, Ns ] { type Out = O }
 
-    given [ T ] : SubtypesDeriver[ T, EmptyTuple, EmptyTuple ] with {
+    given [ T, TsTail <: Tuple ] : SubtypesDeriver[ T, TsTail, EmptyTuple, EmptyTuple ] with {
         type Out = EmptyTuple
 
         def derive( ordinal : Int ) : EmptyTuple = EmptyTuple
     }
 
-    given [ T, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
+    given [ T, TsTail <: Tuple, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
         using
         mir : Mirror.SumOf[ T ],
-        provider : SchemaProvider.Aux[ ST, STS ],
+        provider : RecursiveSchemaProvider.Aux[ ST, T *: TsTail, STS ],
         ev : NotGiven[ N =:= Nothing ],
         tsGen : ToSuperGenerator.Aux[ T, ST, ST => T ],
-        tDer : SubtypesDeriver.Aux[ T, STTail, NTail, Next ],
+        tDer : SubtypesDeriver.Aux[ T, TsTail, STTail, NTail, Next ],
         nVal : ValueOf[ N ],
-    ) : SubtypesDeriver.Aux[ T, ST *: STTail, N *: NTail, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next ] = {
+    ) : SubtypesDeriver.Aux[ T, TsTail, ST *: STTail, N *: NTail, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next ] = {
 //        val typeName = summonInline[ ValueOf[ N ] ].value
         val typeName = nVal.value
 
-        new SubtypesDeriver[ T, ST *: STTail, N *: NTail ] {
+        new SubtypesDeriver[ T, TsTail, ST *: STTail, N *: NTail ] {
             type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next
 
             def derive( ordinal : Int ) : Out = {

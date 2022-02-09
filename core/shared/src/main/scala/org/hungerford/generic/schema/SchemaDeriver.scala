@@ -58,7 +58,7 @@ object RecursiveSchemaDeriver {
 
     given coproductSchemaDeriver[ T, Tail <: Tuple, S ](
         using
-        cprd : CoproductDeriver.Aux[ T, S ],
+        cprd : CoproductDeriver.Aux[ T, Tail, S ],
     ) : RecursiveSchemaDeriver.Aux[ T, Tail, S ] = new RecursiveSchemaDeriver[ T, Tail ] {
         type Shape = S
         def derive : Schema.Aux[ T, S ] = ComplexSchema[ T, Shape ]( cprd.derive )

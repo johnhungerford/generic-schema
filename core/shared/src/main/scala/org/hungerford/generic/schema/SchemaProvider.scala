@@ -74,10 +74,10 @@ trait LowPriorityRecursiveSchemaProviders extends LowestPriorityRecursiveSchemaP
 object RecursiveSchemaProvider extends LowPriorityRecursiveSchemaProviders {
     type Aux[ T, Tail <: Tuple, S ] = RecursiveSchemaProvider[ T, Tail ] { type Shape = S }
 
-    given schemaInstanceProvider[ T, Tail <: Tuple, S ](
-        using inst : Schema.Aux[ T, S ],
-    ) : RecursiveSchemaProvider.Aux[ T, Tail, S ] = new RecursiveSchemaProvider[ T, Tail ] {
-        override type Shape = S
-        override def provide : Schema.Aux[ T, S ] = inst
+    given schemaInstanceProvider[ T, Tail <: Tuple ](
+        using inst : Schema[ T ],
+    ) : RecursiveSchemaProvider.Aux[ T, Tail, inst.Shape ] = new RecursiveSchemaProvider[ T, Tail ] {
+        override type Shape = inst.Shape
+        override def provide : Schema.Aux[ T, inst.Shape ] = inst
     }
 }

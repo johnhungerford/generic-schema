@@ -1,82 +1,82 @@
 package org.hungerford.generic.schema
 
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.product.field.{Field, FieldBuilder}
+import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, LazyField}
+import org.hungerford.generic.schema.types.Contains
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-
 import org.hungerford.generic.schema.Default.dsl.*
 
 class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
 
     behavior of "SchemaDeriver"
 
-    it should "derive a product schema equivalent to one built with implicit primitives and no additional fields" in {
-        case class Test( int: Int, str: String )
-
-        import org.hungerford.generic.schema.primitives.Primitives.given
-
-        val testSchema = Schema.productBuilder[ Test ]
-          .addField( FieldBuilder[ Test, Int ].name( "int" ).extractor( _.int ).fromSchema.build )
-          .addField( FieldBuilder[ Test, String ].name( "str" ).extractor( _.str ).fromSchema.build )
-          .construct( ( int, str ) => Test( int, str ) )
-          .build
-
-        val newTestRes = SchemaDeriver.schema[ Test ]
-
-        newTestRes.shape.fieldDescriptions.size shouldBe testSchema.shape.fieldDescriptions.size
-        newTestRes.shape.fieldDescriptions.head.fieldName shouldBe testSchema.shape.fieldDescriptions.head.fieldName
-        newTestRes.shape.fieldDescriptions.head.description shouldBe testSchema.shape.fieldDescriptions.head.description
-        newTestRes.shape.fieldDescriptions.head.extractor( Test( 5, "hello" ) ) shouldBe testSchema.shape.fieldDescriptions.head.extractor( Test( 5, "hello" ) )
-        newTestRes.shape.fieldDescriptions.tail.head.fieldName shouldBe testSchema.shape.fieldDescriptions.tail.head.fieldName
-        newTestRes.shape.fieldDescriptions.tail.head.description shouldBe testSchema.shape.fieldDescriptions.tail.head.description
-        newTestRes.shape.fieldDescriptions.tail.head.extractor( Test( 5, "hello" ) ) shouldBe testSchema.shape.fieldDescriptions.tail.head.extractor( Test( 5, "hello" ) )
-
-
-    }
-
-    it should "derive a product schema for a large case class" in {
-        case class Test( int: Int, str: String, dbl: Double, bool: Boolean, newInt: Int )
-
-        import org.hungerford.generic.schema.primitives.Primitives.given
-
-        val newTestRes = SchemaDeriver.schema[ Test ]
-
-        newTestRes.shape.size shouldBe 5
-    }
-
-    it should "derive a coproduct schema" in {
-        sealed trait SuperT
-        case class SubT1( int : Int ) extends SuperT
-        case class SubT2( str : String ) extends SuperT
-
-        val expectedSchema = Schema.coproductBuilder[ SuperT ]
-          .buildSubtype[ SubT1 ]( _.typeName( "SubT1" ).fromSchema( Schema.derived ).fromSuper( { case v@SubT1( _ ) => Some( v ); case _ => None } ).build )
-          .buildSubtype[ SubT2 ]( _.typeName( "SubT2" ).fromSchema( Schema.derived ).fromSuper( { case v@SubT2( _ ) => Some( v ); case _ => None } ).build )
-          .build
-
-        val sch = SchemaDeriver.schema[ SuperT ]
-        sch.shape.subtypeDescriptions.size shouldBe 2
-
-        val schStDescripts = sch.shape.subtypeDescriptions
-        val expStDescripts = expectedSchema.shape.subtypeDescriptions
-        schStDescripts.head.typeName shouldBe expStDescripts.head.typeName
-
-        schStDescripts.head.schema.shape.fieldDescriptions.size shouldBe expStDescripts.head.schema.shape.fieldDescriptions.size
-        schStDescripts.head.schema.shape.fieldDescriptions.head.fieldName shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.fieldName
-        schStDescripts.head.schema.shape.fieldDescriptions.head.extractor( SubT1( 5 ) ) shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.extractor( SubT1( 5 ) )
-        schStDescripts.head.schema.shape.fieldDescriptions.head.description shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.description
-        schStDescripts.head.schema.shape.fieldDescriptions.tail shouldBe expStDescripts.head.schema.shape.fieldDescriptions.tail
-
-        schStDescripts.tail.head.typeName shouldBe expStDescripts.tail.head.typeName
-
-        schStDescripts.tail.head.schema.shape.fieldDescriptions.size shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.size
-        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.fieldName shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.fieldName
-        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.extractor( SubT2( "hello" ) ) shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.extractor( SubT2( "hello" ) )
-        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.description shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.description
-        schStDescripts.tail.head.schema.shape.fieldDescriptions.tail shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.tail
-    }
-
+//    it should "derive a product schema equivalent to one built with implicit primitives and no additional fields" in {
+//        case class Test( int: Int, str: String )
+//
+//        import org.hungerford.generic.schema.primitives.Primitives.given
+//
+//        val testSchema = Schema.productBuilder[ Test ]
+//          .addField( FieldBuilder[ Test, Int ].name( "int" ).extractor( _.int ).fromSchema.build )
+//          .addField( FieldBuilder[ Test, String ].name( "str" ).extractor( _.str ).fromSchema.build )
+//          .construct( ( int, str ) => Test( int, str ) )
+//          .build
+//
+//        val newTestRes = SchemaDeriver.schema[ Test ]
+//
+//        newTestRes.shape.fieldDescriptions.size shouldBe testSchema.shape.fieldDescriptions.size
+//        newTestRes.shape.fieldDescriptions.head.fieldName shouldBe testSchema.shape.fieldDescriptions.head.fieldName
+//        newTestRes.shape.fieldDescriptions.head.description shouldBe testSchema.shape.fieldDescriptions.head.description
+//        newTestRes.shape.fieldDescriptions.head.extractor( Test( 5, "hello" ) ) shouldBe testSchema.shape.fieldDescriptions.head.extractor( Test( 5, "hello" ) )
+//        newTestRes.shape.fieldDescriptions.tail.head.fieldName shouldBe testSchema.shape.fieldDescriptions.tail.head.fieldName
+//        newTestRes.shape.fieldDescriptions.tail.head.description shouldBe testSchema.shape.fieldDescriptions.tail.head.description
+//        newTestRes.shape.fieldDescriptions.tail.head.extractor( Test( 5, "hello" ) ) shouldBe testSchema.shape.fieldDescriptions.tail.head.extractor( Test( 5, "hello" ) )
+//
+//
+//    }
+//
+//    it should "derive a product schema for a large case class" in {
+//        case class Test( int: Int, str: String, dbl: Double, bool: Boolean, newInt: Int )
+//
+//        import org.hungerford.generic.schema.primitives.Primitives.given
+//
+//        val newTestRes = SchemaDeriver.schema[ Test ]
+//
+//        newTestRes.shape.size shouldBe 5
+//    }
+//
+//    it should "derive a coproduct schema" in {
+//        sealed trait SuperT
+//        case class SubT1( int : Int ) extends SuperT
+//        case class SubT2( str : String ) extends SuperT
+//
+//        val expectedSchema = Schema.coproductBuilder[ SuperT ]
+//          .buildSubtype[ SubT1 ]( _.typeName( "SubT1" ).fromSchema( Schema.derived ).fromSuper( { case v@SubT1( _ ) => Some( v ); case _ => None } ).build )
+//          .buildSubtype[ SubT2 ]( _.typeName( "SubT2" ).fromSchema( Schema.derived ).fromSuper( { case v@SubT2( _ ) => Some( v ); case _ => None } ).build )
+//          .build
+//
+//        val sch = SchemaDeriver.schema[ SuperT ]
+//        sch.shape.subtypeDescriptions.size shouldBe 2
+//
+//        val schStDescripts = sch.shape.subtypeDescriptions
+//        val expStDescripts = expectedSchema.shape.subtypeDescriptions
+//        schStDescripts.head.typeName shouldBe expStDescripts.head.typeName
+//
+//        schStDescripts.head.schema.shape.fieldDescriptions.size shouldBe expStDescripts.head.schema.shape.fieldDescriptions.size
+//        schStDescripts.head.schema.shape.fieldDescriptions.head.fieldName shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.fieldName
+//        schStDescripts.head.schema.shape.fieldDescriptions.head.extractor( SubT1( 5 ) ) shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.extractor( SubT1( 5 ) )
+//        schStDescripts.head.schema.shape.fieldDescriptions.head.description shouldBe expStDescripts.head.schema.shape.fieldDescriptions.head.description
+//        schStDescripts.head.schema.shape.fieldDescriptions.tail shouldBe expStDescripts.head.schema.shape.fieldDescriptions.tail
+//
+//        schStDescripts.tail.head.typeName shouldBe expStDescripts.tail.head.typeName
+//
+//        schStDescripts.tail.head.schema.shape.fieldDescriptions.size shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.size
+//        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.fieldName shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.fieldName
+//        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.extractor( SubT2( "hello" ) ) shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.extractor( SubT2( "hello" ) )
+//        schStDescripts.tail.head.schema.shape.fieldDescriptions.head.description shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.head.description
+//        schStDescripts.tail.head.schema.shape.fieldDescriptions.tail shouldBe expStDescripts.tail.head.schema.shape.fieldDescriptions.tail
+//    }
+//
     it should "handle a simple recursive case" in {
         case class Recur( recur : Recur )
 
@@ -88,18 +88,60 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
         innerSch shouldBe recurSch
     }
 
-//    it should "handle a recursive case nested in products" in {
-//        case class Inner( outer : Outer )
-//        case class Outer( inner : Inner )
-//
-//        val outerSch = Schema.derived[ Outer ]
-//        import outerSch.givenSchema
-//
-//        val recurSch = outerSch( "inner" / "outer" ).schema
-//
-//        recurSch shouldBe outerSch
-//    }
-//
+    it should "handle a simple recursive case with multiple fields" in {
+        case class Recur( int : Int, recur : Recur, str : String )
+
+        val recurSch = Schema.derived[ Recur ]
+        import recurSch.givenSchema
+
+        val recField = recurSch( "recur" )
+        recField match {
+            case LazyField( _, _, _, _, _, _, _ ) =>
+        }
+
+        val intField = recurSch( "int" )
+        intField match {
+            case Field( _, _, _, _, _, _, _, _ ) =>
+        }
+
+        val strField = recurSch( "str" )
+        strField match {
+            case Field( _, _, _, _, _, _, _, _ ) =>
+        }
+
+        val innerSch = recurSch( "recur" ).schema
+
+        innerSch shouldBe recurSch
+    }
+
+    it should "handle a simple recursive case nested one level" in {
+        case class Recur( recur : Recur )
+        case class RecurWrap( inner : Recur )
+
+        val recurSch = Schema.derived[ RecurWrap ]
+        val innerSch = recurSch( "inner" ).schema
+        import innerSch.givenSchema
+
+        val innerInnerSch = recurSch( "inner" / "recur" ).schema
+
+        innerInnerSch shouldBe innerSch
+    }
+
+    it should "handle a recursive case nested in products" in {
+        case class Inner( outer : Outer )
+        case class Outer( inner : Inner )
+
+        val outerSch = Schema.derived[ Outer ]
+        import outerSch.givenSchema
+
+        val der = summon[RecursiveSchemaProvider[Inner, Outer *: EmptyTuple]]
+        summon[Contains[Inner *: Outer *: EmptyTuple, Outer]]
+
+        val recurSch = outerSch( "inner" / "outer" ).schema
+
+        recurSch shouldBe outerSch
+    }
+
 //    it should "handle a recursive case nested in coproducts" in {
 //        sealed trait Coprod
 //        case object Inner extends Coprod

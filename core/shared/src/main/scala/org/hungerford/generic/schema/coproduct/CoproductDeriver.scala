@@ -83,21 +83,23 @@ trait SubtypesDeriver[ T, STs <: Tuple, Ns <: Tuple ] {
 object SubtypesDeriver {
     type Aux[ T, STs <: Tuple, Ns <: Tuple, O ] = SubtypesDeriver[ T, STs, Ns ] { type Out = O }
 
-    inline given [ T ] : SubtypesDeriver[ T, EmptyTuple, EmptyTuple ] with {
+    given [ T ] : SubtypesDeriver[ T, EmptyTuple, EmptyTuple ] with {
         type Out = EmptyTuple
 
         def derive( ordinal : Int ) : EmptyTuple = EmptyTuple
     }
 
-    inline given [ T, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
+    given [ T, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
         using
         mir : Mirror.SumOf[ T ],
         provider : SchemaProvider.Aux[ ST, STS ],
         ev : NotGiven[ N =:= Nothing ],
         tsGen : ToSuperGenerator.Aux[ T, ST, ST => T ],
         tDer : SubtypesDeriver.Aux[ T, STTail, NTail, Next ],
+        nVal : ValueOf[ N ],
     ) : SubtypesDeriver.Aux[ T, ST *: STTail, N *: NTail, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next ] = {
-        val typeName = summonInline[ ValueOf[ N ] ].value
+//        val typeName = summonInline[ ValueOf[ N ] ].value
+        val typeName = nVal.value
 
         new SubtypesDeriver[ T, ST *: STTail, N *: NTail ] {
             type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next

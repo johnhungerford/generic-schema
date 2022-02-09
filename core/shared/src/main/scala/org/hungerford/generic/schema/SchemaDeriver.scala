@@ -47,29 +47,29 @@ object RecursiveSchemaDeriver {
         implicit sd : RecursiveSchemaDeriver[ Tuple.Head[ Ts ], Tuple.Tail[ Ts ] ],
     ) : RecursiveSchemaDeriver.Aux[ Tuple.Head[ Ts ], Tuple.Tail[ Ts ], sd.Shape ] = sd
 
-    given productSchemaDeriver[ T, Tail <: Tuple ](
+    given productSchemaDeriver[ T, Tail <: Tuple, S ](
         using
-        prd : ProductDeriver[ T, Tail ],
-    ) : RecursiveSchemaDeriver.Aux[ T, Tail, prd.Out ] = new RecursiveSchemaDeriver[ T, Tail ] {
-        override type Shape = prd.Out
+        prd : ProductDeriver.Aux[ T, Tail, S ],
+    ) : RecursiveSchemaDeriver.Aux[ T, Tail, S ] = new RecursiveSchemaDeriver[ T, Tail ] {
+        override type Shape = S
 
-        override def derive : Schema.Aux[ T, Shape ] = ComplexSchema[ T, Shape ]( prd.derive )
+        override def derive : Schema.Aux[ T, S ] = ComplexSchema[ T, Shape ]( prd.derive )
     }
 
-    given coproductSchemaDeriver[ T, Tail <: Tuple ](
+    given coproductSchemaDeriver[ T, Tail <: Tuple, S ](
         using
-        cprd : CoproductDeriver[ T ],
-    ) : RecursiveSchemaDeriver.Aux[ T, Tail, cprd.Out ] = new RecursiveSchemaDeriver[ T, Tail ] {
-        type Shape = cprd.Out
-        def derive : Schema.Aux[ T, Shape ] = ComplexSchema[ T, Shape ]( cprd.derive )
+        cprd : CoproductDeriver.Aux[ T, S ],
+    ) : RecursiveSchemaDeriver.Aux[ T, Tail, S ] = new RecursiveSchemaDeriver[ T, Tail ] {
+        type Shape = S
+        def derive : Schema.Aux[ T, S ] = ComplexSchema[ T, Shape ]( cprd.derive )
     }
 
-    given singletonSchemaDeriver[ T, Tail <: Tuple ](
+    given singletonSchemaDeriver[ T <: Singleton, Tail <: Tuple, S ](
         using
-        sd : SingletonDeriver[ T ],
-    ) : RecursiveSchemaDeriver.Aux[ T, Tail, sd.Out ] = new RecursiveSchemaDeriver[ T, Tail ] {
-        type Shape = sd.Out
-        def derive : Schema.Aux[ T, Shape ] = ComplexSchema[ T, Shape ]( sd.derive )
+        sd : SingletonDeriver.Aux[ T, S ],
+    ) : RecursiveSchemaDeriver.Aux[ T, Tail, S ] = new RecursiveSchemaDeriver[ T, Tail ] {
+        type Shape = S
+        def derive : Schema.Aux[ T, S ] = ComplexSchema[ T, S ]( sd.derive )
     }
 
 }

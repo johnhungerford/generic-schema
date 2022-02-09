@@ -3,7 +3,7 @@ package org.hungerford.generic.schema.selector
 import org.hungerford.generic.schema.{Schema, selector}
 import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeRetriever, TypeName}
 import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, subtype}
-import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever}
+import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever, LazyField}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
 
 import scala.util.NotGiven
@@ -63,6 +63,19 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
 
         override def retrieve( from : Field[ T, F, N, S ] ) : Inner = {
             fr.retrieve( from.schema )
+        }
+    }
+
+    given fromLazyFieldDescription[ T, F, N <: FieldName, SelR, I ](
+        using
+        ev : NotGiven[ SelR <:< Tuple ],
+        sch : Schema[ F ],
+        fr : selector.ComponentRetriever.Aux[ Schema.Aux[ F, sch.Shape ], SelR, I ],
+    ) : ComponentRetriever[ LazyField[ T, F, N ], SelR ] with {
+        override type Inner = I
+
+        override def retrieve( from : LazyField[ T, F, N ] ) : Inner = {
+            fr.retrieve( sch )
         }
     }
 

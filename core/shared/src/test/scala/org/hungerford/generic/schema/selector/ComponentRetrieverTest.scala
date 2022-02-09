@@ -82,4 +82,59 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         st.typeName shouldBe "InnerT"
     }
 
+    case class SimpleRecur( sr : SimpleRecur )
+    val srSch = Schema.derived[ SimpleRecur ]
+
+    it should "retrieve a simple recursive field one level past the lazy field" in {
+        import srSch.givenSchema
+        val res = srSch( "sr" / "sr" ).schema
+        res shouldBe srSch
+    }
+
+    it should "retrieve a simple recursive field N levels past the lazy field" in {
+        import srSch.givenSchema
+        val res = srSch( "sr" / "sr" / "sr" / "sr" / "sr" / "sr" ).schema
+        res shouldBe srSch
+    }
+
+    case class OuterRecur( inner : InnerRecur )
+    case class InnerRecur( self : InnerRecur )
+    val orSch = Schema.derived[ OuterRecur ]
+
+    it should "retrieve a nested recursive field one level past the lazy field" in {
+        val iSch = orSch( "inner" ).schema
+        import iSch.givenSchema
+        val res = orSch( "inner" / "self" / "self" ).schema
+        res shouldBe iSch
+    }
+
+    it should "retrieve a nested recursive field N levels past the lazy field" in {
+        val iSch = orSch( "inner" ).schema
+        import iSch.givenSchema
+        val res = orSch( "inner" / "self" / "self" / "self" / "self" / "self" / "self" ).schema
+        res shouldBe iSch
+    }
+
+    case class OutRec( inner1 : Inner1 )
+    sealed trait Inner1
+    case object Inner1a extends Inner1
+    final case class Inner1b( inner2 : Inner2 ) extends Inner1
+    case object Inner1c extends Inner1
+    case class Inner2( inner3 : Inner3 )
+    case class Inner3( inner1 : Inner1 )
+
+
+    it should "retrieve components past a highly nested lazy field" in {
+        val outRecSch = Schema.derived[ OutRec ]
+
+        val iSch = outRecSch( "inner1" ).schema
+        val i2Sch = outRecSch( "inner1" / "Inner1b" / "inner2" ).schema
+        import i2Sch.givenSchema
+        import iSch.givenSchema
+        val res1 = outRecSch( "inner1" / "Inner1b" / "inner2" / "inner3" / "inner1" ).schema
+        res1 shouldBe iSch
+        val res2 = outRecSch( "inner1" / "Inner1b" / "inner2" / "inner3" / "inner1" / "Inner1b" / "inner2" ).schema
+        res2 shouldBe i2Sch
+    }
+
 }

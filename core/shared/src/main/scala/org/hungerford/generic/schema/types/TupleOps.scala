@@ -1,6 +1,7 @@
 package org.hungerford.generic.schema.types
 
-import scala.compiletime.ops.int.{>, -, <=}
+import scala.compiletime.ops.int.{-, <=, >}
+import scala.deriving.Mirror
 import scala.util.NotGiven
 
 trait Remover[ I, R <: Tuple ] {
@@ -155,3 +156,23 @@ object Retriever extends LowPriorityRetrievers {
 
     def retrieve[ I ] : RT[ I ] = new RT[ I ]
 }
+
+trait TypeNames[ T <: Tuple ] {
+    def labels : List[ String ]
+}
+
+object TypeNames {
+    given empty : TypeNames[ EmptyTuple ] with {
+        def labels : List[ String ] = Nil
+    }
+
+    given tup[ Head, Tail <: Tuple ](
+        using
+        mir : Mirror.Of[ Head ],
+        hLab : ValueOf[ mir.MirroredLabel ],
+        next : TypeNames[ Tail ],
+    ) : TypeNames[ Head *: Tail ] with {
+        def labels : List[ String ] = hLab.value :: next.labels
+    }
+}
+

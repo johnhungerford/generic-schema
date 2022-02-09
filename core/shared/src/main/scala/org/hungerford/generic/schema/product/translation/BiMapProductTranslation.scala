@@ -36,22 +36,22 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
      */
     protected def buildMapVal( buildableValue : BuildMapVal ) : MapVal
 
-    protected def extractField[ T, F ]( from : MapVal, field : Field[ T, F ], schema : OtherSchema[ F ] ) : F
+    protected def extractField[ T, F ]( from : MapVal, field : Field.Extr[ T, F ], schema : OtherSchema[ F ] ) : F
 
     protected def extractAdditionalFields[ T ]( from : MapVal, informedBy : OtherSchema[ T ] ) : Map[ String, T ]
 
-    protected def writeField[ T, F ]( value : F, to : BuildMapVal, field : Field[ T, F ], schema : OtherSchema[ F ] ) : BuildMapVal
+    protected def writeField[ F ]( value : F, to : BuildMapVal, field : Field.Of[ F ], schema : OtherSchema[ F ] ) : BuildMapVal
 
     protected def writeAdditionalFields[ T ]( from : Map[ String, T ], to : BuildMapVal, informedBy : OtherSchema[ T ] ) : BuildMapVal
 
-    trait BiMapInjector[ T, F ] {
-        def inject( value : F, into : BuildMapVal, field : Field[ T, F ], schema : OtherSchema[ F ] ) : BuildMapVal
+    trait BiMapInjector[ F ] {
+        def inject( value : F, into : BuildMapVal, field : Field.Of[ F ], schema : OtherSchema[ F ] ) : BuildMapVal
     }
 
     object BiMapInjector {
-        given fromWriteField[ T, F ] : BiMapInjector[ T, F ] with {
-            def inject( value : F, into : BuildMapVal, field : Field[ T, F ], schema : OtherSchema[ F ] ) : BuildMapVal = {
-                writeField[ T, F ]( value, into, field, schema )
+        given fromWriteField[ F ] : BiMapInjector[ F ] with {
+            def inject( value : F, into : BuildMapVal, field : Field.Of[ F ], schema : OtherSchema[ F ] ) : BuildMapVal = {
+                writeField[ F ]( value, into, field, schema )
             }
         }
     }
@@ -68,10 +68,10 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
         given[ T, F, N <: FieldName, S, RVTail <: Tuple, RTail <: Tuple ] (
             using
             trans : SchemaTranslator[ F, S, OtherSchema ],
-            headInjector : BiMapInjector[ T, F ],
+            headInjector : BiMapInjector[ F ],
             tailInjector : BiMapTupleInjector[ RVTail, RTail ],
-        ) : BiMapTupleInjector[ F *: RVTail, Field.Aux[ T, F, N, S ] *: RTail ] with {
-            def inject( value : F *: RVTail, into : BuildMapVal, informedBy : Field.Aux[ T, F, N, S ] *: RTail ) : BuildMapVal = {
+        ) : BiMapTupleInjector[ F *: RVTail, Field[ T, F, N, S ] *: RTail ] with {
+            def inject( value : F *: RVTail, into : BuildMapVal, informedBy : Field[ T, F, N, S ] *: RTail ) : BuildMapVal = {
                 val headSchema = trans.translate( informedBy.head.schema )
                 val headInjected = headInjector.inject( value.head, into, informedBy.head, headSchema )
                 tailInjector.inject( value.tail, headInjected, informedBy.tail )
@@ -80,12 +80,12 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
     }
 
     trait BiMapExtractor[ T, F ] {
-        def extract( from : MapVal, field : Field[ T, F ], schema : OtherSchema[ F ]  ) : F
+        def extract( from : MapVal, field : Field.Extr[ T, F ], schema : OtherSchema[ F ]  ) : F
     }
 
     object BiMapExtractor {
         given[ T, F ] : BiMapExtractor[ T, F ] with {
-            def extract( from : MapVal, field : Field[ T, F ], schema : OtherSchema[ F ] ) : F = {
+            def extract( from : MapVal, field : Field.Extr[ T, F ], schema : OtherSchema[ F ] ) : F = {
                 extractField[ T, F ]( from, field, schema )
             }
         }
@@ -113,11 +113,11 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
             headExtr : BiMapExtractor[ T, F ],
             tailExtr : BiMapTupleExtractor.Aux[ Tail, TailRes ],
 
-        ) : BiMapTupleExtractor.Aux[ Field.Aux[ T, F, N, S ] *: Tail, F *: TailRes ] =
-            new BiMapTupleExtractor[ Field.Aux[ T, F, N, S ] *: Tail ] {
+        ) : BiMapTupleExtractor.Aux[ Field[ T, F, N, S ] *: Tail, F *: TailRes ] =
+            new BiMapTupleExtractor[ Field[ T, F, N, S ] *: Tail ] {
                 type Out = F *: TailRes
 
-                def extract( from : MapVal, informedBy : Field.Aux[ T, F, N, S ] *: Tail ) : F *: tailExtr.Out = {
+                def extract( from : MapVal, informedBy : Field[ T, F, N, S ] *: Tail ) : F *: tailExtr.Out = {
                     val headSchema = trans.translate( informedBy.head.schema )
                     headExtr.extract( from, informedBy.head, headSchema ) *: tailExtr.extract( from, informedBy.tail )
                 }
@@ -128,8 +128,8 @@ trait BiMapProductTranslation[ OtherSchema[ _ ], MapVal, BuildMapVal ] {
         using
         sr : SchemaTranslator[ F, S, OtherSchema ],
     ) : FieldInjector[ T, F, N, S, BuildMapVal ] with {
-        def inject( field : Field.Aux[ T, F, N, S ], value : F, into : BuildMapVal ) : BuildMapVal =
-            writeField[ T, F ]( value, into, field, sr.translate( field.schema ) )
+        def inject( field : Field[ T, F, N, S ], value : F, into : BuildMapVal ) : BuildMapVal =
+            writeField[ F ]( value, into, field, sr.translate( field.schema ) )
     }
 
     given additionalFieldsExtractor[ T ] : SimpleExtractor.Aux[ MapVal, OtherSchema[ T ], Map[ String, T ] ] = {

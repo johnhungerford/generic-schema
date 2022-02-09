@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.product.field
 
-import org.hungerford.generic.schema.product.field.Field.Aux
+import org.hungerford.generic.schema.product.field.Field
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.hungerford.generic.schema.Schema
@@ -12,11 +12,24 @@ class UniqueFieldNamesTest extends AnyFlatSpecLike with Matchers {
     behavior of "UniqueFieldNames"
 
     it should "be summoned for a tuple of one FieldDescription" in {
-        summon[ UniqueFieldNames[ Field.Aux[ Int, Int, "hello", Unit ] *: EmptyTuple ] ]
+        summon[ UniqueFieldNames[ Field[ Int, Int, "hello", Unit ] *: EmptyTuple ] ]
+    }
+
+    it should "be summoned for a tuple of one LazyField" in {
+        summon[ UniqueFieldNames[ LazyField[ Int, Int, "hello" ] *: EmptyTuple ] ]
     }
 
     it should "be summoned for a tuple of two unique FieldDescriptions" in {
-        summon[ UniqueFieldNames[ Field.Aux[ Int, Int, "hello", Unit ] *: Field.Aux[ Int, Int, "there", Unit ] *: EmptyTuple ] ]
+        summon[ UniqueFieldNames[ Field[ Int, Int, "hello", Unit ] *: Field[ Int, Int, "there", Unit ] *: EmptyTuple ] ]
+    }
+
+    it should "be summoned for a tuple LazyField with unique names" in {
+        summon[ UniqueFieldNames[ LazyField[ Int, Int, "hello" ] *: LazyField[ Int, Int, "there " ] *: EmptyTuple ] ]
+    }
+
+    it should "be summoned for LazyFields and Fields with unique names" in {
+        summon[ UniqueFieldNames[ LazyField[ Int, Int, "hello" ] *: Field[ Int, Int, "there ", Unit ] *: EmptyTuple ] ]
+        summon[ UniqueFieldNames[ Field[ Int, Int, "hello ", Unit ]  *: LazyField[ Int, Int, "there" ] *: EmptyTuple ] ]
     }
 
     it should "not be summoned for a tuple of two FieldDescriptions with the same field name" in {

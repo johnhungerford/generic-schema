@@ -3,7 +3,7 @@ package org.hungerford.generic.schema.selector
 import org.hungerford.generic.schema.{Schema, selector}
 import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeRetriever, TypeName}
 import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, subtype}
-import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever}
+import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever, LazyField}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
 
 import scala.util.NotGiven
@@ -58,32 +58,45 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         using
         ev : NotGiven[ SelR <:< Tuple ],
         fr : selector.ComponentRetriever.Aux[ Schema.Aux[ F, S ], SelR, I ],
-    ) : ComponentRetriever[ Field.Aux[ T, F, N, S ], SelR ] with {
+    ) : ComponentRetriever[ Field[ T, F, N, S ], SelR ] with {
         override type Inner = I
 
-        override def retrieve( from : Field.Aux[ T, F, N, S ] ) : Inner = {
+        override def retrieve( from : Field[ T, F, N, S ] ) : Inner = {
             fr.retrieve( from.schema )
         }
     }
 
-    given fromProductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, S ](
+    given fromLazyFieldDescription[ T, F, N <: FieldName, SelR, I ](
         using
-        fr : FieldRetriever.Aux[ SelN, R, Field.Aux[ T, F, N, S ] ],
-    ) : ComponentRetriever[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ SelN ] ] with {
-        override type Inner = Field.Aux[ T, F, N, S ]
+        ev : NotGiven[ SelR <:< Tuple ],
+        sch : Schema[ F ],
+        fr : selector.ComponentRetriever.Aux[ Schema.Aux[ F, sch.Shape ], SelR, I ],
+    ) : ComponentRetriever[ LazyField[ T, F, N ], SelR ] with {
+        override type Inner = I
 
-        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Field.Aux[ T, F, N, S ] = {
+        override def retrieve( from : LazyField[ T, F, N ] ) : Inner = {
+            fr.retrieve( sch )
+        }
+    }
+
+    given fromProductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Fld ](
+        using
+        fr : FieldRetriever.Aux[ SelN, R, Fld ],
+    ) : ComponentRetriever[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ SelN ] ] with {
+        override type Inner = Fld
+
+        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Fld = {
             fr.retrieve( from.shape.fieldDescriptions )
         }
     }
 
     given fromProductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, S ](
         using
-        fr : FieldRetriever.Aux[ SelN, R, Field.Aux[ T, F, N, S ] ],
+        fr : FieldRetriever.Aux[ SelN, R, Field[ T, F, N, S ] ],
     ) : ComponentRetriever[ ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ], FieldSelector[ SelN ] ] with {
-        override type Inner = Field.Aux[ T, F, N, S ]
+        override type Inner = Field[ T, F, N, S ]
 
-        override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ) : Field.Aux[ T, F, N, S ] = {
+        override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ) : Field[ T, F, N, S ] = {
             fr.retrieve( from.fieldDescs )
         }
     }

@@ -45,7 +45,7 @@ trait UPickleProductTranslation
 
     protected def extractField[ T, F ](
         from : Value.Value,
-        field : Field[ T, F ],
+        field : Field.Extr[ T, F ],
         schema : ReadWriter[ F ],
     ) : F = {
        val fieldValue : Value = from.obj( field.fieldName )
@@ -59,10 +59,10 @@ trait UPickleProductTranslation
        }
    }
 
-    protected def writeField[ T, F ](
+    protected def writeField[ F ](
         value : F,
         to : ListMap[ String, Value.Value ],
-        field : Field[ T, F ],
+        field : Field.Of[ F ],
         schema : ReadWriter[ F ],
     ) : ListMap[ String, Value.Value ] = {
        val valueJson : Value.Value = writeJs( value )( schema )

@@ -35,19 +35,19 @@
 [error]    |  org.hungerford.generic.schema.product.ProductShape[
 [error]    |    org.hungerford.generic.schema.example.api.DataModel.Request
 [error]    |  , (
-[error]    |    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |      ("name" : String)
 [error]    |    , Unit]
 [error]    |  , 
-[error]    |    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |      ("id" : String)
 [error]    |    , Unit]
 [error]    |  , 
-[error]    |    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |      ("amount" : String)
 [error]    |    , Unit]
 [error]    |  , 
-[error]    |    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |    org.hungerford.generic.schema.product.field.Field[
 [error]    |      org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |    , ("payment" : String), 
 [error]    |      org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -61,11 +61,11 @@
 [error]    |          org.hungerford.generic.schema.product.ProductShape[
 [error]    |            org.hungerford.generic.schema.example.api.DataModel.CreditCard
 [error]    |          , (
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |            org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |              ("number" : String)
 [error]    |            , Unit]
 [error]    |          , 
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |            org.hungerford.generic.schema.product.field.Field[
 [error]    |              org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |            , ("expDat" : String), 
 [error]    |              org.hungerford.generic.schema.product.ProductShape[
@@ -75,7 +75,7 @@
 [error]    |                  Name = ("year" : String); Shape = Unit
 [error]    |                }
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                  ("month" : String)
 [error]    |                , Unit]
 [error]    |              ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -109,21 +109,21 @@
 [error]    |          org.hungerford.generic.schema.product.ProductShape[
 [error]    |            org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |          , (
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |            org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |              ("checkNumber" : String)
 [error]    |            , Unit]
 [error]    |          , 
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |            org.hungerford.generic.schema.product.field.Field[String,
 [error]    |              ("memo" : String)
 [error]    |            , Unit]
 [error]    |          , 
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |            org.hungerford.generic.schema.product.field.Field[
 [error]    |              org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |            , ("date" : String), 
 [error]    |              org.hungerford.generic.schema.product.ProductShape[
 [error]    |                ....api.DataModel.Date
 [error]    |              , (....field.Field[Int]{Name = ("year" : String); Shape = Unit}, 
-[error]    |                ....Field.Aux[Int, ("month" : String), Unit]
+[error]    |                ....Field[Int, ("month" : String), Unit]
 [error]    |              ), (Int, Int), Nothing, Unit, (Int, Int) => ...api.DataModel.Date
 [error]    |                , 
 [error]    |              ...api.DataModel.Date => (Int, Int)]
@@ -172,19 +172,19 @@
 [error]    |    [org.hungerford.generic.schema.example.api.DataModel.Request, 
 [error]    |      
 [error]    |        (
-[error]    |          org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |          org.hungerford.generic.schema.product.field.Field[String,
 [error]    |            ("name" : String)
 [error]    |          , Unit]
 [error]    |        , 
-[error]    |          org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |          org.hungerford.generic.schema.product.field.Field[String,
 [error]    |            ("id" : String)
 [error]    |          , Unit]
 [error]    |        , 
-[error]    |          org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |          org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |            ("amount" : String)
 [error]    |          , Unit]
 [error]    |        , 
-[error]    |          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |          org.hungerford.generic.schema.product.field.Field[
 [error]    |            org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |          , ("payment" : String), 
 [error]    |            org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -198,11 +198,11 @@
 [error]    |                org.hungerford.generic.schema.product.ProductShape[
 [error]    |                  org.hungerford.generic.schema.example.api.DataModel.CreditCard
 [error]    |                , (
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                    ("number" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                  org.hungerford.generic.schema.product.field.Field[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                  , ("expDat" : String), 
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
@@ -212,7 +212,7 @@
 [error]    |                        Name = ("year" : String); Shape = Unit
 [error]    |                      }
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("month" : String)
 [error]    |                      , Unit]
 [error]    |                    ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -251,15 +251,15 @@
 [error]    |                org.hungerford.generic.schema.product.ProductShape[
 [error]    |                  org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                , (
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                    ("checkNumber" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                    ("memo" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                  org.hungerford.generic.schema.product.field.Field[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                  , ("date" : String), 
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
@@ -269,7 +269,7 @@
 [error]    |                        Name = ("year" : String); Shape = Unit
 [error]    |                      }
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("month" : String)
 [error]    |                      , Unit]
 [error]    |                    ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -322,15 +322,15 @@
 [error]    |      , Unit, 
 [error]    |        
 [error]    |          (
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |            org.hungerford.generic.schema.product.field.Field[String,
 [error]    |              ("id" : String)
 [error]    |            , Unit]
 [error]    |          , 
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |            org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |              ("amount" : String)
 [error]    |            , Unit]
 [error]    |          , 
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |            org.hungerford.generic.schema.product.field.Field[
 [error]    |              org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |            , ("payment" : String), 
 [error]    |              org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -344,11 +344,11 @@
 [error]    |                  org.hungerford.generic.schema.product.ProductShape[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.CreditCard
 [error]    |                  , (
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                      ("number" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                    org.hungerford.generic.schema.product.field.Field[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                    , ("expDat" : String), 
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
@@ -358,7 +358,7 @@
 [error]    |                          Name = ("year" : String); Shape = Unit
 [error]    |                        }
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("month" : String)
 [error]    |                        , Unit]
 [error]    |                      ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -396,15 +396,15 @@
 [error]    |                  org.hungerford.generic.schema.product.ProductShape[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                  , (
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                      ("checkNumber" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                      ("memo" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                    org.hungerford.generic.schema.product.field.Field[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                    , ("date" : String), 
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
@@ -414,7 +414,7 @@
 [error]    |                          Name = ("year" : String); Shape = Unit
 [error]    |                        }
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("month" : String)
 [error]    |                        , Unit]
 [error]    |                      ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -444,19 +444,19 @@
 [error]    |      , 
 [error]    |        
 [error]    |          (
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |            org.hungerford.generic.schema.product.field.Field[String,
 [error]    |              ("name" : String)
 [error]    |            , Unit]
 [error]    |          , 
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |            org.hungerford.generic.schema.product.field.Field[String,
 [error]    |              ("id" : String)
 [error]    |            , Unit]
 [error]    |          , 
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |            org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |              ("amount" : String)
 [error]    |            , Unit]
 [error]    |          , 
-[error]    |            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |            org.hungerford.generic.schema.product.field.Field[
 [error]    |              org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |            , ("payment" : String), 
 [error]    |              org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -470,11 +470,11 @@
 [error]    |                  org.hungerford.generic.schema.product.ProductShape[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.CreditCard
 [error]    |                  , (
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                      ("number" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                    org.hungerford.generic.schema.product.field.Field[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                    , ("expDat" : String), 
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
@@ -484,7 +484,7 @@
 [error]    |                          Name = ("year" : String); Shape = Unit
 [error]    |                        }
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("month" : String)
 [error]    |                        , Unit]
 [error]    |                      ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -522,15 +522,15 @@
 [error]    |                  org.hungerford.generic.schema.product.ProductShape[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                  , (
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                      ("checkNumber" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                      ("memo" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                    org.hungerford.generic.schema.product.field.Field[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                    , ("date" : String), 
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
@@ -540,7 +540,7 @@
 [error]    |                          Name = ("year" : String); Shape = Unit
 [error]    |                        }
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("month" : String)
 [error]    |                        , Unit]
 [error]    |                      ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -593,19 +593,19 @@
 [error]    |        , Unit, 
 [error]    |          
 [error]    |            (
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |              org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                ("name" : String)
 [error]    |              , Unit]
 [error]    |            , 
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |              org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                ("id" : String)
 [error]    |              , Unit]
 [error]    |            , 
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |              org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                ("amount" : String)
 [error]    |              , Unit]
 [error]    |            , 
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |              org.hungerford.generic.schema.product.field.Field[
 [error]    |                org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |              , ("payment" : String), 
 [error]    |                org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -619,11 +619,11 @@
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.CreditCard
 [error]    |                    , (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("number" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                      , ("expDat" : String), 
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
@@ -633,7 +633,7 @@
 [error]    |                            Name = ("year" : String); Shape = Unit
 [error]    |                          }
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("month" : String), Unit]
 [error]    |                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -673,15 +673,15 @@
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                    , (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("checkNumber" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                        ("memo" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                      , ("date" : String), 
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
@@ -691,7 +691,7 @@
 [error]    |                            Name = ("year" : String); Shape = Unit
 [error]    |                          }
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("month" : String), Unit]
 [error]    |                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -746,19 +746,19 @@
 [error]    |          , Unit, 
 [error]    |            
 [error]    |              (
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                  ("name" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                  ("id" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                  ("amount" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                org.hungerford.generic.schema.product.field.Field[
 [error]    |                  org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                , ("payment" : String), 
 [error]    |                  org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -773,11 +773,11 @@
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                          CreditCard
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("number" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("expDat" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -787,7 +787,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -830,15 +830,15 @@
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("checkNumber" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[String
+[error]    |                        org.hungerford.generic.schema.product.field.Field[String
 [error]    |                          , 
 [error]    |                        ("memo" : String), Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("date" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -848,7 +848,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -916,15 +916,15 @@
 [error]    |          [String, ("name" : String), Unit, 
 [error]    |            
 [error]    |              (
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                  ("id" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                  ("amount" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                org.hungerford.generic.schema.product.field.Field[
 [error]    |                  org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                , ("payment" : String), 
 [error]    |                  org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -939,11 +939,11 @@
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                          CreditCard
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("number" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("expDat" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -953,7 +953,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -996,15 +996,15 @@
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("checkNumber" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[String
+[error]    |                        org.hungerford.generic.schema.product.field.Field[String
 [error]    |                          , 
 [error]    |                        ("memo" : String), Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("date" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -1014,7 +1014,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1060,11 +1060,11 @@
 [error]    |        , String, ("id" : String), Unit, 
 [error]    |          
 [error]    |            (
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |              org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                ("amount" : String)
 [error]    |              , Unit]
 [error]    |            , 
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |              org.hungerford.generic.schema.product.field.Field[
 [error]    |                org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |              , ("payment" : String), 
 [error]    |                org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -1078,11 +1078,11 @@
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.CreditCard
 [error]    |                    , (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("number" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                      , ("expDat" : String), 
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
@@ -1092,7 +1092,7 @@
 [error]    |                            Name = ("year" : String); Shape = Unit
 [error]    |                          }
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("month" : String), Unit]
 [error]    |                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1132,15 +1132,15 @@
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                    , (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("checkNumber" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                        ("memo" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                      , ("date" : String), 
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
@@ -1150,7 +1150,7 @@
 [error]    |                            Name = ("year" : String); Shape = Unit
 [error]    |                          }
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("month" : String), Unit]
 [error]    |                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1180,19 +1180,19 @@
 [error]    |        , 
 [error]    |          
 [error]    |            (
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |              org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                ("name" : String)
 [error]    |              , Unit]
 [error]    |            , 
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |              org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                ("id" : String)
 [error]    |              , Unit]
 [error]    |            , 
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |              org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                ("amount" : String)
 [error]    |              , Unit]
 [error]    |            , 
-[error]    |              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |              org.hungerford.generic.schema.product.field.Field[
 [error]    |                org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |              , ("payment" : String), 
 [error]    |                org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -1206,11 +1206,11 @@
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.CreditCard
 [error]    |                    , (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("number" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                      , ("expDat" : String), 
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
@@ -1220,7 +1220,7 @@
 [error]    |                            Name = ("year" : String); Shape = Unit
 [error]    |                          }
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("month" : String), Unit]
 [error]    |                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1260,15 +1260,15 @@
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                    , (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("checkNumber" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                        ("memo" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                      , ("date" : String), 
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
@@ -1278,7 +1278,7 @@
 [error]    |                            Name = ("year" : String); Shape = Unit
 [error]    |                          }
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("month" : String), Unit]
 [error]    |                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1333,19 +1333,19 @@
 [error]    |          , Unit, 
 [error]    |            
 [error]    |              (
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                  ("name" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                  ("id" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                  ("amount" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                org.hungerford.generic.schema.product.field.Field[
 [error]    |                  org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                , ("payment" : String), 
 [error]    |                  org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -1360,11 +1360,11 @@
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                          CreditCard
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("number" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("expDat" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -1374,7 +1374,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1417,15 +1417,15 @@
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("checkNumber" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[String
+[error]    |                        org.hungerford.generic.schema.product.field.Field[String
 [error]    |                          , 
 [error]    |                        ("memo" : String), Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("date" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -1435,7 +1435,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1493,19 +1493,19 @@
 [error]    |            , Unit, 
 [error]    |              
 [error]    |                (
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                    ("name" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                    ("id" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                    ("amount" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                  org.hungerford.generic.schema.product.field.Field[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                  , ("payment" : String), 
 [error]    |                    org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -1521,11 +1521,11 @@
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                            CreditCard
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("number" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("expDat" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -1536,7 +1536,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1582,15 +1582,15 @@
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("checkNumber" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            String
 [error]    |                          , ("memo" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("date" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -1601,7 +1601,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1678,15 +1678,15 @@
 [error]    |            , 
 [error]    |              
 [error]    |                (
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                    ("id" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                    ("amount" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                  org.hungerford.generic.schema.product.field.Field[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                  , ("payment" : String), 
 [error]    |                    org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -1702,11 +1702,11 @@
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                            CreditCard
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("number" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("expDat" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -1717,7 +1717,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1763,15 +1763,15 @@
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("checkNumber" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            String
 [error]    |                          , ("memo" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("date" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -1782,7 +1782,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -1827,11 +1827,11 @@
 [error]    |              [String, ("id" : String), Unit, 
 [error]    |                
 [error]    |                  (
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                      ("amount" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                    org.hungerford.generic.schema.product.field.Field[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                    , ("payment" : String), 
 [error]    |                      org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -1848,11 +1848,11 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              CreditCard
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("number" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("expDat" : String), 
@@ -1913,15 +1913,15 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              Check
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("checkNumber" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              String
 [error]    |                            , ("memo" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("date" : String), 
@@ -1983,7 +1983,7 @@
 [error]    |          , Int, ("amount" : String), Unit, 
 [error]    |            
 [error]    |              (
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                org.hungerford.generic.schema.product.field.Field[
 [error]    |                  org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                , ("payment" : String), 
 [error]    |                  org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -1998,11 +1998,11 @@
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                          CreditCard
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("number" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("expDat" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -2012,7 +2012,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -2055,15 +2055,15 @@
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("checkNumber" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[String
+[error]    |                        org.hungerford.generic.schema.product.field.Field[String
 [error]    |                          , 
 [error]    |                        ("memo" : String), Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("date" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -2073,7 +2073,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -2106,19 +2106,19 @@
 [error]    |          , 
 [error]    |            
 [error]    |              (
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                  ("name" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                  ("id" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                  ("amount" : String)
 [error]    |                , Unit]
 [error]    |              , 
-[error]    |                org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                org.hungerford.generic.schema.product.field.Field[
 [error]    |                  org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                , ("payment" : String), 
 [error]    |                  org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -2133,11 +2133,11 @@
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                          CreditCard
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("number" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("expDat" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -2147,7 +2147,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -2190,15 +2190,15 @@
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("checkNumber" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[String
+[error]    |                        org.hungerford.generic.schema.product.field.Field[String
 [error]    |                          , 
 [error]    |                        ("memo" : String), Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("date" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -2208,7 +2208,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -2266,19 +2266,19 @@
 [error]    |            , Unit, 
 [error]    |              
 [error]    |                (
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                    ("name" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                    ("id" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                    ("amount" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                  org.hungerford.generic.schema.product.field.Field[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                  , ("payment" : String), 
 [error]    |                    org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -2294,11 +2294,11 @@
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                            CreditCard
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("number" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("expDat" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -2309,7 +2309,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -2355,15 +2355,15 @@
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("checkNumber" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            String
 [error]    |                          , ("memo" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("date" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -2374,7 +2374,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -2435,19 +2435,19 @@
 [error]    |              , Unit, 
 [error]    |                
 [error]    |                  (
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                      ("name" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                      ("id" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                      ("amount" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                    org.hungerford.generic.schema.product.field.Field[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                    , ("payment" : String), 
 [error]    |                      org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -2464,11 +2464,11 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              CreditCard
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("number" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("expDat" : String), 
@@ -2529,15 +2529,15 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              Check
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("checkNumber" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              String
 [error]    |                            , ("memo" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("date" : String), 
@@ -2631,15 +2631,15 @@
 [error]    |              , 
 [error]    |                
 [error]    |                  (
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                      ("id" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                      ("amount" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                    org.hungerford.generic.schema.product.field.Field[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                    , ("payment" : String), 
 [error]    |                      org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -2656,11 +2656,11 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              CreditCard
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("number" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("expDat" : String), 
@@ -2721,15 +2721,15 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              Check
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("checkNumber" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              String
 [error]    |                            , ("memo" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("date" : String), 
@@ -2796,11 +2796,11 @@
 [error]    |                , 
 [error]    |                  
 [error]    |                    (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("amount" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                      , ("payment" : String), 
 [error]    |                        org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -2820,11 +2820,11 @@
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                CreditCard
 [error]    |                            , (
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("number" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                  Date
 [error]    |                              , ("expDat" : String), 
@@ -2897,15 +2897,15 @@
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Check
 [error]    |                            , (
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("checkNumber" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                String
 [error]    |                              , ("memo" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                  Date
 [error]    |                              , ("date" : String), 
@@ -2968,7 +2968,7 @@
 [error]    |                  [Int, ("amount" : String), Unit, 
 [error]    |                    
 [error]    |                      (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                            Payment
 [error]    |                        , ("payment" : String), 
@@ -3170,11 +3170,11 @@
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.CreditCard
 [error]    |                    , (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("number" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                      , ("expDat" : String), 
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
@@ -3184,7 +3184,7 @@
 [error]    |                            Name = ("year" : String); Shape = Unit
 [error]    |                          }
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("month" : String), Unit]
 [error]    |                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -3224,15 +3224,15 @@
 [error]    |                    org.hungerford.generic.schema.product.ProductShape[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                    , (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("checkNumber" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                        ("memo" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                      , ("date" : String), 
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
@@ -3242,7 +3242,7 @@
 [error]    |                            Name = ("year" : String); Shape = Unit
 [error]    |                          }
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("month" : String), Unit]
 [error]    |                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -3270,19 +3270,19 @@
 [error]    |            , EmptyTuple.type, 
 [error]    |              
 [error]    |                (
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                    ("name" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                    ("id" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                  org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                    ("amount" : String)
 [error]    |                  , Unit]
 [error]    |                , 
-[error]    |                  org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                  org.hungerford.generic.schema.product.field.Field[
 [error]    |                    org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                  , ("payment" : String), 
 [error]    |                    org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -3298,11 +3298,11 @@
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                            CreditCard
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("number" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("expDat" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -3313,7 +3313,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -3359,15 +3359,15 @@
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("checkNumber" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            String
 [error]    |                          , ("memo" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("date" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -3378,7 +3378,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -3452,11 +3452,11 @@
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                          CreditCard
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("number" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("expDat" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -3466,7 +3466,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -3509,15 +3509,15 @@
 [error]    |                      org.hungerford.generic.schema.product.ProductShape[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                      , (
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                        org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                          ("checkNumber" : String)
 [error]    |                        , Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[String
+[error]    |                        org.hungerford.generic.schema.product.field.Field[String
 [error]    |                          , 
 [error]    |                        ("memo" : String), Unit]
 [error]    |                      , 
-[error]    |                        org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                        org.hungerford.generic.schema.product.field.Field[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                        , ("date" : String), 
 [error]    |                          org.hungerford.generic.schema.product.ProductShape[
@@ -3527,7 +3527,7 @@
 [error]    |                              Name = ("year" : String); Shape = Unit
 [error]    |                            }
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("month" : String), Unit]
 [error]    |                          ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -3558,19 +3558,19 @@
 [error]    |              , 
 [error]    |                
 [error]    |                  (
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                      ("name" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                      ("id" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                    org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                      ("amount" : String)
 [error]    |                    , Unit]
 [error]    |                  , 
-[error]    |                    org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                    org.hungerford.generic.schema.product.field.Field[
 [error]    |                      org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                    , ("payment" : String), 
 [error]    |                      org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -3587,11 +3587,11 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              CreditCard
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("number" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("expDat" : String), 
@@ -3652,15 +3652,15 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              Check
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("checkNumber" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              String
 [error]    |                            , ("memo" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("date" : String), 
@@ -3749,11 +3749,11 @@
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                            CreditCard
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("number" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("expDat" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -3764,7 +3764,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -3810,15 +3810,15 @@
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("checkNumber" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            String
 [error]    |                          , ("memo" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("date" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -3829,7 +3829,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -3863,19 +3863,19 @@
 [error]    |                , 
 [error]    |                  
 [error]    |                    (
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                        ("name" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[String, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[String,
 [error]    |                        ("id" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[Int, 
+[error]    |                      org.hungerford.generic.schema.product.field.Field[Int,
 [error]    |                        ("amount" : String)
 [error]    |                      , Unit]
 [error]    |                    , 
-[error]    |                      org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                      org.hungerford.generic.schema.product.field.Field[
 [error]    |                        org.hungerford.generic.schema.example.api.DataModel.Payment
 [error]    |                      , ("payment" : String), 
 [error]    |                        org.hungerford.generic.schema.coproduct.CoproductShape[
@@ -3895,11 +3895,11 @@
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                CreditCard
 [error]    |                            , (
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("number" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                  Date
 [error]    |                              , ("expDat" : String), 
@@ -3972,15 +3972,15 @@
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Check
 [error]    |                            , (
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("checkNumber" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                String
 [error]    |                              , ("memo" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                  Date
 [error]    |                              , ("date" : String), 
@@ -4081,11 +4081,11 @@
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                            CreditCard
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("number" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("expDat" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -4096,7 +4096,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -4142,15 +4142,15 @@
 [error]    |                        org.hungerford.generic.schema.product.ProductShape[
 [error]    |                          org.hungerford.generic.schema.example.api.DataModel.Check
 [error]    |                        , (
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[Int
+[error]    |                          org.hungerford.generic.schema.product.field.Field[Int
 [error]    |                            , 
 [error]    |                          ("checkNumber" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            String
 [error]    |                          , ("memo" : String), Unit]
 [error]    |                        , 
-[error]    |                          org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                          org.hungerford.generic.schema.product.field.Field[
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.Date
 [error]    |                          , ("date" : String), 
 [error]    |                            org.hungerford.generic.schema.product.ProductShape[
@@ -4161,7 +4161,7 @@
 [error]    |                                {
 [error]    |                              Name = ("year" : String); Shape = Unit}
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("month" : String), Unit]
 [error]    |                            ), (Int, Int), Nothing, Unit, (Int, Int) => 
@@ -4209,11 +4209,11 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              CreditCard
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("number" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("expDat" : String), 
@@ -4274,15 +4274,15 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              Check
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("checkNumber" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              String
 [error]    |                            , ("memo" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("date" : String), 
@@ -4437,15 +4437,15 @@
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Check
 [error]    |                            , (
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("checkNumber" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                String
 [error]    |                              , ("memo" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                  Date
 [error]    |                              , ("date" : String), 
@@ -4506,11 +4506,11 @@
 [error]    |                            org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                              CreditCard
 [error]    |                          , (
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              Int
 [error]    |                            , ("number" : String), Unit]
 [error]    |                          , 
-[error]    |                            org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                            org.hungerford.generic.schema.product.field.Field[
 [error]    |                              org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                Date
 [error]    |                            , ("expDat" : String), 
@@ -4558,11 +4558,11 @@
 [error]    |                        , 
 [error]    |                          
 [error]    |                            (
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                Int
 [error]    |                              , ("number" : String), Unit]
 [error]    |                            , 
-[error]    |                              org.hungerford.generic.schema.product.field.Field.Aux[
+[error]    |                              org.hungerford.generic.schema.product.field.Field[
 [error]    |                                org.hungerford.generic.schema.example.api.DataModel.
 [error]    |                                  Date
 [error]    |                              , ("expDat" : String), 
@@ -5257,7 +5257,7 @@
 [error]    |                                        , 
 [error]    |                                          org.hungerford.generic.schema.product.
 [error]    |                                            field
-[error]    |                                          .Field.Aux[Int, ("month" : String), Unit]
+[error]    |                                          .Field[Int, ("month" : String), Unit]
 [error]    |                                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
 [error]    |                                          org.hungerford.generic.schema.example.api.
 [error]    |                                            DataModel
@@ -5402,7 +5402,7 @@
 [error]    |                                        (
 [error]    |                                          org.hungerford.generic.schema.product.
 [error]    |                                            field
-[error]    |                                          .Field.Aux[Int, ("month" : String), Unit]
+[error]    |                                          .Field[Int, ("month" : String), Unit]
 [error]    |                                         *: EmptyTuple.type)
 [error]    |                                      
 [error]    |                                    , 
@@ -5416,7 +5416,7 @@
 [error]    |                                        , 
 [error]    |                                          org.hungerford.generic.schema.product.
 [error]    |                                            field
-[error]    |                                          .Field.Aux[Int, ("month" : String), Unit]
+[error]    |                                          .Field[Int, ("month" : String), Unit]
 [error]    |                                        )
 [error]    |                                      
 [error]    |                                    , (Int, Int), Nothing, Unit, 
@@ -5457,7 +5457,7 @@
 [error]    |                                          , 
 [error]    |                                            org.hungerford.generic.schema.product.
 [error]    |                                              field
-[error]    |                                            .Field.Aux[Int, ("month" : String), Unit
+[error]    |                                            .Field[Int, ("month" : String), Unit
 [error]    |                                              ]
 [error]    |                                          )
 [error]    |                                        
@@ -5498,7 +5498,7 @@
 [error]    |                                            , 
 [error]    |                                              org.hungerford.generic.schema.product.
 [error]    |                                                field
-[error]    |                                              .Field.Aux[Int, ("month" : String), 
+[error]    |                                              .Field[Int, ("month" : String),
 [error]    |                                                Unit
 [error]    |                                              ]
 [error]    |                                            )
@@ -5548,7 +5548,7 @@
 [error]    |                                            (
 [error]    |                                              org.hungerford.generic.schema.product.
 [error]    |                                                field
-[error]    |                                              .Field.Aux[Int, ("month" : String), 
+[error]    |                                              .Field[Int, ("month" : String),
 [error]    |                                                Unit
 [error]    |                                              ]
 [error]    |                                             *: EmptyTuple.type)
@@ -5579,7 +5579,7 @@
 [error]    |                                          , 
 [error]    |                                            org.hungerford.generic.schema.product.
 [error]    |                                              field
-[error]    |                                            .Field.Aux[Int, ("month" : String), Unit
+[error]    |                                            .Field[Int, ("month" : String), Unit
 [error]    |                                              ]
 [error]    |                                          )
 [error]    |                                        
@@ -5622,7 +5622,7 @@
 [error]    |                                            , 
 [error]    |                                              org.hungerford.generic.schema.product.
 [error]    |                                                field
-[error]    |                                              .Field.Aux[Int, ("month" : String), 
+[error]    |                                              .Field[Int, ("month" : String),
 [error]    |                                                Unit
 [error]    |                                              ]
 [error]    |                                            )
@@ -5664,7 +5664,7 @@
 [error]    |                                              , 
 [error]    |                                                org.hungerford.generic.schema.product
 [error]    |                                                  .
-[error]    |                                                field.Field.Aux[Int, 
+[error]    |                                                field.Field[Int,
 [error]    |                                                  ("month" : String)
 [error]    |                                                , Unit]
 [error]    |                                              )
@@ -5727,7 +5727,7 @@
 [error]    |                                              (
 [error]    |                                                org.hungerford.generic.schema.product
 [error]    |                                                  .
-[error]    |                                                field.Field.Aux[Int, 
+[error]    |                                                field.Field[Int,
 [error]    |                                                  ("month" : String)
 [error]    |                                                , Unit]
 [error]    |                                               *: EmptyTuple.type)
@@ -5765,7 +5765,7 @@
 [error]    |                                            , 
 [error]    |                                              org.hungerford.generic.schema.product.
 [error]    |                                                field
-[error]    |                                              .Field.Aux[Int, ("month" : String), 
+[error]    |                                              .Field[Int, ("month" : String),
 [error]    |                                                Unit
 [error]    |                                              ]
 [error]    |                                            )
@@ -5809,7 +5809,7 @@
 [error]    |                                        , 
 [error]    |                                          org.hungerford.generic.schema.product.
 [error]    |                                            field
-[error]    |                                          .Field.Aux[Int, ("month" : String), Unit]
+[error]    |                                          .Field[Int, ("month" : String), Unit]
 [error]    |                                        )
 [error]    |                                      
 [error]    |                                    , (Int, Int), 
@@ -5865,7 +5865,7 @@
 [error]    |                                        , 
 [error]    |                                          org.hungerford.generic.schema.product.
 [error]    |                                            field
-[error]    |                                          .Field.Aux[Int, ("month" : String), Unit]
+[error]    |                                          .Field[Int, ("month" : String), Unit]
 [error]    |                                        ), (Int, Int), Nothing, Unit, (Int, Int) => 
 [error]    |                                          org.hungerford.generic.schema.example.api.
 [error]    |                                            DataModel

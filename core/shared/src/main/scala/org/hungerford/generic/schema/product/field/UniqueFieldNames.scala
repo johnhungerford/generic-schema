@@ -12,11 +12,11 @@ sealed trait FieldDescriptionsDoNotContainFieldName[ N <: String, R <: Tuple ]
 object FieldDescriptionsDoNotContainFieldName {
     given [ N <: Stringleton ] : FieldDescriptionsDoNotContainFieldName[ N, EmptyTuple ] with {}
 
-    given [ N <: Stringleton, T, F, O <: Stringleton, S, Next <: Tuple ](
+    given [ N <: Stringleton, O <: Stringleton, FldO <: Field.Named[ O ], Next <: Tuple ](
         using
         ev : => Ineq[ N, O ],
         nextEv : => FieldDescriptionsDoNotContainFieldName[ N, Next ],
-    ) : FieldDescriptionsDoNotContainFieldName[ N, Field.Aux[ T, F, O, S ] *: Next ] with {}
+    ) : FieldDescriptionsDoNotContainFieldName[ N, FldO *: Next ] with {}
 }
 
 sealed trait UniqueFieldNames[ R <: Tuple ]
@@ -24,9 +24,9 @@ sealed trait UniqueFieldNames[ R <: Tuple ]
 object UniqueFieldNames {
     given UniqueFieldNames[ EmptyTuple ] with {}
 
-    given [ T, F, N <: Stringleton, S, Rest <: Tuple ](
+    given [ T, N <: Stringleton, FldN <: Field.Named[ N ], Rest <: Tuple ](
         using
         ev1 : FieldDescriptionsDoNotContainFieldName[ N, Rest ],
         ev2 : UniqueFieldNames[ Rest ],
-    ) : UniqueFieldNames[ Field.Aux[ T, F, N, S ] *: Rest ] with {}
+    ) : UniqueFieldNames[ FldN *: Rest ] with {}
 }

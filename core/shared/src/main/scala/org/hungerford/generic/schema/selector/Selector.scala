@@ -75,8 +75,8 @@ trait SelectorDsl extends SelectorConversion {
     def tN[ T ] : TS[ T ] = new TS[ T ]
 
     class TS[ T ] {
-        def apply[ I <: Int, N <: Nat ](
-            n : I,
+        def apply[ I <: Int & Singleton, N <: Nat ](
+            skip : I,
         )(
             using
             conv : IntEquiv.Aux[ I, N ],

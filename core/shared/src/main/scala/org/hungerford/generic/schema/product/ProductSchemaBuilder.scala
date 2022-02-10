@@ -1,11 +1,11 @@
 package org.hungerford.generic.schema.product
 
-import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldName, FieldRemover, FieldReplacer, FieldRetriever, UniqueFieldNames}
+import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldName, FieldRemover, FieldReplacer, FieldRetriever, FieldTypeRemover, UniqueFieldNames}
 import org.hungerford.generic.schema.{ComplexSchema, NoSchema, Primitive, Schema}
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
-import org.hungerford.generic.schema.selector.{AmbigSelector, ComponentRetriever, ComponentUpdater, FieldSelector, Selector}
-import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
+import org.hungerford.generic.schema.selector.{AmbigSelector, ComponentRetriever, ComponentUpdater, FieldSelector, Selector, TypeSelector}
+import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Nat}
 
 import scala.collection.immutable.NewVectorIterator
 
@@ -51,6 +51,20 @@ case class ProductSchemaBuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
     )(
         using
         rm : FieldRemover.Aux[ N, R, NewR ],
+        fc : => CtxWrapTuplesConstraint[ Field.Of, NewR, NewRV ],
+    ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, AFE, Unit ] = {
+        val newFields = rm.remove( fieldDescs )
+        copy[ T, NewR, NewRV, AF, AFS, AFE, Unit ](
+            fieldDescs = newFields,
+            constr = (),
+        )
+    }
+
+    def removeField[ F, N <: Nat, NewR <: Tuple, NewRV <: Tuple ](
+        typeSelector : TypeSelector[ F, N ],
+    )(
+        using
+        rm : FieldTypeRemover.Aux[ F, N, R, NewR ],
         fc : => CtxWrapTuplesConstraint[ Field.Of, NewR, NewRV ],
     ) : ProductSchemaBuilder[ T, NewR, NewRV, AF, AFS, AFE, Unit ] = {
         val newFields = rm.remove( fieldDescs )

@@ -1,26 +1,41 @@
 package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.product.field.FieldName
+import org.hungerford.generic.schema.types.{IntEquiv, Nat}
 
 type Append[ R <: Tuple, T ] = Tuple.Concat[ R, T *: EmptyTuple ]
+
+case class TypeSelector[ T, N <: Nat ]()
 
 class Selector[ R <: Tuple ] {
     def /[ N <: Singleton ]( identifier : N ) : Selector[ Append[ R, AmbigSelector[ N ] ] ] = {
         new Selector[ Append[ R, AmbigSelector[ N ] ] ]
     }
 
+    def /[ T, N <: Nat ]( ts : TypeSelector[ T, N ] ) : Selector[ Append[ R, AmbigSelector[ TypeSelector[ T, N ] ] ] ] = {
+        new Selector[ Append[ R, AmbigSelector[ TypeSelector[ T, N ] ] ] ]
+    }
+
     def /-[ N <: Singleton ]( field : N ) : Selector[ Append[ R, FieldSelector[ N ] ] ] = {
         new Selector[ Append[ R, FieldSelector[ N ] ] ]
+    }
+
+    def /-[ T, N <: Nat ]( ts : TypeSelector[ T, N ] ) : Selector[ Append[ R, FieldSelector[ TypeSelector[ T, N ] ] ] ] = {
+        new Selector[ Append[ R, FieldSelector[ TypeSelector[ T, N ] ] ] ]
     }
 
     def /~[ N <: Singleton ]( subtype : N ) : Selector[ Append[ R, SubTypeSelector[ N ] ] ] = {
         new Selector[ Append[ R, SubTypeSelector[ N ] ] ]
     }
+
+    def /~[ T, N <: Nat ]( ts : TypeSelector[ T, N ] ) : Selector[ Append[ R, SubTypeSelector[ TypeSelector[ T, N ] ] ] ] = {
+        new Selector[ Append[ R, SubTypeSelector[ TypeSelector[ T, N ] ] ] ]
+    }
 }
 
-trait FieldSelector[ N <: Singleton ]
-trait SubTypeSelector[ N <: Singleton ]
-trait AmbigSelector[  N <: Singleton ]
+trait FieldSelector[ N ]
+trait SubTypeSelector[ N ]
+trait AmbigSelector[  N ]
 
 trait SelectorConversion {
     given [ N <: Singleton ] : Conversion[ N, Selector[ AmbigSelector[ N ] *: EmptyTuple ] ] with
@@ -54,6 +69,18 @@ trait SelectorDsl extends SelectorConversion {
 
     def subtype[ N <: Singleton ]( subtype : N ) : Selector[ SubTypeSelector[ N ] *: EmptyTuple ] = {
         new Selector[ SubTypeSelector[ N ] *: EmptyTuple ]
+    }
+
+    def t[ T ] : TypeSelector[ T, Nat._0 ] = TypeSelector[ T, Nat._0 ]()
+    def tN[ T ] : TS[ T ] = new TS[ T ]
+
+    class TS[ T ] {
+        def apply[ I <: Int, N <: Nat ](
+            n : I,
+        )(
+            using
+            conv : IntEquiv.Aux[ I, N ],
+        ) : TypeSelector[ T, N ] = TypeSelector[ T, N ]()
     }
 }
 

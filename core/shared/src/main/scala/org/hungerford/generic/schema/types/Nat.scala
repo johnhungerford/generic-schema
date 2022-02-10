@@ -1,10 +1,11 @@
 package org.hungerford.generic.schema.types
 
 trait Nat
-class _0 extends Nat
-class Succ[ N <: Nat ] extends Nat
 
 object Nat {
+    trait _0 extends Nat
+    trait Succ[ N <: Nat ] extends Nat
+
     type _1 = Succ[ _0 ]
     type _2 = Succ[ _1 ]
     type _3 = Succ[ _2 ]
@@ -42,6 +43,8 @@ trait Plus[ A <: Nat, B <: Nat ] {
 object Plus {
     type Aux[ A <: Nat, B <: Nat, C <: Nat ] = Plus[ A, B ] { type Res = C }
 
+    import Nat.*
+
     given [ B <: Nat ] : Plus[ _0, B ] with { type Res = B }
     given leftRecurse[ A <: Nat, B <: Nat, C <: Nat ](
         using
@@ -77,7 +80,7 @@ trait IntEquiv[ I <: Int ] {
 object IntEquiv {
     type Aux[ I <: Int, N0 <: Nat ] = IntEquiv[ I ] { type N = N0 }
 
-    given eq0 : IntEquiv[ 0 ] with { type N = _0 }
+    given eq0 : IntEquiv[ 0 ] with { type N = Nat._0 }
     given eq1 : IntEquiv[ 1 ] with { type N = Nat._1 }
     given eq2 : IntEquiv[ 2 ] with { type N = Nat._2 }
     given eq3 : IntEquiv[ 3 ] with { type N = Nat._3 }

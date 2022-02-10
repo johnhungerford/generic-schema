@@ -1,7 +1,47 @@
 package org.hungerford.generic.schema.product.field
 
 import org.hungerford.generic.schema.product.ProductShape
-import org.hungerford.generic.schema.types.{Nat, Remover, Replacer, Retriever}
+import org.hungerford.generic.schema.selector.TypeSelector
+import org.hungerford.generic.schema.types.{Minus, Nat, Remover, Replacer, Retriever}
+
+trait FieldTypeRemover[ T, N <: Nat, R <: Tuple ] {
+    type Out <: Tuple
+
+    def remove( fields : R ) : Out
+}
+
+trait LowPriorityFieldTypeRemovers {
+    given nextFieldRemover[ T , N <: Nat, Head, Tail <: Tuple, Res <: Tuple ](
+        using
+        next : FieldTypeRemover.Aux[ T, N, Tail, Res ],
+    ) : FieldTypeRemover[ T, N, Head *: Tail ] with {
+        type Out = Head *: Res
+
+        override def remove( fields: Head *: Tail ): Head *: Res = fields.head *: next.remove( fields.tail )
+    }
+}
+
+object FieldTypeRemover extends LowPriorityFieldTypeRemovers {
+    type Aux[ T, N <: Nat, R <: Tuple, O <: Tuple ] =
+        FieldTypeRemover[ T, N, R ] { type Out = O }
+
+    given fieldRemoverByTypeZero[ T, Fld <: Field.Of[ T ], Tail <: Tuple ] : FieldTypeRemover[ T, Nat._0, Fld *: Tail ] with {
+        type Out = Tail
+
+        def remove( fields : Fld *: Tail ) : Tail = fields.tail
+    }
+
+    given fieldRemoverByTypeNonZero[ T, N <: Nat, DecN <: Nat, Fld <: Field.Of[ T ], Tail <: Tuple, Res <: Tuple ](
+        using
+        ev :  Nat.DecA[ N, DecN ],
+        next : FieldTypeRemover.Aux[ T, DecN, Tail, Res ],
+    ) : FieldTypeRemover[ T, N, Fld *: Tail ] with {
+        type Out = Fld *: Res
+
+        def remove( fields : Fld *: Tail ) : Fld *: Res = fields.head *: next.remove( fields.tail )
+    }
+
+}
 
 trait FieldRemover[ N <: Singleton, R <: Tuple ] {
     type Out <: Tuple
@@ -26,11 +66,12 @@ object FieldRemover extends LowPriorityFieldRemovers {
     type Aux[ N <: Singleton, R <: Tuple, O <: Tuple ] =
         FieldRemover[ N, R ] { type Out = O }
 
-    given fieldRemover[ T, F, N <: FieldName, S, Tail <: Tuple ] : FieldRemover.Aux[ N, Field[ T, F, N, S ] *: Tail, Tail ] = new FieldRemover[ N, Field[ T, F, N, S ] *: Tail ] {
-        type Out = Tail
+    given fieldRemover[ N <: FieldName, Fld <: Field.Named[ N ], Tail <: Tuple ] : FieldRemover.Aux[ N, Fld *: Tail, Tail ] =
+        new FieldRemover[ N, Fld *: Tail ] {
+            type Out = Tail
 
-        def remove( fields : Field[ T, F, N, S ] *: Tail ) : Tail = fields.tail
-    }
+            def remove( fields : Fld *: Tail ) : Tail = fields.tail
+        }
 
     given fieldRemoverByIndex[ I <: Int & Singleton, R <: Tuple, Res <: Tuple ](
         using

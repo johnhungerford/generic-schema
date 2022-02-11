@@ -344,21 +344,28 @@ import org.hungerford.generic.schema.Default.dsl.*
 // subtype of HttpMethod (this will have the effect of serializing
 // HttpRequest("someurl", Put, None) as {"url":"someurl","method":"Upsert"})
 val updatedHttpRequestSchema =
-    httpRequestSchema.modifyComponent("method" / "Put")(
+    httpRequestSchema.modifyComponent("method" /~ "Put")(
         _.withDescription("Create or update a record")
-          .modifySchema(_.withName("Upsert"))
+          .withName("Upsert")
     )
     
 // --- OR ---
 
-// Same as above, but using indices instead field and subtype names. 
-// The `select` method is needed here because `/` is a predefined method
-// on Int.
+// Same as above, but using index instead field and subtype name. 
 val updatedHttpRequestSchema =
-    httpRequestSchema.modifyComponent(select(1) / 2)(
+    httpRequestSchema.modifyComponent( 1 /~ 2)(
         _.withDescription("Create or update a record")
-          .modifySchema(_.withName("Upsert"))
-        )
+          .withName("Upsert")
+    )
+
+// --- OR ---
+
+// Same as above, but select by type. 
+val updatedHttpRequestSchema =
+    httpRequestSchema.modifyComponent( t[HttpMethod] /~ t[Put] )(
+        _.withDescription("Create or update a record")
+          .withName("Upsert")
+    )
 
 // Retrieve the "method" field description from the new http request schema
 // defined above, and extract its schema

@@ -64,13 +64,52 @@ class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matc
 
     }
 
-    it should "be able to remove a subfiedl" in {
+    it should "be able to remove a subfield by name" in {
         val csb = Schema.derivedBuilder[ SuperTrait ]
           .removeSubtype( "SubCase" )
           .build
 
         csb.shape.subtypeDescriptions.size shouldBe 1
         csb.shape.subtypeDescriptions.head.typeName shouldBe "SubCase2"
+
+        val csb2 = Schema.derivedBuilder[ SuperTrait ]
+          .removeSubtype( "SubCase2" )
+          .build
+
+        csb2.shape.subtypeDescriptions.size shouldBe 1
+        csb2.shape.subtypeDescriptions.head.typeName shouldBe "SubCase"
+    }
+
+    it should "be able to remove a subfield by index" in {
+        val csb = Schema.derivedBuilder[ SuperTrait ]
+          .removeSubtype( 0 )
+          .build
+
+        csb.shape.subtypeDescriptions.size shouldBe 1
+        csb.shape.subtypeDescriptions.head.typeName shouldBe "SubCase2"
+
+        val csb2 = Schema.derivedBuilder[ SuperTrait ]
+          .removeSubtype( 1 )
+          .build
+
+        csb2.shape.subtypeDescriptions.size shouldBe 1
+        csb2.shape.subtypeDescriptions.head.typeName shouldBe "SubCase"
+    }
+
+    it should "be able to remove a subfield by type" in {
+        val csb = Schema.derivedBuilder[ SuperTrait ]
+          .removeSubtype( t[SubCase] )
+          .build
+
+        csb.shape.subtypeDescriptions.size shouldBe 1
+        csb.shape.subtypeDescriptions.head.typeName shouldBe "SubCase2"
+
+        val csb2 = Schema.derivedBuilder[ SuperTrait ]
+          .removeSubtype( t[SubCase2] )
+          .build
+
+        csb2.shape.subtypeDescriptions.size shouldBe 1
+        csb2.shape.subtypeDescriptions.head.typeName shouldBe "SubCase"
     }
 
     it should "be able to modify a subfield" in {

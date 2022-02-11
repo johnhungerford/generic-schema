@@ -4,9 +4,9 @@ import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.product.field.{FieldName, FieldRetriever}
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeBuilder, SubtypeRemover, SubtypeRetriever, ToSuperGenerator, TypeName}
-import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
-import org.hungerford.generic.schema.selector.{ComponentUpdater, SubTypeSelector}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeBuilder, SubtypeRemover, SubtypeRetriever, SubtypeTypeRemover, ToSuperGenerator, TypeName}
+import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Nat}
+import org.hungerford.generic.schema.selector.{ComponentUpdater, SubTypeSelector, TypeSelector}
 
 import scala.collection.immutable.ListMap
 
@@ -54,11 +54,20 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
     ) : SubtypeBuilderAdder[ ST, tsEv.TS, T, R, D, DN ] =
         SubtypeBuilderAdder[ ST, tsEv.TS, T, R, D, DN ]( this )
 
-    def removeSubtype[ N <: TypeName, NewR <: Tuple ](
+    def removeSubtype[ N <: Singleton, NewR <: Tuple ](
         typeName : N,
     )(
         using
         str : SubtypeRemover.Aux[ N, R, NewR ],
+    ) : CoproductSchemaBuilder[ T, NewR, D, DN ] = {
+        copy[ T, NewR, D, DN ]( sts = str.remove( sts ) )
+    }
+
+    def removeSubtype[ ST, N <: Nat, NewR <: Tuple ](
+        typeSelector : TypeSelector[ ST, N ],
+    )(
+        using
+        str : SubtypeTypeRemover.Aux[ ST, N, R, NewR ],
     ) : CoproductSchemaBuilder[ T, NewR, D, DN ] = {
         copy[ T, NewR, D, DN ]( sts = str.remove( sts ) )
     }

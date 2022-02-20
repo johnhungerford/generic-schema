@@ -63,12 +63,24 @@ trait SelectorDsl extends SelectorConversion {
         new Selector[ AmbigSelector[ N ] *: EmptyTuple ]
     }
 
+    def select[ T, N <: Nat ]( identifier: TypeSelector[ T, N ] ): Selector[ AmbigSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ] = {
+        new Selector[ AmbigSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ]
+    }
+
     def field[ N <: Singleton ]( field: N ): Selector[ FieldSelector[ N ] *: EmptyTuple ] = {
         new Selector[ FieldSelector[ N ] *: EmptyTuple ]
     }
 
+    def field[ T, N <: Nat ]( field: TypeSelector[ T, N ] ): Selector[ FieldSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ] = {
+        new Selector[ FieldSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ]
+    }
+
     def subtype[ N <: Singleton ]( subtype : N ) : Selector[ SubTypeSelector[ N ] *: EmptyTuple ] = {
         new Selector[ SubTypeSelector[ N ] *: EmptyTuple ]
+    }
+
+    def subtype[ T, N <: Nat ]( subtype : TypeSelector[ T, N ] ) : Selector[ SubTypeSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ] = {
+        new Selector[ SubTypeSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ]
     }
 
     def t[ T ] : TypeSelector[ T, Nat._0 ] = TypeSelector[ T, Nat._0 ]()

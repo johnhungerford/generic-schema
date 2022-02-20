@@ -39,6 +39,16 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         newSch.shape.fieldNames shouldBe Set( "string_field" )
     }
 
+    it should "update a schema's field using a selector by type" in {
+        val newSch = ComponentUpdater.update( oneSch )( field( t[ String ] ) ){ field =>
+            FieldBuilder.from( field )
+              .name( "string_field" )
+              .build
+        }
+
+        newSch.shape.fieldNames shouldBe Set( "string_field" )
+    }
+
     it should "update a schema's nested field using a selector" in {
         val newSch = ComponentUpdater.update( twoSch )( Selector.field( "one" ) / "str" ){ field =>
             FieldBuilder.from( field )

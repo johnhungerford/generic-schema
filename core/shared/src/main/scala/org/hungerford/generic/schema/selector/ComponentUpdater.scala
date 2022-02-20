@@ -3,9 +3,9 @@ package org.hungerford.generic.schema.selector
 import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, UniqueDiscriminatorValues, UniqueTypeNames, ValidDiscriminator, subtype}
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.{ComplexSchema, Schema, SchemaRebuilder}
-import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape, ValidAfExtr}
-import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldName, FieldReplacer, FieldRetriever, UniqueFieldNames}
-import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
+import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape, ValidAfExtr, field}
+import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, FieldName, FieldReplacer, FieldRetriever, FieldTypeReplacer, FieldTypeRetriever, UniqueFieldNames}
+import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Nat}
 import org.hungerford.generic.schema.coproduct.subtype.{CorrectDV, Subtype, SubtypeBuilder, SubtypeReplacer, SubtypeRetriever, TypeName}
 
 import scala.util.NotGiven
@@ -94,6 +94,37 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
         }
     }
 
+    given fromProductSchemaUsingType[ F, SelN <: Nat, T, R <: Tuple, NewR <: Tuple, RV <: Tuple, AF, AFS, AFE, C, NewN <: FieldName, NewFS, Fld <: Field.Extr[ T, F ] ](
+        using
+        frt : FieldTypeRetriever.Aux[ F, SelN, R, Fld ],
+        frp : FieldTypeReplacer.Aux[ F, SelN, R, T, F, NewN, NewFS, NewR ],
+        unq : UniqueFieldNames[ NewR ],
+        ctx : CtxWrapTuplesConstraint[ Field.Of, NewR, RV ],
+        pc : ProductConstructor[ C, RV, AF, T ],
+        pdc : ProductDeconstructor[ T, (AF, R) ],
+        afeEv : ValidAfExtr[ T, AF, AFE ],
+    ) : ComponentUpdater.Aux[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ TypeSelector[ F, SelN ] ], Fld, Field[ T, F, NewN, NewFS ], Schema.Aux[ T, ProductShape[ T, NewR, RV, AF, AFS, AFE, C ] ] ] = {
+        new ComponentUpdater[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ TypeSelector[ F, SelN ] ], Fld, Field[ T, F, NewN, NewFS ] ] {
+            override type NewOuter = Schema.Aux[ T, ProductShape[ T, NewR, RV, AF, AFS, AFE, C ] ]
+
+            override def update(
+                outer : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
+            )(
+                updater : Fld => Field[ T, F, NewN, NewFS ],
+            ) : Schema.Aux[ T, ProductShape[ T, NewR, RV, AF, AFS, AFE, C ] ] = {
+                val field = frt.retrieve( outer.shape.fieldDescriptions )
+                val newField = updater( field )
+                ComplexSchema[ T, ProductShape[ T, NewR, RV, AF, AFS, AFE, C ] ](
+                    genericDescription = outer.genericDescription,
+                    genericValidators = outer.genericValidators,
+                    shape = outer.shape.copy[ T, NewR, RV, AF, AFS, AFE, C ](
+                        fieldDescriptions = frp.replace( outer.shape.fieldDescriptions, newField )
+                        )
+                    )
+            }
+        }
+    }
+
     given fromProductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, NewR <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, FS, NewN <: FieldName, NewFS ](
         using
         frt : FieldRetriever.Aux[ N, R, Field[ T, F, N, FS ] ],
@@ -107,6 +138,28 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
                 outer : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ],
             )(
                 updater : Field[ T, F, N, FS ] => Field[ T, F, NewN, NewFS ],
+            ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, AFE, C ] = {
+                val field = frt.retrieve( outer.fieldDescs )
+                val newField = updater( field )
+                val newFields = frp.replace( outer.fieldDescs, newField )
+                outer.copy[ T, NewR, RV, AF, AFS, AFE, C ]( fieldDescs = newFields )
+            }
+        }
+    }
+
+    given fromProductSchemaBuilderUsingType[ F, SelN <: Nat, T, R <: Tuple, NewR <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Fld <: Field.Extr[ T, F ], NewN <: FieldName, NewFS ](
+        using
+        frt : FieldTypeRetriever.Aux[ F, SelN, R, Fld ],
+        frp : FieldTypeReplacer.Aux[ F, SelN, R, T, F, NewN, NewFS, NewR ],
+        ctx : CtxWrapTuplesConstraint[ Field.Of, NewR, RV ],
+    ) : ComponentUpdater.Aux[ ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ], FieldSelector[ TypeSelector[ F, SelN ] ], Fld, Field[ T, F, NewN, NewFS ], ProductSchemaBuilder[ T, NewR, RV, AF, AFS, AFE, C ] ] = {
+        new ComponentUpdater[ ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ], FieldSelector[ TypeSelector[ F, SelN ] ], Fld, Field[ T, F, NewN, NewFS ] ] {
+            override type NewOuter = ProductSchemaBuilder[ T, NewR, RV, AF, AFS, AFE, C ]
+
+            override def update(
+                outer : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ],
+            )(
+                updater : Fld => Field[ T, F, NewN, NewFS ],
             ) : ProductSchemaBuilder[ T, NewR, RV, AF, AFS, AFE, C ] = {
                 val field = frt.retrieve( outer.fieldDescs )
                 val newField = updater( field )

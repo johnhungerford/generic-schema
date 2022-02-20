@@ -1,6 +1,7 @@
 package org.hungerford.generic.schema.coproduct.subtype
 
 import org.hungerford.generic.schema.coproduct.subtype
+import org.hungerford.generic.schema.selector.TypeSelector
 import org.hungerford.generic.schema.types.{Nat, Retriever}
 
 import scala.util.NotGiven
@@ -62,4 +63,24 @@ object SubtypeRetriever extends LowPrioritySubtypeRetrievers {
         using
         fr : SubtypeRetriever[ N, R ],
     ) : fr.Subtype = fr.retrieve( subtypes )
+}
+
+trait SubtypeTypeRetriever[ T, N <: Nat, R <: Tuple ] {
+    type Subtype
+
+    def retrieve( from : R ) : Subtype
+}
+
+trait LowPrioritySubtypeTypeRetrievers {}
+
+object SubtypeTypeRetriever {
+
+
+    def retrieve[ T, N <: Nat, R <: Tuple ](
+        sel : TypeSelector[ T, N ],
+        from : R,
+    )(
+        using
+        rt : SubtypeTypeRetriever[ T, N, R ]
+    ) : rt.Subtype = rt.retrieve( from )
 }

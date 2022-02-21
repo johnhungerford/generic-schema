@@ -71,10 +71,38 @@ trait SubtypeTypeRetriever[ T, N <: Nat, R <: Tuple ] {
     def retrieve( from : R ) : Subtype
 }
 
-trait LowPrioritySubtypeTypeRetrievers {}
+trait LowPrioritySubtypeTypeRetrievers {
+    given nextSubtypeTypeRetriever[ T, N <: Nat, Head, Tail <: Tuple, Next ](
+        using
+        next : SubtypeTypeRetriever.Aux[ T, N, Tail, Next ],
+    ) : SubtypeTypeRetriever[ T, N, Head *: Tail ] with {
+        type Subtype = Next
 
-object SubtypeTypeRetriever {
+        override def retrieve( from: Head *: Tail ) : Subtype =
+            next.retrieve( from.tail )
+    }
+}
 
+object SubtypeTypeRetriever extends LowPrioritySubtypeTypeRetrievers {
+    type Aux[ T, N <: Nat, R <: Tuple, ST ] = SubtypeTypeRetriever[ T, N, R ] { type Subtype = ST }
+
+    given zero[ ST, SubT, Tail <: Tuple ](
+        using
+        ev : SubtypeOfType[ ST, SubT ],
+    ) : SubtypeTypeRetriever[ ST, Nat._0, SubT *: Tail ] with {
+        type Subtype = SubT
+        override def retrieve( from: SubT *: Tail ) : SubT = from.head
+    }
+
+    given nonZero[ ST, N <: Nat, DecN <: Nat, SubT, Tail <: Tuple, Res ](
+        using
+        ev : Nat.DecA[ N, DecN ],
+        ev2 : SubtypeOfType[ ST, SubT ],
+        next : SubtypeTypeRetriever.Aux[ ST, DecN, Tail, Res ],
+    ) : SubtypeTypeRetriever[ ST, N, SubT *: Tail ] with {
+        type Subtype = Res
+        override def retrieve( from: SubT *: Tail ) : Res = next.retrieve( from.tail )
+    }
 
     def retrieve[ T, N <: Nat, R <: Tuple ](
         sel : TypeSelector[ T, N ],

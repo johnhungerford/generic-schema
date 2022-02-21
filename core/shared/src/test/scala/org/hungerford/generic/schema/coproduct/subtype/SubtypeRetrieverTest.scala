@@ -37,6 +37,10 @@ class SubtypeRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     it should "retrieve a subtype from a tuple of subtypes using the type" in {
         val sts = Schema.derived[ SuperT ].shape.subtypeDescriptions
 
+        val subt3st = sts.tail.tail.head
+
+//        val st1 = SubtypeTypeRetriever.zero[ SubT3, subt3st.type, EmptyTuple ].retrieve( subt3st *: EmptyTuple )
+
         val st1 = SubtypeTypeRetriever.retrieve( t[ SubT3 ], sts )
         st1.typeName shouldBe "SubT3"
         st1.schema.shape.fieldDescriptions.size shouldBe 1

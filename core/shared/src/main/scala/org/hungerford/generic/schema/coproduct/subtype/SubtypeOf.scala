@@ -15,5 +15,5 @@ object SubtypeOfDV {
 trait SubtypeOfType[ T, SubT ]
 
 object SubtypeOfType {
-    given [ T, ST, D, DN, DV, N <: TypeName, STS ] : SubtypeOfType[ ST, Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ] with {}
+    given [ T, ST, D, DN, DV, N <: TypeName, STS, SubT <: Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ] : SubtypeOfType[ ST, SubT ] with {}
 }

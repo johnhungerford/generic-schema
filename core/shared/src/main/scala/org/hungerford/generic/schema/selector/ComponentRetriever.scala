@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.{Schema, selector}
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeRetriever, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeRetriever, SubtypeTypeRetriever, TypeName}
 import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, subtype}
 import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever, FieldTypeRetriever, LazyField}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
@@ -147,6 +147,17 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         }
     }
 
+    given fromCoproductSchemaUsingType[ ST, SelN <: Nat, T, R <: Tuple, RV <: Tuple, D, DN, SubT ](
+        using
+        fr : SubtypeTypeRetriever.Aux[ ST, SelN, R, SubT ],
+    ) : ComponentRetriever[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ TypeSelector[ ST, SelN ] ] ] with {
+        override type Inner = SubT
+
+        override def retrieve( from : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ) : SubT = {
+            fr.retrieve( from.shape.subtypeDescriptions )
+        }
+    }
+
     given fromCoproductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, D, DN, ST ](
         using
         fr : SubtypeRetriever.Aux[ SelN, R, ST ],
@@ -154,6 +165,17 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         override type Inner = ST
 
         override def retrieve( from : CoproductSchemaBuilder[ T, R, D, DN ] ) : ST = {
+            fr.retrieve( from.sts )
+        }
+    }
+
+    given fromCoproductSchemaBuilderUsingType[ ST, SelN <: Nat, T, R <: Tuple, D, DN, SubT ](
+        using
+        fr : SubtypeTypeRetriever.Aux[ ST, SelN, R, SubT ],
+    ) : ComponentRetriever[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ TypeSelector[ ST, SelN ] ] ] with {
+        override type Inner = SubT
+
+        override def retrieve( from : CoproductSchemaBuilder[ T, R, D, DN ] ) : SubT = {
             fr.retrieve( from.sts )
         }
     }

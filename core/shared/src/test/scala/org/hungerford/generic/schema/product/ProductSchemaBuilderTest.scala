@@ -105,6 +105,36 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
           .build
     }
 
+    it should "be able to remove field descriptions by type" in {
+        Schema.productBuilder[ TestCase ]
+          .addField( FieldBuilder[ TestCase, Int ].primitive.name( "int" ).extractor( _.int ).build )
+          .addField( FieldBuilder[ TestCase, String ].primitive.name( "str" ).extractor( _.str ).build )
+          .addField( FieldBuilder[ TestCase, Boolean ].primitive.name( "bool" ).extractor( _ => true ).build )
+          .removeField( t[ Boolean ] )
+          .construct( (int, str) => TestCase( int, str ) )
+          .build
+
+        Schema.productBuilder[ TestCase ]
+          .addField( FieldBuilder[ TestCase, String ].primitive.name( "str" ).extractor( _.str ).build )
+          .addField( FieldBuilder[ TestCase, Boolean ].primitive.name( "bool" ).extractor( _ => true ).build )
+          .addField( FieldBuilder[ TestCase, Int ].primitive.name( "int" ).extractor( _.int ).build )
+          .removeField( t[ Boolean ] )
+          .removeField( tN[ String ]( 0 ) )
+          .addField( FieldBuilder[ TestCase, String ].primitive.name( "str" ).extractor( _.str ).build )
+          .construct( (int, str) => TestCase( int, str ) )
+          .build
+
+        Schema.productBuilder[ TestCase ]
+          .addField( FieldBuilder[ TestCase, String ].primitive.name( "str" ).extractor( _.str ).build )
+          .addField( FieldBuilder[ TestCase, Boolean ].primitive.name( "bool" ).extractor( _ => true ).build )
+          .addField( FieldBuilder[ TestCase, Int ].primitive.name( "int" ).extractor( _.int ).build )
+          .addField( FieldBuilder[ TestCase, Boolean ].primitive.name( "bool2" ).extractor( _ => false ).build )
+          .removeField( tN[ Boolean ]( 1 ) ) // removes bool2
+          .removeField( "bool" )            // removes bool
+          .construct( (str, int) => TestCase( int, str ) )
+          .build
+    }
+
     it should "be able to rebuild" in {
         val schema = Schema.productBuilder[ TestCase ]
           .addField( FieldBuilder[ TestCase, Int ].primitive.name( "int" ).extractor( _.int ).build )

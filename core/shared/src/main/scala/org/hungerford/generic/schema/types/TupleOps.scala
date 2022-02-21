@@ -26,7 +26,7 @@ trait LowPriorityRemovers {
 object Remover extends LowPriorityRemovers {
     type Aux[ I, R <: Tuple, O ] = Remover[ I, R ] { type Out = O }
 
-    given removeHead[ I <: Nat, Head, Tail <: Tuple ] : Remover[ _0, Head *: Tail ] with {
+    given removeHead[ I <: Nat, Head, Tail <: Tuple ] : Remover[ Nat._0, Head *: Tail ] with {
         type Out = Tail
 
         override def remove( tuple: Head *: Tail ): Out = tuple.tail
@@ -76,7 +76,7 @@ trait LowPriorityReplacers {
 object Replacer extends LowPriorityReplacers {
     type Aux[ I, R <: Tuple, New, O ] = Replacer[ I, R, New ] { type Out = O }
 
-    given replaceHead[ Head, Tail <: Tuple, New ] : Replacer[ _0, Head *: Tail, New ] with {
+    given replaceHead[ Head, Tail <: Tuple, New ] : Replacer[ Nat._0, Head *: Tail, New ] with {
         type Out = New *: Tail
 
         override def replace( elems: Head *: Tail, withElement: New ) : Out =
@@ -129,7 +129,7 @@ trait LowPriorityRetrievers {
 object Retriever extends LowPriorityRetrievers {
     type Aux[ I, R <: Tuple, O ] = Retriever[ I, R ] { type Out = O }
 
-    given retrieveHead[ Head, Tail <: Tuple ] : Retriever[ _0, Head *: Tail ] with {
+    given retrieveHead[ Head, Tail <: Tuple ] : Retriever[ Nat._0, Head *: Tail ] with {
         type Out = Head
 
         override def retrieve( from: Head *: Tail ) : Out = from.head

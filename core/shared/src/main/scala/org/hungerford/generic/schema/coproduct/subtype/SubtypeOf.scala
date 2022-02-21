@@ -11,3 +11,9 @@ trait SubtypeOfDV[ D, DV <: D & Singleton, SubT ]
 object SubtypeOfDV {
     given [ N <: TypeName, T, ST, D, DN, DV <: D & Singleton, STS ] : SubtypeOfDV[ D, DV, Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ] with {}
 }
+
+trait SubtypeOfType[ T, SubT ]
+
+object SubtypeOfType {
+    given [ T, ST, D, DN, DV, N <: TypeName, STS, SubT <: Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ] : SubtypeOfType[ ST, SubT ] with {}
+}

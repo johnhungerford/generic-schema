@@ -1,10 +1,11 @@
 package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.{Schema, selector}
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeRetriever, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeRetriever, SubtypeTypeRetriever, TypeName}
 import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, subtype}
-import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever, LazyField}
+import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever, FieldTypeRetriever, LazyField}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
+import org.hungerford.generic.schema.types.Nat
 
 import scala.util.NotGiven
 
@@ -24,10 +25,28 @@ trait LowPriorityComponentRetrievers {
         override def retrieve( from : Outer ) : I = fr.retrieve( from )
     }
 
+    given ambigFieldTypeRetriever[ Outer, T, N <: Nat, I ](
+        using
+        fr : ComponentRetriever.Aux[ Outer, FieldSelector[ TypeSelector[ T, N ] ], I ],
+    ) : ComponentRetriever[ Outer, AmbigSelector[ TypeSelector[ T, N ] ] ] with {
+        type Inner = I
+
+        override def retrieve( from : Outer ) : I = fr.retrieve( from )
+    }
+
     given ambigSubTypeRetriever[ Outer, N <: Singleton, I ](
         using
         fr : ComponentRetriever.Aux[ Outer, SubTypeSelector[ N ], I ],
     ) : ComponentRetriever[ Outer, AmbigSelector[ N ] ] with {
+        type Inner = I
+
+        override def retrieve( from : Outer ) : I = fr.retrieve( from )
+    }
+
+    given ambigSubTypeTypeRetriever[ Outer, T, N <: Nat, I ](
+        using
+        fr : ComponentRetriever.Aux[ Outer, SubTypeSelector[ TypeSelector[ T, N ] ], I ],
+    ) : ComponentRetriever[ Outer, AmbigSelector[ TypeSelector[ T, N ] ] ] with {
         type Inner = I
 
         override def retrieve( from : Outer ) : I = fr.retrieve( from )
@@ -90,6 +109,17 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         }
     }
 
+    given fromProductSchemaUsingType[ F, SelN <: Nat, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Fld ](
+        using
+        fr : FieldTypeRetriever.Aux[ F, SelN, R, Fld ],
+    ) : ComponentRetriever[ Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ], FieldSelector[ TypeSelector[ F, SelN ] ] ] with {
+        override type Inner = Fld
+
+        override def retrieve( from : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ) : Fld = {
+            fr.retrieve( from.shape.fieldDescriptions )
+        }
+    }
+
     given fromProductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, F, S ](
         using
         fr : FieldRetriever.Aux[ SelN, R, Field[ T, F, N, S ] ],
@@ -97,6 +127,17 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         override type Inner = Field[ T, F, N, S ]
 
         override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ) : Field[ T, F, N, S ] = {
+            fr.retrieve( from.fieldDescs )
+        }
+    }
+
+    given fromProductSchemaBuilderUsingType[ F, SelN <: Nat, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, N <: FieldName, Fld ](
+        using
+        fr : FieldTypeRetriever.Aux[ F, SelN, R, Fld ],
+    ) : ComponentRetriever[ ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ], FieldSelector[ TypeSelector[ F, SelN ] ] ] with {
+        override type Inner = Fld
+
+        override def retrieve( from : ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ) : Fld = {
             fr.retrieve( from.fieldDescs )
         }
     }
@@ -124,6 +165,17 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         }
     }
 
+    given fromCoproductSchemaUsingType[ ST, SelN <: Nat, T, R <: Tuple, RV <: Tuple, D, DN, SubT ](
+        using
+        fr : SubtypeTypeRetriever.Aux[ ST, SelN, R, SubT ],
+    ) : ComponentRetriever[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ TypeSelector[ ST, SelN ] ] ] with {
+        override type Inner = SubT
+
+        override def retrieve( from : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ) : SubT = {
+            fr.retrieve( from.shape.subtypeDescriptions )
+        }
+    }
+
     given fromCoproductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, D, DN, ST ](
         using
         fr : SubtypeRetriever.Aux[ SelN, R, ST ],
@@ -131,6 +183,17 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         override type Inner = ST
 
         override def retrieve( from : CoproductSchemaBuilder[ T, R, D, DN ] ) : ST = {
+            fr.retrieve( from.sts )
+        }
+    }
+
+    given fromCoproductSchemaBuilderUsingType[ ST, SelN <: Nat, T, R <: Tuple, D, DN, SubT ](
+        using
+        fr : SubtypeTypeRetriever.Aux[ ST, SelN, R, SubT ],
+    ) : ComponentRetriever[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ TypeSelector[ ST, SelN ] ] ] with {
+        override type Inner = SubT
+
+        override def retrieve( from : CoproductSchemaBuilder[ T, R, D, DN ] ) : SubT = {
             fr.retrieve( from.sts )
         }
     }

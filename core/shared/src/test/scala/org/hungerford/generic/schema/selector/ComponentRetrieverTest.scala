@@ -38,6 +38,16 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         fld.schema.shape shouldBe ()
     }
 
+    it should "retrieve a nested field by type" in {
+        val innerSch = Schema.derived[ Inner ]
+        val fld = ComponentRetriever.retrieve( sch )( field( t[ Inner ] ) /- t[ Innerest ] /- t[ Double ] )
+        summon[ fld.type <:< Field.Extr[ Innerest, Double ] ]
+        fld.fieldName shouldBe "dbl"
+        fld.description shouldBe None
+        fld.validators shouldBe Set.empty[ Validator[ Double ] ]
+        fld.schema.shape shouldBe ()
+    }
+
     sealed trait OuterT
     final case class SubT() extends OuterT
     sealed trait InnerT extends OuterT
@@ -68,6 +78,17 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         st.schema.shape.fieldDescriptions.head.fieldName shouldBe "str"
     }
 
+    it should "retrieve a nested subtype by type" in {
+        val sch = Schema.derived[ OuterT ]
+
+        val st = ComponentRetriever.retrieve( sch )( subtype( t[ InnerT ] ) /~ t[ CoreT ] /~ t[ SubT3 ] )
+        summon[ st.type <:< Subtype[ CoreT, SubT3, Unit ] ]
+        st.typeName shouldBe "SubT3"
+        st.description shouldBe None
+        st.validators shouldBe Set.empty[ Validator[ SubT3 ] ]
+        st.schema.shape.fieldDescriptions.head.fieldName shouldBe "str"
+    }
+
     it should "retrieve a subtype from a schema builder by name" in {
         val schBuilder = Schema.derivedBuilder[ OuterT ]
 
@@ -79,6 +100,13 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         val schBuilder = Schema.derivedBuilder[ OuterT ]
 
         val st = ComponentRetriever.retrieve( schBuilder )( Selector.subtype( 1 ) )
+        st.typeName shouldBe "InnerT"
+    }
+
+    it should "retrieve a subtype from a schema builder by type" in {
+        val schBuilder = Schema.derivedBuilder[ OuterT ]
+
+        val st = ComponentRetriever.retrieve( schBuilder )( subtype( t[ InnerT ] ) )
         st.typeName shouldBe "InnerT"
     }
 
@@ -136,5 +164,6 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         val res2 = outRecSch( "inner1" / "Inner1b" / "inner2" / "inner3" / "inner1" / "Inner1b" / "inner2" ).schema
         res2 shouldBe i2Sch
     }
+
 
 }

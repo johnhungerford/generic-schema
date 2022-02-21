@@ -1,5 +1,6 @@
 package org.hungerford.generic.schema.coproduct.subtype
 
+import org.hungerford.generic.schema.selector.TypeSelector
 import org.hungerford.generic.schema.types.{Nat, Replacer}
 
 trait SubtypeReplacer[ N <: Singleton, NewSubT, R <: Tuple ] {
@@ -51,5 +52,59 @@ object SubtypeReplacer extends LowPrioritySubtypeReplacer {
     )(
         using
         strp : SubtypeReplacer[ N, NewSubT, R ],
+    ) : strp.Out = strp.replace( from, withSubtype )
+}
+
+trait SubtypeTypeReplacer[ T, N <: Nat, NewSubT, R <: Tuple ] {
+    type Out
+
+    def replace( subtypes : R, withSubtype : NewSubT ) : Out
+}
+
+trait LowPrioritySubtypeTypeReplacer {
+    given notFound[ T, N <: Nat, Head, Tail <: Tuple, NewSubT, NextRes <: Tuple ](
+        using
+        next : SubtypeTypeReplacer.Aux[ T, N, NewSubT, Tail, NextRes ],
+    ) : SubtypeTypeReplacer[ T, N, NewSubT, Head *: Tail ] with {
+        type Out = Head *: NextRes
+
+        def replace( subtypes: Head *: Tail, withSubtype: NewSubT ): Out =
+            subtypes.head *: next.replace( subtypes.tail, withSubtype )
+    }
+}
+
+object SubtypeTypeReplacer extends LowPrioritySubtypeTypeReplacer {
+    type Aux[ T, N <: Nat, NewSubT, R <: Tuple, O ] = SubtypeTypeReplacer[ T, N, NewSubT, R ] { type Out = O }
+
+    given found[ ST, NewSubT, OldT, OldD, OldDN, OldDV, OldN <: TypeName, OldS, Tail <: Tuple  ] :
+      SubtypeTypeReplacer[ ST, Nat._0, NewSubT, Subtype.Aux[ OldT, ST, OldD, OldDN, OldDV, OldN, OldS ] *: Tail ] with {
+        type Out = NewSubT *: Tail
+
+        override def replace(
+            subtypes: Subtype.Aux[ OldT, ST, OldD, OldDN, OldDV, OldN, OldS ] *: Tail,
+            withSubtype: NewSubT
+        ) : Out = withSubtype *: subtypes.tail
+    }
+
+    given foundNext[ ST, N <: Nat, DecN <: Nat, NewSubT, T, D, DN, DV, TN <: TypeName, S, Tail <: Tuple, Next <: Tuple ](
+        using
+        ev : Nat.DecA[ N, DecN ],
+        next : SubtypeTypeReplacer.Aux[ ST, DecN, NewSubT, Tail, Next ],
+    ) : SubtypeTypeReplacer[ ST, N, NewSubT, Subtype.Aux[ T, ST, D, DN, DV, TN, S ] *: Tail ] with {
+        type Out = Subtype.Aux[ T, ST, D, DN, DV, TN, S ] *: Next
+
+        override def replace(
+            subtypes: Subtype.Aux[ T, ST, D, DN, DV, TN, S ] *: Tail,
+            withSubtype: NewSubT
+        ) : Out = subtypes.head *: next.replace( subtypes.tail, withSubtype )
+    }
+
+    def replace[ T, N <: Nat, NewSubT, R <: Tuple ](
+        selector : TypeSelector[ T, N ],
+        from : R,
+        withSubtype : NewSubT,
+    )(
+        using
+        strp : SubtypeTypeReplacer[ T, N, NewSubT, R ],
     ) : strp.Out = strp.replace( from, withSubtype )
 }

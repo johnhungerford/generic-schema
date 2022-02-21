@@ -39,6 +39,16 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         newSch.shape.fieldNames shouldBe Set( "string_field" )
     }
 
+    it should "update a schema's field using a selector by type" in {
+        val newSch = ComponentUpdater.update( oneSch )( field( t[ String ] ) ){ field =>
+            FieldBuilder.from( field )
+              .name( "string_field" )
+              .build
+        }
+
+        newSch.shape.fieldNames shouldBe Set( "string_field" )
+    }
+
     it should "update a schema's nested field using a selector" in {
         val newSch = ComponentUpdater.update( twoSch )( Selector.field( "one" ) / "str" ){ field =>
             FieldBuilder.from( field )
@@ -161,6 +171,22 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         newSch.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
     }
 
+    it should "update a subtype by type" in {
+        val sch = Schema.derived[ OuterT ]
+
+        val newSch = ComponentUpdater.update( sch )( subtype( t[ InnerT ] ) ) { subtype =>
+            SubtypeBuilder.from( subtype )
+              .typeName( "NEW-NAME" )
+              .fromSchema( Schema.primitive[ InnerT ] )
+              .build
+        }
+
+        newSch.shape.subtypeDescriptions.size shouldBe 2
+        newSch.shape.subtypeDescriptions.head.typeName shouldBe "SubT"
+        newSch.shape.subtypeDescriptions.tail.head.typeName shouldBe "NEW-NAME"
+        newSch.shape.subtypeDescriptions.tail.head.schema.shape shouldBe ()
+    }
+
     it should "update from a subtype" in {
         val st = Schema.derived[ OuterT ]( "InnerT" )
 
@@ -219,6 +245,22 @@ class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         val schBuilder = Schema.derivedBuilder[ OuterT ]
 
         val newSch = ComponentUpdater.update( schBuilder )( Selector.subtype( 1 ) ) { subtype =>
+            SubtypeBuilder.from( subtype )
+              .typeName( "NEW-NAME" )
+              .fromSchema( Schema.primitive[ InnerT ] )
+              .build
+        }
+
+        newSch.sts.size shouldBe 2
+        newSch.sts.head.typeName shouldBe "SubT"
+        newSch.sts.tail.head.typeName shouldBe "NEW-NAME"
+        newSch.sts.tail.head.schema.shape shouldBe ()
+    }
+
+    it should "update from a coproduct schema builder by type" in {
+        val schBuilder = Schema.derivedBuilder[ OuterT ]
+
+        val newSch = ComponentUpdater.update( schBuilder )( subtype( t[ InnerT ] ) ) { subtype =>
             SubtypeBuilder.from( subtype )
               .typeName( "NEW-NAME" )
               .fromSchema( Schema.primitive[ InnerT ] )

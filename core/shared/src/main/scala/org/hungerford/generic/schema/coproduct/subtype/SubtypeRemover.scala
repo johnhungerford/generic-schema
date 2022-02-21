@@ -55,3 +55,46 @@ object SubtypeRemover extends LowPrioritySubtypeRemovers {
         str : SubtypeRemover[ N, R ]
     ) : str.Out = str.remove( from )
 }
+
+trait SubtypeTypeRemover[ T, N <: Nat, R <: Tuple ] {
+    type Out <: Tuple
+
+    def remove( fields : R ) : Out
+}
+
+trait LowPrioritySubtypeTypeRemovers {
+    given nextFieldRemover[ T , N <: Nat, Head, Tail <: Tuple, Res <: Tuple ](
+        using
+        next : SubtypeTypeRemover.Aux[ T, N, Tail, Res ],
+    ) : SubtypeTypeRemover[ T, N, Head *: Tail ] with {
+        type Out = Head *: Res
+
+        override def remove( fields: Head *: Tail ): Head *: Res = fields.head *: next.remove( fields.tail )
+    }
+}
+
+object SubtypeTypeRemover extends LowPrioritySubtypeTypeRemovers {
+    type Aux[ T, N <: Nat, R <: Tuple, O <: Tuple ] =
+        SubtypeTypeRemover[ T, N, R ] { type Out = O }
+
+    given fieldRemoverByTypeZero[ T, SubT, Tail <: Tuple ](
+        using
+        ev : SubtypeOfType[ T, SubT ],
+    ) : SubtypeTypeRemover[ T, Nat._0, SubT *: Tail ] with {
+        type Out = Tail
+
+        def remove( fields : SubT *: Tail ) : Tail = fields.tail
+    }
+
+    given fieldRemoverByTypeNonZero[ T, N <: Nat, DecN <: Nat, SubT, Tail <: Tuple, Res <: Tuple ](
+        using
+        ev1 : SubtypeOfType[ T, SubT ],
+        ev2 :  Nat.DecA[ N, DecN ],
+        next : SubtypeTypeRemover.Aux[ T, DecN, Tail, Res ],
+    ) : SubtypeTypeRemover[ T, N, SubT *: Tail ] with {
+        type Out = SubT *: Res
+
+        def remove( fields : SubT *: Tail ) : SubT *: Res = fields.head *: next.remove( fields.tail )
+    }
+
+}

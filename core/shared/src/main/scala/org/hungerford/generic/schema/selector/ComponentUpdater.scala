@@ -28,6 +28,17 @@ trait LowPriorityComponentUpdaters {
                 fcu.update( outer )( updater )
         }
 
+    given ambigFieldTypeUpdater[ Outer, T, N <: Nat, Inner, NewInner, NO ](
+        using
+        fcu : ComponentUpdater.Aux[ Outer, FieldSelector[ TypeSelector[ T, N ] ], Inner, NewInner, NO ],
+    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ TypeSelector[ T, N ] ], Inner, NewInner, NO ] =
+        new ComponentUpdater[ Outer, AmbigSelector[ TypeSelector[ T, N ] ], Inner, NewInner ] {
+            type NewOuter = NO
+
+            override def update( outer: Outer )( updater: Inner => NewInner ): NO =
+                fcu.update( outer )( updater )
+        }
+
     given ambigSubTypeUpdater[ Outer, N <: Singleton, Inner, NewInner, NO ](
         using
         fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
@@ -37,6 +48,17 @@ trait LowPriorityComponentUpdaters {
 
             override def update( outer: Outer )( updater: Inner => NewInner ): NO = fcu.update( outer )( updater )
         }
+
+    given ambigSubTypeTypeUpdater[ Outer, T, N <: Nat, Inner, NewInner, NO ](
+        using
+        fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
+    ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ TypeSelector[ T, N ] ], Inner, NewInner, NO ] =
+        new ComponentUpdater[ Outer, AmbigSelector[ TypeSelector[ T, N ] ], Inner, NewInner ] {
+            type NewOuter = NO
+
+            override def update( outer: Outer )( updater: Inner => NewInner ): NO = fcu.update( outer )( updater )
+        }
+
 }
 
 object ComponentUpdater extends LowPriorityComponentUpdaters {

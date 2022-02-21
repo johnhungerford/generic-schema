@@ -25,10 +25,28 @@ trait LowPriorityComponentRetrievers {
         override def retrieve( from : Outer ) : I = fr.retrieve( from )
     }
 
+    given ambigFieldTypeRetriever[ Outer, T, N <: Nat, I ](
+        using
+        fr : ComponentRetriever.Aux[ Outer, FieldSelector[ TypeSelector[ T, N ] ], I ],
+    ) : ComponentRetriever[ Outer, AmbigSelector[ TypeSelector[ T, N ] ] ] with {
+        type Inner = I
+
+        override def retrieve( from : Outer ) : I = fr.retrieve( from )
+    }
+
     given ambigSubTypeRetriever[ Outer, N <: Singleton, I ](
         using
         fr : ComponentRetriever.Aux[ Outer, SubTypeSelector[ N ], I ],
     ) : ComponentRetriever[ Outer, AmbigSelector[ N ] ] with {
+        type Inner = I
+
+        override def retrieve( from : Outer ) : I = fr.retrieve( from )
+    }
+
+    given ambigSubTypeTypeRetriever[ Outer, T, N <: Nat, I ](
+        using
+        fr : ComponentRetriever.Aux[ Outer, SubTypeSelector[ TypeSelector[ T, N ] ], I ],
+    ) : ComponentRetriever[ Outer, AmbigSelector[ TypeSelector[ T, N ] ] ] with {
         type Inner = I
 
         override def retrieve( from : Outer ) : I = fr.retrieve( from )

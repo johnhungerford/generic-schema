@@ -139,4 +139,28 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
         newSc.description shouldBe Some( "test-description" )
     }
 
+    it should "allow retrieval and modification of deeply nested component involving both products and coproducts by type" in {
+        import TestSchemaDsl.*
+
+        val sch = Schema.derived[ Wrapper ]
+
+        val subComponent = sch( field( t[ SuperT ] ) / t[ SubT2 ] / t[ SubT2B ] / t[ NestedSuperT ] / t[ NSub2 ] / t[ Float ] )
+//        subComponent.fieldName shouldBe "flt"
+//        subComponent.schema.shape shouldBe ()
+//        subComponent.description shouldBe None
+//
+//        val newSch = sch.modifyComponent( field( t[ SuperT ] ) / t[ SubT2 ] / t[ SubT2B ] / t[ NestedSuperT ] / t[ NSub2 ] / t[ Float ] )(
+//            _.rebuild
+//              .name( "NEW_NAME" )
+//              .description( "test-description" )
+//              .build
+//            )
+//
+//        val newSc = newSch( field( t[ SuperT ] ) / t[ SubT2 ] / t[ SubT2B ] / t[ NestedSuperT ] / t[ NSub2 ] / t[ Float ] )
+//
+//        newSc.fieldName shouldBe "NEW_NAME"
+//        newSc.schema.shape shouldBe ()
+//        newSc.description shouldBe Some( "test-description" )
+    }
+
 }

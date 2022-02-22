@@ -14,11 +14,26 @@ class SchemaProviderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "provide a schema from derivation" in {
-        case class Test( int : Int )
+        case class Test( int: Int )
 
         val sch = SchemaProvider.schema[ Test ]
 
         sch.shape.size shouldBe 1
-   }
+    }
+
+    sealed trait Inner
+    final case class Bottom( str : String ) extends Inner
+    case class Middle( inner : Inner )
+    case class Outer( middle : Middle )
+
+    it should "provide a schema from extraction from a given schema" in {
+        import org.hungerford.generic.schema.Default.dsl.*
+        val outerSch = Schema.derived[ Outer ]
+        import outerSch.given
+
+        val bottomSch = SchemaProvider.schema[ Bottom ]
+        bottomSch.shape.size shouldBe 1
+        bottomSch.shape.fieldDescriptions.head.fieldName shouldBe "str"
+    }
 
 }

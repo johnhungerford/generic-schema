@@ -43,9 +43,9 @@ class CoproductSchemaExtractorTest extends AnyFlatSpecLike with org.scalatest.ma
         import tc3Sch.given
 
         val sup3Sch = Schema.derived[ Sup3 ]
-          .modifyComponent( subtype( t[Sup3Nest] ) /~ t[TC3.type] )( _.modifySchema( _.withDescription( "twice nested" ) ) )
+          .modifyComponent( t[Sup3Nest] / t[TC3.type] )( _.modifySchema( _.withDescription( "twice nested" ) ) )
 
-        val nestedTc3Sch = sup3Sch( subtype( t[Sup3Nest] ) /~ t[TC3.type] ).schema
+        val nestedTc3Sch = sup3Sch( t[Sup3Nest] /~ t[TC3.type] ).schema
         val topLevelTc3Sch = sup3Sch( subtype( t[TC3.type] ) ).schema
 
         topLevelTc3Sch shouldBe tc3Sch

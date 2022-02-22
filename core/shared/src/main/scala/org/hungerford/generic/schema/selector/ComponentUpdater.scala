@@ -51,7 +51,7 @@ trait LowPriorityComponentUpdaters {
 
     given ambigSubTypeTypeUpdater[ Outer, T, N <: Nat, Inner, NewInner, NO ](
         using
-        fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ N ], Inner, NewInner, NO ],
+        fcu : ComponentUpdater.Aux[ Outer, SubTypeSelector[ TypeSelector[ T, N ] ], Inner, NewInner, NO ],
     ) : ComponentUpdater.Aux[ Outer, AmbigSelector[ TypeSelector[ T, N ] ], Inner, NewInner, NO ] =
         new ComponentUpdater[ Outer, AmbigSelector[ TypeSelector[ T, N ] ], Inner, NewInner ] {
             type NewOuter = NO

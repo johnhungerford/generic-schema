@@ -199,6 +199,11 @@ trait SchemaDsl {
             schema,
         )
 
+    extension [ T, S ]( schema : Schema.Aux[ T, S ] )
+        def extractSchema[ InnerT ](
+            using extr: SchemaExtractor[ InnerT, Schema.Aux[ T, S ] ]
+        ) : Schema.Aux[ InnerT, extr.Shape ] = extr.extract( schema )
+
     extension ( sch : Schema.type )
         def productBuilder[ T ] : ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ] =
             ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ](

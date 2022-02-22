@@ -41,23 +41,75 @@ trait SelectorConversion {
     given [ N <: Singleton ] : Conversion[ N, Selector[ AmbigSelector[ N ] *: EmptyTuple ] ] with
         def apply( selector : N ) : Selector[ AmbigSelector[ N ] *: EmptyTuple ] =
             new Selector[ AmbigSelector[ N ] *: EmptyTuple ]
+
+    given [ T, N <: Nat ] : Conversion[ TypeSelector[ T, N ], Selector[ AmbigSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ] ] with
+        def apply( selector : TypeSelector[ T, N ] ) : Selector[ AmbigSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ] =
+            new Selector[ AmbigSelector[ TypeSelector[ T, N ] ] *: EmptyTuple ]
 }
 
 trait SelectorDsl extends SelectorConversion {
-    extension [ N1 <: Singleton ]( selection : N1 ) def /[ N2 <: Singleton ]( field : N2 ) :
+    extension [ T1, N1 <: Nat ]( selection : TypeSelector[ T1, N1 ] )
+        def /[ T2, N2 <: Nat ]( field : TypeSelector[ T2, N2 ] ) :
+            Selector[ AmbigSelector[ TypeSelector[ T1, N1 ] ] *: AmbigSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[TypeSelector[ T1, N1 ]] *: AmbigSelector[TypeSelector[ T2, N2 ]] *: EmptyTuple ]
+            }
+
+        def /[ N2 <: Singleton ]( field : N2 ) :
+            Selector[ AmbigSelector[ TypeSelector[ T1, N1 ] ] *: AmbigSelector[ N2 ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[TypeSelector[ T1, N1 ]] *: AmbigSelector[N2] *: EmptyTuple ]
+            }
+
+        def /-[ T2, N2 <: Nat ]( sel : TypeSelector[ T2, N2 ] ) :
+            Selector[ AmbigSelector[ TypeSelector[ T1, N1 ] ] *: FieldSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[TypeSelector[ T1, N1 ]] *: FieldSelector[TypeSelector[ T2, N2 ]] *: EmptyTuple ]
+            }
+
+        def /-[ N2 <: Singleton ]( field : N2 ) :
+            Selector[ AmbigSelector[ TypeSelector[ T1, N1 ] ] *: FieldSelector[ N2 ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[TypeSelector[ T1, N1 ]] *: FieldSelector[N2] *: EmptyTuple ]
+            }
+
+        def /~[ T2, N2 <: Nat ]( subtype : TypeSelector[ T2, N2 ] ) :
+            Selector[ AmbigSelector[ TypeSelector[ T1, N1 ] ] *: SubTypeSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[TypeSelector[ T1, N1 ]] *: SubTypeSelector[TypeSelector[ T2, N2 ]] *: EmptyTuple ]
+            }
+
+        def /~[ N2 <: Singleton ]( subtype : N2 ) :
+            Selector[ AmbigSelector[ TypeSelector[ T1, N1 ] ] *: SubTypeSelector[ N2 ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[TypeSelector[ T1, N1 ]] *: SubTypeSelector[N2] *: EmptyTuple ]
+            }
+
+    extension [ N1 <: Singleton ]( selection : N1 )
+        def /[ T2, N2 <: Nat ]( field : TypeSelector[ T2, N2 ] ) :
+        Selector[ AmbigSelector[ N1 ] *: AmbigSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {
+            new Selector[ AmbigSelector[N1] *: AmbigSelector[TypeSelector[ T2, N2 ]] *: EmptyTuple ]
+        }
+
+        def /[ N2 <: Singleton ]( field : N2 ) :
         Selector[ AmbigSelector[ N1 ] *: AmbigSelector[ N2 ] *: EmptyTuple ] = {
-        new Selector[ AmbigSelector[N1] *: AmbigSelector[N2] *: EmptyTuple ]
-    }
+            new Selector[ AmbigSelector[N1] *: AmbigSelector[N2] *: EmptyTuple ]
+        }
 
-    extension [ N1 <: Singleton ]( selection : N1 ) def /-[ N2 <: Singleton ]( field : N2 ) :
-        Selector[ AmbigSelector[ N1 ] *: FieldSelector[ N2 ] *: EmptyTuple ] = {
-        new Selector[ AmbigSelector[N1] *: FieldSelector[N2] *: EmptyTuple ]
-    }
+        def /-[ T2, N2 <: Nat ]( sel : TypeSelector[ T2, N2 ] ) :
+            Selector[ AmbigSelector[ N1 ] *: FieldSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[N1] *: FieldSelector[TypeSelector[ T2, N2 ]] *: EmptyTuple ]
+            }
 
-    extension [ N1 <: Singleton ]( selection : N1 ) def /~[ N2 <: Singleton ]( subtype : N2 ) :
-        Selector[ AmbigSelector[ N1 ] *: SubTypeSelector[ N2 ] *: EmptyTuple ] = {
-        new Selector[ AmbigSelector[N1] *: SubTypeSelector[N2] *: EmptyTuple ]
-    }
+        def /-[ N2 <: Singleton ]( field : N2 ) :
+            Selector[ AmbigSelector[ N1 ] *: FieldSelector[ N2 ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[N1] *: FieldSelector[N2] *: EmptyTuple ]
+            }
+
+        def /~[ T2, N2 <: Nat ]( subtype : TypeSelector[ T2, N2 ] ) :
+            Selector[ AmbigSelector[ N1 ] *: SubTypeSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[N1] *: SubTypeSelector[TypeSelector[ T2, N2 ]] *: EmptyTuple ]
+            }
+
+        def /~[ N2 <: Singleton ]( subtype : N2 ) :
+            Selector[ AmbigSelector[ N1 ] *: SubTypeSelector[ N2 ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[N1] *: SubTypeSelector[N2] *: EmptyTuple ]
+            }
+
 
     def select[ N <: Singleton ]( identifier: N ): Selector[ AmbigSelector[ N ] *: EmptyTuple ] = {
         new Selector[ AmbigSelector[ N ] *: EmptyTuple ]

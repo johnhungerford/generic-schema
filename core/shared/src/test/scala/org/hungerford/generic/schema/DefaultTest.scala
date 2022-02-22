@@ -38,11 +38,14 @@ class DefaultTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Mat
 
         val updated1 = sch1.modifyComponent( "inner" / "core" / "bool" )( _.withName( "boolean_field" ) )
         val updated2 = sch1.modifyComponent( 0 /- 0 / 2 )( _.withName( "boolean_field" ) )
+        val updated3 = sch1.modifyComponent( t[ Inner ] / t[ Core ] / t[ Boolean ] )( _.withName( "boolean_field" ) )
 
         updated1 shouldBe updated2
 
         updated( "inner_field" / "core_field" / "boolean_field" ).fieldName shouldBe "boolean_field"
         updated1( "inner" / "core" / "boolean_field" ).fieldName shouldBe "boolean_field"
+        updated2( "inner" / "core" / "boolean_field" ).fieldName shouldBe "boolean_field"
+        updated3( "inner" / "core" / "boolean_field" ).fieldName shouldBe "boolean_field"
     }
 
 }

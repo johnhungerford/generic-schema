@@ -1,5 +1,7 @@
 package org.hungerford.generic.schema
 
+import org.hungerford.generic.schema.coproduct.{CoproductSchemaExtractor, CoproductShape}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, TypeName}
 import org.hungerford.generic.schema.product.{ProductSchemaExtractor, ProductShape}
 import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.{RecursiveSchemaDeriver, Schema}
@@ -29,6 +31,17 @@ object SchemaExtractor {
         ): Schema.Aux[ F, S ] = prExtr.extract( from.shape )
     }
 
+    given coproductSchemaExtractor[ F, T, ST, R <: Tuple, RV <: Tuple, D, DN, S ](
+        using
+        coprExtr : CoproductSchemaExtractor.Aux[ F, CoproductShape[ T, R, RV, D, DN ], S ],
+    ) : SchemaExtractor[ F, Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ] with {
+        type Shape = S
+
+        override def extract(
+            from: Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
+        ): Schema.Aux[ F, S ] = coprExtr.extract( from.shape )
+    }
+
     given fieldSchemaExtractor[ T, F, FS, Fld <: Field.Shaped[ F, FS ], S ](
         using
         extr : SchemaExtractor.Aux[ T, Schema.Aux[ F, FS ], S ],
@@ -37,6 +50,17 @@ object SchemaExtractor {
 
         override def extract(
             from: Fld
+        ): Schema.Aux[ T, S ] = extr.extract( from.schema )
+    }
+
+    given subtypeSchemaExtractor[ T, STT, ST, STS, STD, STDN, STDV, STN <: TypeName, S ](
+        using
+        extr : SchemaExtractor.Aux[ T, Schema.Aux[ ST, STS ], S ],
+    ) : SchemaExtractor[ T, Subtype.Aux[ STT, ST, STD, STDN, STDV, STN, STS ] ] with {
+        type Shape = S
+
+        override def extract(
+            from: Subtype.Aux[ STT, ST, STD, STDN, STDV, STN, STS ],
         ): Schema.Aux[ T, S ] = extr.extract( from.schema )
     }
 

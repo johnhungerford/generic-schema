@@ -42,6 +42,8 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
 
     type Cons = C
 
+    type ProductType = ProductShape[ T, R, RV, AF, AFS, AFE, C ]
+
     lazy val size : Int = fieldDescriptions.size
 
     lazy val fieldNames : Set[ String ] = {

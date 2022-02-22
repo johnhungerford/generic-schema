@@ -353,7 +353,7 @@ val updatedHttpRequestSchema =
 
 // Same as above, but using index instead field and subtype name. 
 val updatedHttpRequestSchema =
-    httpRequestSchema.modifyComponent( 1 /~ 2)(
+    httpRequestSchema.modifyComponent(1 /~ 2)(
         _.withDescription("Create or update a record")
           .withName("Upsert")
     )
@@ -362,7 +362,7 @@ val updatedHttpRequestSchema =
 
 // Same as above, but select by type. 
 val updatedHttpRequestSchema =
-    httpRequestSchema.modifyComponent( t[HttpMethod] /~ t[Put] )(
+    httpRequestSchema.modifyComponent(t[HttpMethod] /~ t[Put])(
         _.withDescription("Create or update a record")
           .withName("Upsert")
     )

@@ -28,6 +28,12 @@ trait LowPriorityProductConstructors extends LowestPriorityProductConstructors {
 }
 
 object ProductConstructor extends LowPriorityProductConstructors {
+    given noFieldWithAF[ AF, T ] : ProductConstructor[ Map[ String, AF ] => T, EmptyTuple, AF, T ] with {
+        override def convert( from: Map[ String, AF ] => T ): ( EmptyTuple, Map[ String, AF ]) => T = {
+            ( fields : EmptyTuple, additionalFields : Map[ String, AF ] ) => from( additionalFields )
+        }
+    }
+
     given standardWithoutAF[ R <: Tuple, T ] : ProductConstructor[ R => T, R, Nothing, T ] with {
         override def convert( from : R => T ) : (R, Map[ String, Nothing ]) => T = {
             ( fields : R, _ : Map[ String, Nothing ] ) => from( fields )

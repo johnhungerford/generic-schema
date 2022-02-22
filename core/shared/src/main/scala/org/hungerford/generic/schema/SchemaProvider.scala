@@ -1,11 +1,46 @@
 package org.hungerford.generic.schema
 
+import org.hungerford.generic.schema.product.{ProductSchemaExtractor, ProductShape}
+import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.{RecursiveSchemaDeriver, Schema}
-import org.hungerford.generic.schema.types.{Provider, Size, Contains, TypeNames}
+import org.hungerford.generic.schema.types.{Contains, Provider, Size, TypeNames}
 
 import scala.deriving.Mirror
 import scala.compiletime.{constValue, erasedValue, summonAll, summonInline}
 import scala.util.NotGiven
+
+trait SchemaExtractor[ T, From ] {
+    type Shape
+
+    def extract( from : From ) : Schema.Aux[ T, Shape ]
+}
+
+object SchemaExtractor {
+    type Aux[ T, From, S ] = SchemaExtractor[ T, From ] { type Shape = S }
+
+    given productSchemaExtractor[ F, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, S ](
+        using
+        prExtr : ProductSchemaExtractor.Aux[ F, ProductShape[ T, R, RV, AF, AFS, AFE, C ], S ]
+    ) : SchemaExtractor[ F, Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ] with {
+        type Shape = S
+
+        override def extract(
+            from: Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
+        ): Schema.Aux[ F, S ] = prExtr.extract( from.shape )
+    }
+
+    given fieldSchemaExtractor[ T, F, FS, Fld <: Field.Shaped[ F, FS ], S ](
+        using
+        extr : SchemaExtractor.Aux[ T, Schema.Aux[ F, FS ], S ],
+    ) : SchemaExtractor[ T, Fld ] with {
+        type Shape = S
+
+        override def extract(
+            from: Fld
+        ): Schema.Aux[ T, S ] = extr.extract( from.schema )
+    }
+
+}
 
 trait SchemaProvider[ T ] {
     type Shape

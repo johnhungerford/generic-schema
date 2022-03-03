@@ -24,7 +24,9 @@ sealed case class Field[ T, F, N <: FieldName, S ] private[ schema ] (
     override val default : Option[ F ] = None,
     override val examples : Seq[ F ] = Nil,
     override val deprecated : Boolean = false,
-) extends Field.Shaped[ F, S ] with Field.OrLazy[ T, F, N ]
+) extends Field.Shaped[ F, S ] with Field.OrLazy[ T, F, N ] {
+    type Self = Field[ T, F, N, S ]
+}
 
 sealed case class LazyField[ T, F, N <: FieldName ] private[ schema ] (
     override val fieldName : N,
@@ -39,7 +41,7 @@ sealed case class LazyField[ T, F, N <: FieldName ] private[ schema ] (
         using
         sch : Schema.Aux[ F, S ]
     ) : Schema.Aux[ F, S ] = sch
-    
+
     def resolveSchema[ S ]( implicit sch : Schema.Aux[ F, S ] ) : Field[ T, F, N, S ] = {
         Field[ T, F, N, S ](
             fieldName,
@@ -52,6 +54,8 @@ sealed case class LazyField[ T, F, N <: FieldName ] private[ schema ] (
             deprecated,
         )
     }
+
+    type Self = LazyField[ T, F, N ]
 }
 
 object Field {

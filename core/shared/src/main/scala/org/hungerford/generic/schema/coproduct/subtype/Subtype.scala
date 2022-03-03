@@ -9,44 +9,7 @@ import scala.util.NotGiven
 
 type TypeName = String & Singleton
 
-trait Subtype[ T, ST, Discr ] {
-    type DiscrName
-    type DiscrValue
-    type Name <: TypeName
-    type Shape
-
-    def typeName: Name
-
-    def schema: Schema.Aux[ ST, Shape ]
-
-    def toSuper : ST => T
-
-    def fromSuper : T => Option[ ST ]
-
-    def discriminatorValue : DiscrValue
-
-    def description: Option[ String ] = None
-
-    def validators: Set[ Validator[ ST ] ] = Set.empty[ Validator[ ST ] ]
-
-    def default: Option[ ST ] = None
-
-    def examples: Seq[ ST ] = Seq.empty[ ST ]
-
-    def deprecated: Boolean = false
-}
-
-object Subtype {
-    type Aux[ T, ST, D, DN, DV, N <: TypeName, S ] = Subtype[ T, ST, D ] {
-        type Name = N; type DiscrValue = DV; type DiscrName = DN; type Shape = S
-    }
-    type Ctx[ T, D ] = [ X ] =>> Subtype[ T, X, D ]
-
-    type NoD[ T, ST, N <: TypeName, S ] = Aux[ T, ST, Unit, Nothing, Nothing, N, S ]
-    type WithD[ T, ST, D, DN <: FieldName, DV <: D & Singleton, N <: TypeName, S ] = Aux[ T, ST, D, DN, DV, N, S ]
-}
-
-case class SubtypeCase[ T, ST, D, DN, DV, N <: TypeName, S ](
+sealed case class Subtype[ T, ST, D, DN, DV, N <: TypeName, S ] private[ schema ] (
     override val typeName: N,
     override val schema: Schema.Aux[ ST, S ],
     override val toSuper : ST => T,
@@ -57,15 +20,62 @@ case class SubtypeCase[ T, ST, D, DN, DV, N <: TypeName, S ](
     override val default: Option[ ST ] = None,
     override val examples: Seq[ ST ] = Seq.empty[ ST ],
     override val deprecated: Boolean = false,
-) extends Subtype[ T, ST, D ] {
-    type Name = N
-    type DiscrName = DN
-    type DiscrValue = DV
-    type Shape = S
-
-    // For testing: get aux type from an instance
-    type Aux = Subtype.Aux[ T, ST, D, DN, DV, N, S ]
+) extends Subtype.OrLazy[ T, ST, D, DN, DV, N ] with Subtype.Shaped[ ST, S ] {
+    type Self = Subtype[ T, ST, D, DN, DV, N, S ]
 }
+
+sealed case class LazySubtype[ T, ST, D, DN, DV, N <: TypeName ] private[ schema ] (
+    override val typeName: N,
+    override val toSuper : ST => T,
+    override val fromSuper : T => Option[ ST ],
+    override val discriminatorValue : DV,
+    override val description: Option[ String ] = None,
+    override val validators: Set[ Validator[ ST ] ] = Set.empty[ Validator[ ST ] ],
+    override val default: Option[ ST ] = None,
+    override val examples: Seq[ ST ] = Seq.empty[ ST ],
+    override val deprecated: Boolean = false,
+) extends Subtype.OrLazy[ T, ST, D, DN, DV, N ] {
+    type Self = LazySubtype[ T, ST, D, DN, DV, N ]
+}
+
+object Subtype {
+    sealed trait Subtype {
+        def description: Option[ String ]
+        def deprecated: Boolean
+    }
+
+    sealed trait Of[ T ] extends Subtype.Subtype
+
+    sealed trait Tpe[ ST ] extends Subtype.Subtype {
+        def validators: Set[ Validator[ ST ] ]
+        def default: Option[ ST ]
+        def examples: Seq[ ST ]
+    }
+
+    sealed trait Named[ N <: TypeName ] extends Subtype.Subtype {
+        def typeName : N
+    }
+
+    sealed trait Discr[ D, DN, DV ] extends Subtype.Subtype {
+        def discriminatorName : DN
+        def discriminatorValue : DV
+    }
+
+    type NoDiscr = Discr[ Nothing, Nothing, Unit ]
+    type WithDiscr[ D, DN <: TypeName, DV <: D & Singleton ] = Discr[ D, DN, DV ]
+
+    sealed trait Shaped[ ST, Shape ] extends Subtype.Tpe[ ST ] {
+        def schema : Schema.Aux[ ST, Shape ]
+    }
+
+    sealed trait SubOf[ T, ST ] extends Subtype.Of[ T ] with Subtype.Tpe[ ST ] {
+        def toSuper : ST => T
+        def fromSuper : T => Option[ ST ]
+    }
+
+    sealed trait OrLazy[ T, ST, D, DN, DV, N <: TypeName ] extends Subtype.SubOf[ T, ST ] with Subtype.Discr[ D, DN, DV ]
+}
+
 
 trait SubtypeDsl {
 

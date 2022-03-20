@@ -94,7 +94,7 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
 }
 
 object CoproductSchemaBuilder {
-    def empty[ T ] = new CoproductSchemaBuilder[ T, EmptyTuple, Unit, Nothing ](
+    def empty[ T ] = new CoproductSchemaBuilder[ T, EmptyTuple, Unit, Unit ](
         sts = EmptyTuple,
     )
 }
@@ -149,6 +149,23 @@ object DiscriminatorAdder {
     }
 }
 
+trait DiscrName[ DN ] {
+    def value : DN
+}
+
+object DiscrName {
+    given discrNameWithValue[ DN <: TypeName ](
+        using
+        dn : ValueOf[ DN ],
+    ) : DiscrName[ DN ] with {
+        override def value: DN = dn.value
+    }
+
+    given discrNameWithoutValue : DiscrName[ Unit ] with {
+        override def value: Unit = ()
+    }
+}
+
 case class SubtypeBuilderAdder[ ST, TSType, T, R <: Tuple, D, DN  ](
     stb : CoproductSchemaBuilder[ T, R, D, DN ],
 )(
@@ -159,7 +176,7 @@ case class SubtypeBuilderAdder[ ST, TSType, T, R <: Tuple, D, DN  ](
         buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, TSType, Unit, Unit, Nothing, Unit ] => SubT,
     )(
         using
-        dn : ValueOf[ DN ],
+        dn : DiscrName[ DN ],
         uniqT : UniqueTypeNames[ Tuple.Concat[ R, SubT *: EmptyTuple ] ],
         uniqDV : UniqueDiscriminatorValues[ Tuple.Concat[ R, SubT *: EmptyTuple ] ],
         vd: ValidDiscriminator[ D, DN, Tuple.Concat[ R, SubT *: EmptyTuple ] ],

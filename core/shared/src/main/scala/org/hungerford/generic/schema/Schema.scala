@@ -155,7 +155,7 @@ trait SchemaDsl {
             using
             crt : ComponentRetriever[ Schema.Aux[ T, S ], Sel ],
         ) : crt.Inner = crt.retrieve( schema )
-        
+
     extension [ T, S ]( schema : Schema.Aux[ T, S ] )
         def withName( name : String ) : Schema.Aux[ T, S ] = schema._withName( name )
 
@@ -214,8 +214,8 @@ trait SchemaDsl {
             )
 
     extension ( sch : Schema.type )
-        def coproductBuilder[ T ] : CoproductSchemaBuilder[ T, EmptyTuple, Unit, Nothing ] =
-            CoproductSchemaBuilder[ T, EmptyTuple, Unit, Nothing ]( sts = EmptyTuple )
+        def coproductBuilder[ T ] : CoproductSchemaBuilder[ T, EmptyTuple, Unit, Unit ] =
+            CoproductSchemaBuilder[ T, EmptyTuple, Unit, Unit ]( sts = EmptyTuple )
 
     extension ( sch : Schema.type )
         def singletonBuilder[ T <: Singleton ] : SingletonSchemaBuilder[ T, Unit ] =

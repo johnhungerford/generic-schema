@@ -12,7 +12,7 @@ trait ValidDiscriminator[ D, DN, R ]
 
 object ValidDiscriminator {
 
-    given [ R ] : ValidDiscriminator[ Unit, Nothing, R ] with {}
+    given [ R ] : ValidDiscriminator[ Unit, Unit, R ] with {}
 
     given [ D, DN ] : ValidDiscriminator[ D, DN, EmptyTuple ] with {}
 
@@ -32,20 +32,20 @@ object ValidDiscriminator {
 trait UniqueDiscriminatorValues[ R ]
 
 trait LowPriorityUDVs {
-    given [ T, ST, D, DN, DV, N <: TypeName, Tail <: Tuple ](
+    given [ T, ST, D, DN, DV, N <: TypeName, SubT <: Subtype.OrLazy[ T, ST, D, DN, DV, N ], Tail <: Tuple ](
         using
         dnc : DoesNotContainDV[ Tail, DV ],
         next : UniqueDiscriminatorValues[ Tail ],
-    ) : UniqueDiscriminatorValues[ LazySubtype[ T, ST, D, DN, DV, N ] *: Tail ] with {}
+    ) : UniqueDiscriminatorValues[ SubT *: Tail ] with {}
 }
 
 object UniqueDiscriminatorValues extends LowPriorityUDVs {
     given UniqueDiscriminatorValues[ EmptyTuple ] with {}
 
-    given ignoreUnitDVs[ T, ST, D, DN, N <: TypeName, Tail <: Tuple ](
+    given ignoreUnitDVs[ T, ST, D, DN, N <: TypeName,  SubT <: Subtype.OrLazy[ T, ST, D, DN, Unit, N ], Tail <: Tuple ](
         using
         next : UniqueDiscriminatorValues[ Tail ],
-    ) : UniqueDiscriminatorValues[ LazySubtype[ T, ST, D, DN, Unit, N ] *: Tail ] with {}
+    ) : UniqueDiscriminatorValues[ SubT *: Tail ] with {}
 }
 
 trait UniqueTypeNames[ R ]
@@ -53,11 +53,11 @@ trait UniqueTypeNames[ R ]
 object UniqueTypeNames {
     given UniqueTypeNames[ EmptyTuple ] with {}
 
-    given [ T, ST, D, DN, DV, N <: TypeName, Tail <: Tuple ](
+    given [ N <: TypeName, SubT <: Subtype.Named[ N ], Tail <: Tuple ](
         using
         dnc : DoesNotContainN[ Tail, N ],
         next : UniqueTypeNames[ Tail ],
-    ) : UniqueTypeNames[ LazySubtype[ T, ST, D, DN, DV, N ] *: Tail ] with {}
+    ) : UniqueTypeNames[ SubT *: Tail ] with {}
 }
 
 trait DoesNotContainDV[ R, DV ]
@@ -65,11 +65,11 @@ trait DoesNotContainDV[ R, DV ]
 object DoesNotContainDV {
     given [ DV ] : DoesNotContainDV[ EmptyTuple, DV ] with {}
 
-    given [ T, ST, D, DN, DVDiff, N <: TypeName, Tail <: Tuple, DV ](
+    given [ D, DN, DVDiff, N <: TypeName, SubT <: Subtype.Discr[ D, DN, DVDiff ], Tail <: Tuple, DV ](
         using
         ev : NotGiven[ DV =:= DVDiff ],
         next : DoesNotContainDV[ Tail, DV ],
-    ) : DoesNotContainDV[ LazySubtype[ T, ST, D, DN, DVDiff, N ] *: Tail, DV ] with {}
+    ) : DoesNotContainDV[ SubT *: Tail, DV ] with {}
 }
 
 trait DoesNotContainN[ R, N ]
@@ -77,9 +77,9 @@ trait DoesNotContainN[ R, N ]
 object DoesNotContainN {
     given [ N ] : DoesNotContainN[ EmptyTuple, N ] with {}
 
-    given [ T, ST, D, DN, DV, NDiff <: TypeName, Tail <: Tuple, N ](
+    given [ NDiff <: TypeName, SubT <: Subtype.Named[ NDiff ], Tail <: Tuple, N ](
         using
         ev : NotGiven[ N =:= NDiff ],
         next : DoesNotContainN[ Tail, N ],
-    ) : DoesNotContainN[ LazySubtype[ T, ST, D, DN, DV, NDiff ] *: Tail, N ] with {}
+    ) : DoesNotContainN[ SubT *: Tail, N ] with {}
 }

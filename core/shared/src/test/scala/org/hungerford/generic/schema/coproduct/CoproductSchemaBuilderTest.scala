@@ -12,24 +12,24 @@ class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matc
 
     case class SomeTrait( value : Any )
 
-//    it should "be able to add a subtype" in {
-//        val csb = Schema.coproductBuilder[ SomeTrait ]
-//          .buildSubtype[ Int ]( _.typeName( "int" ).primitive.toSuper( SomeTrait.apply ).fromSuper( v => v.value match { case i : Int => Some( i ); case _ => None } ).build )
-//          .buildSubtype[ String ]( _.typeName( "str" ).primitive.toSuper( SomeTrait.apply ).fromSuper( v => v.value match { case _ : Int => None; case other => Some( other.toString ) } ).build )
-//          .build
-//
-//        summon[ csb.type <:< Schema.Aux[ SomeTrait, CoproductShape[ SomeTrait, (Subtype[ SomeTrait, Int, Unit, Nothing, Unit, "int",  Unit ], Subtype[ SomeTrait, String, Unit, Nothing, Unit, "str", Unit ]), (Int, String), Unit, Nothing ] ] ]
-//    }
-//
-//    sealed trait SuperTrait
-//    case class SubCase( int : Int ) extends SuperTrait
-//
-//    it should "be able to add real subtype" in {
-//        val csb = Schema.coproductBuilder[ SuperTrait ]
-//          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).build )
-//          .build
-//    }
-//
+    it should "be able to add a subtype" in {
+        val csb = Schema.coproductBuilder[ SomeTrait ]
+          .buildSubtype[ Int ]( _.typeName( "int" ).primitive.toSuper( SomeTrait.apply ).fromSuper( v => v.value match { case i : Int => Some( i ); case _ => None } ).build )
+          .buildSubtype[ String ]( _.typeName( "str" ).primitive.toSuper( SomeTrait.apply ).fromSuper( v => v.value match { case _ : Int => None; case other => Some( other.toString ) } ).build )
+          .build
+
+        summon[ csb.type <:< Schema.Aux[ SomeTrait, CoproductShape[ SomeTrait, (Subtype[ SomeTrait, Int, Unit, Unit, Unit, "int",  Unit ], Subtype[ SomeTrait, String, Unit, Unit, Unit, "str", Unit ]), (Int, String), Unit, Unit ] ] ]
+    }
+
+    sealed trait SuperTrait
+    case class SubCase( int : Int ) extends SuperTrait
+
+    it should "be able to add real subtype" in {
+        val csb = Schema.coproductBuilder[ SuperTrait ]
+          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).build )
+          .build
+    }
+
 //    case class SubCase2( int : Int ) extends SuperTrait
 //
 //    it should "not be able to add two subtypes with the same name" in {

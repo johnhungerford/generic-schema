@@ -10,7 +10,7 @@ case class CoproductShape[ T, R <: Tuple, RV <: Tuple, D, DN ](
     subtypeDescriptions : R,
 )(
     using
-    ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, D ], R, RV ],
+    ctx : CtxWrapTuplesConstraint[ Subtype.Tpe, R, RV ],
     uniqT : UniqueTypeNames[ R ],
     uniqDV : UniqueDiscriminatorValues[ R ],
     dEv : ValidDiscriminator[ D, DN, R ],

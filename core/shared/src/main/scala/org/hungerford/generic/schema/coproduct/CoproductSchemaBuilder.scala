@@ -35,15 +35,15 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
         da : DiscriminatorAdder[ NewD, T, R, D, DN ],
     ) : [ NewDN <: FieldName ] => NewDN => da.Out[ NewDN ] = da.add( nm, desc, vals, exs, dep, sts )
 
-    def addSubtype[ ST, DV, N <: TypeName, S ](
-        st : Subtype.Aux[ T, ST, D, DN, DV, N, S ],
+    def addSubtype[ ST, DV, N <: TypeName, SubT <: Subtype.OrLazy[ T, ST, D, DN, DV, N ] ](
+        st : SubT,
     )(
         using
-        uniqT : UniqueTypeNames[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
-        uniqDV : UniqueDiscriminatorValues[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
-        vd : ValidDiscriminator[ D, DN, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ]
-    ) : CoproductSchemaBuilder[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ] = {
-        copy[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ](
+        uniqT : UniqueTypeNames[ Tuple.Concat[ R, SubT *: EmptyTuple ] ],
+        uniqDV : UniqueDiscriminatorValues[ Tuple.Concat[ R, SubT *: EmptyTuple ] ],
+        vd : ValidDiscriminator[ D, DN, Tuple.Concat[ R, SubT *: EmptyTuple ] ]
+    ) : CoproductSchemaBuilder[ T, Tuple.Concat[ R, SubT *: EmptyTuple ], D, DN ] = {
+        copy[ T, Tuple.Concat[ R, SubT *: EmptyTuple ], D, DN ](
             sts = sts ++ ( st *: EmptyTuple ),
         )
     }
@@ -82,7 +82,7 @@ case class CoproductSchemaBuilder[ T, R <: Tuple, D, DN ](
 
     def build[ RV <: Tuple ](
         using
-        ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, D ], R, RV ],
+        ctx : CtxWrapTuplesConstraint[ Subtype.Tpe, R, RV ],
         uniqT : UniqueTypeNames[ R ],
         uniqDV : UniqueDiscriminatorValues[ R ],
         dEv : ValidDiscriminator[ D, DN, R ],
@@ -155,15 +155,16 @@ case class SubtypeBuilderAdder[ ST, TSType, T, R <: Tuple, D, DN  ](
     using
     val tsEv: ToSuperGenerator.Aux[ T, ST, TSType ],
 ) {
-    def apply[ DV, N <: TypeName, S ](
-        buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, TSType, Unit, Unit, Nothing, Unit ] => Subtype.Aux[ T, ST, D, DN, DV, N, S ],
+    def apply[ DV, N <: TypeName, SubT <: Subtype.OrLazy[ T, ST, D, DN, DV, N ] ](
+        buildFn: SubtypeBuilder[ T, ST, D, DN, Unit, TSType, Unit, Unit, Nothing, Unit ] => SubT,
     )(
         using
-        uniqT : UniqueTypeNames[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
-        uniqDV : UniqueDiscriminatorValues[ Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
-        vd: ValidDiscriminator[ D, DN, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ] ],
-    ): CoproductSchemaBuilder[ T, Tuple.Concat[ R, Subtype.Aux[ T, ST, D, DN, DV, N, S ] *: EmptyTuple ], D, DN ] =
-        stb.addSubtype( buildFn( SubtypeBuilder.empty[ T, ST, D, DN ] ) )
+        dn : ValueOf[ DN ],
+        uniqT : UniqueTypeNames[ Tuple.Concat[ R, SubT *: EmptyTuple ] ],
+        uniqDV : UniqueDiscriminatorValues[ Tuple.Concat[ R, SubT *: EmptyTuple ] ],
+        vd: ValidDiscriminator[ D, DN, Tuple.Concat[ R, SubT *: EmptyTuple ] ],
+    ): CoproductSchemaBuilder[ T, Tuple.Concat[ R, SubT *: EmptyTuple ], D, DN ] =
+        stb.addSubtype( buildFn( SubtypeBuilder.empty[ T, ST, D, DN ]( dn.value ) ) )
 }
 
 case class SubtypeModifier[ N <: TypeName, R <: Tuple, Builder, SubT ](

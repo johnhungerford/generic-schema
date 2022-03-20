@@ -51,7 +51,7 @@ object CoproductSchemaExtractor extends CoproductSchemaExtractorPriority1 {
         ): Schema.Aux[ ST, S ] = stExtr.extract( from.subtypeDescriptions )
     }
 
-    given subtypesHeadExtractor[ ST, T, D, DN, DV, N <: TypeName, S, SubT <: Subtype.Aux[ T, ST, D, DN, DV, N, S ], Tail <: Tuple ] : CoproductSchemaExtractor[ ST, SubT *: Tail ] with {
+    given subtypesHeadExtractor[ ST, T, D, DN, DV, N <: TypeName, S, SubT <: Subtype[ T, ST, D, DN, DV, N, S ], Tail <: Tuple ] : CoproductSchemaExtractor[ ST, SubT *: Tail ] with {
         type Shape = S
 
         override def extract(

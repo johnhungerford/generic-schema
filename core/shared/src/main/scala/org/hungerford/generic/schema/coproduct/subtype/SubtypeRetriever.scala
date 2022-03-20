@@ -34,10 +34,7 @@ object SubtypeRetriever extends LowPrioritySubtypeRetrievers {
         str : SubtypeRetriever[ N, R ],
     ) : SubtypeRetriever.Aux[ N, R, str.Subtype ] = str
 
-    given headHasName[ N <: TypeName, SubT, Tail <: Tuple ](
-        using
-        stn : SubtypeOfName[ N, SubT ],
-    ) : SubtypeRetriever.Aux[ N, SubT *: Tail, SubT ] = {
+    given headHasName[ N <: TypeName, SubT <: Subtype.Named[ N ], Tail <: Tuple ] : SubtypeRetriever.Aux[ N, SubT *: Tail, SubT ] = {
         new SubtypeRetriever[ N, SubT *: Tail ] {
             type Subtype = SubT
 
@@ -86,18 +83,14 @@ trait LowPrioritySubtypeTypeRetrievers {
 object SubtypeTypeRetriever extends LowPrioritySubtypeTypeRetrievers {
     type Aux[ T, N <: Nat, R <: Tuple, ST ] = SubtypeTypeRetriever[ T, N, R ] { type Subtype = ST }
 
-    given zero[ ST, SubT, Tail <: Tuple ](
-        using
-        ev : SubtypeOfType[ ST, SubT ],
-    ) : SubtypeTypeRetriever[ ST, Nat._0, SubT *: Tail ] with {
+    given zero[ ST, SubT <: Subtype.Tpe[ ST ], Tail <: Tuple ] : SubtypeTypeRetriever[ ST, Nat._0, SubT *: Tail ] with {
         type Subtype = SubT
         override def retrieve( from: SubT *: Tail ) : SubT = from.head
     }
 
-    given nonZero[ ST, N <: Nat, DecN <: Nat, SubT, Tail <: Tuple, Res ](
+    given nonZero[ ST, N <: Nat, DecN <: Nat, SubT <: Subtype.Tpe[ ST ], Tail <: Tuple, Res ](
         using
         ev : Nat.DecA[ N, DecN ],
-        ev2 : SubtypeOfType[ ST, SubT ],
         next : SubtypeTypeRetriever.Aux[ ST, DecN, Tail, Res ],
     ) : SubtypeTypeRetriever[ ST, N, SubT *: Tail ] with {
         type Subtype = Res

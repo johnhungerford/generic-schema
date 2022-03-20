@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema
 
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeDsl}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeDsl, TypeName}
 import org.hungerford.generic.schema.selector.SelectorDsl
 import org.hungerford.generic.schema.product.field.FieldDsl
 
@@ -18,5 +18,5 @@ class GenericSchemaDsl( conf : SchemaConfiguration )
     val Field = org.hungerford.generic.schema.product.field.Field
 
     val Subtype = org.hungerford.generic.schema.coproduct.subtype.Subtype
-    type Subtype[ T, St, Discr ] = org.hungerford.generic.schema.coproduct.subtype.Subtype[ T, St, Discr ]
+    type Subtype[ T, ST, D, DN, DV, N <: TypeName, S ] = org.hungerford.generic.schema.coproduct.subtype.Subtype[ T, ST, D, DN, DV, N, S ]
 }

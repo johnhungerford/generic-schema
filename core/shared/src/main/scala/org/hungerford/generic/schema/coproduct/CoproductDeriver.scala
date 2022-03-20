@@ -1,15 +1,14 @@
 package org.hungerford.generic.schema.coproduct
 
 import org.hungerford.generic.schema.{ComplexSchema, RecursiveSchemaProvider, Schema, SchemaProvider}
-import org.hungerford.generic.schema.types.{CtxWrapTuplesConstraint, Deriver, Sub, Zipper}
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeCase, ToSuperGenerator, TypeName}
+import org.hungerford.generic.schema.types.{Contains, CtxWrapTuplesConstraint, Deriver, Sub, Zipper}
+import org.hungerford.generic.schema.coproduct.subtype.{LazySubtype, Subtype, ToSuperGenerator, TypeName}
 import org.hungerford.generic.schema.product.ProductDeriver.MirrorProduct
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.FieldName
 
-import scala.util.NotGiven
 import scala.deriving.Mirror
-import scala.compiletime.{constValue, erasedValue, summonInline}
+import scala.util.NotGiven
 
 trait CoproductDeriver[ T, TsTail <: Tuple ] {
     type Out
@@ -32,7 +31,6 @@ object CoproductDeriver {
         ev1 : mir.MirroredElemTypes =:= Elems,
         ev2 : mir.MirroredElemLabels =:= ElemLabels,
     ) : CoproductDeriver.Aux[ T, TsTail, der.Out ] = {
-
         new CoproductDeriver[ T, TsTail ] {
             override type Out = der.Out
             override def derive: der.Out = der.derive
@@ -53,7 +51,7 @@ object CoproductMirDeriver {
     given [ T, TsTail <: Tuple, Elems <: Tuple, ElemLabels <: Tuple, R <: Tuple ](
         using
         der : SubtypesDeriver.Aux[ T, TsTail, Elems, ElemLabels, R ],
-        ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, Unit ], R, Elems ],
+        ctx : CtxWrapTuplesConstraint[ Subtype.Tpe, R, Elems ],
         uniq : UniqueTypeNames[ R ],
         uniqDv : UniqueDiscriminatorValues[ R ],
         vd : ValidDiscriminator[ Unit, Nothing, R ],
@@ -81,10 +79,7 @@ trait SubtypesDeriver[ T, TsTail <: Tuple, STs <: Tuple, Ns <: Tuple ] {
     def derive( ordinal : Int ) : Out
 }
 
-object SubtypesDeriver {
-    type Aux[ T, TsTails <: Tuple, STs <: Tuple, Ns <: Tuple, O ] =
-        SubtypesDeriver[ T, TsTails, STs, Ns ] { type Out = O }
-
+trait SubtypesDeriverPriority1 {
     given [ T, TsTail <: Tuple ] : SubtypesDeriver[ T, TsTail, EmptyTuple, EmptyTuple ] with {
         type Out = EmptyTuple
 
@@ -99,22 +94,57 @@ object SubtypesDeriver {
         tsGen : ToSuperGenerator.Aux[ T, ST, ST => T ],
         tDer : SubtypesDeriver.Aux[ T, TsTail, STTail, NTail, Next ],
         nVal : ValueOf[ N ],
-    ) : SubtypesDeriver.Aux[ T, TsTail, ST *: STTail, N *: NTail, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next ] = {
-//        val typeName = summonInline[ ValueOf[ N ] ].value
+    ) : SubtypesDeriver.Aux[ T, TsTail, ST *: STTail, N *: NTail, Subtype[ T, ST, Unit, Unit, Unit, N, STS ] *: Next ] = {
+        //        val typeName = summonInline[ ValueOf[ N ] ].value
         val typeName = nVal.value
 
         new SubtypesDeriver[ T, TsTail, ST *: STTail, N *: NTail ] {
-            type Out = Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, STS ] *: Next
+            type Out = Subtype[ T, ST, Unit, Unit, Unit, N, STS ] *: Next
 
             def derive( ordinal : Int ) : Out = {
-                SubtypeCase[ T, ST, Unit, Nothing, Unit, N, STS ](
+                Subtype[ T, ST, Unit, Unit, Unit, N, STS ](
                     typeName,
                     provider.provide,
                     tsGen.toSuper,
                     ( t : T ) => if ( mir.ordinal( t ) == ordinal ) Some( t.asInstanceOf[ ST ] ) else None,
                     (),
-                ) *: tDer.derive( ordinal + 1 )
+                    (),
+                    ) *: tDer.derive( ordinal + 1 )
             }
         }
     }
+}
+
+object SubtypesDeriver extends SubtypesDeriverPriority1 {
+    type Aux[ T, TsTails <: Tuple, STs <: Tuple, Ns <: Tuple, O ] =
+        SubtypesDeriver[ T, TsTails, STs, Ns ] { type Out = O }
+
+
+    given [ T, TsTail <: Tuple, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
+        using
+        ev : Contains[ TsTail, T ],
+        mir : Mirror.SumOf[ T ],
+        ev2 : NotGiven[ N =:= Nothing ],
+        tsGen : ToSuperGenerator.Aux[ T, ST, ST => T ],
+        tDer : SubtypesDeriver.Aux[ T, TsTail, STTail, NTail, Next ],
+        nVal : ValueOf[ N ],
+    ) : SubtypesDeriver.Aux[ T, TsTail, ST *: STTail, N *: NTail, LazySubtype[ T, ST, Unit, Unit, Unit, N ] *: Next ] = {
+        //        val typeName = summonInline[ ValueOf[ N ] ].value
+        val typeName = nVal.value
+
+        new SubtypesDeriver[ T, TsTail, ST *: STTail, N *: NTail ] {
+            type Out = LazySubtype[ T, ST, Unit, Unit, Unit, N ] *: Next
+
+            def derive( ordinal : Int ) : Out = {
+                LazySubtype[ T, ST, Unit, Unit, Unit, N ](
+                    typeName,
+                    tsGen.toSuper,
+                    ( t : T ) => if ( mir.ordinal( t ) == ordinal ) Some( t.asInstanceOf[ ST ] ) else None,
+                    (),
+                    (),
+                    ) *: tDer.derive( ordinal + 1 )
+            }
+        }
+    }
+
 }

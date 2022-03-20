@@ -27,10 +27,7 @@ object SubtypeRemover extends LowPrioritySubtypeRemovers {
         str : SubtypeRemover[ N, R ],
     ) : SubtypeRemover.Aux[ N, R, str.Out ] = str
 
-    given found[ N <: TypeName, SubT, Tail <: Tuple ](
-        using
-        ev : SubtypeOfName[ N, SubT ],
-    ) : SubtypeRemover[ N, SubT *: Tail ] with {
+    given found[ N <: TypeName, SubT <: Subtype.Named[ N ], Tail <: Tuple ] : SubtypeRemover[ N, SubT *: Tail ] with {
         type Out = Tail
 
          def remove( from: SubT *: Tail ): Out = from.tail
@@ -77,19 +74,15 @@ object SubtypeTypeRemover extends LowPrioritySubtypeTypeRemovers {
     type Aux[ T, N <: Nat, R <: Tuple, O <: Tuple ] =
         SubtypeTypeRemover[ T, N, R ] { type Out = O }
 
-    given fieldRemoverByTypeZero[ T, SubT, Tail <: Tuple ](
-        using
-        ev : SubtypeOfType[ T, SubT ],
-    ) : SubtypeTypeRemover[ T, Nat._0, SubT *: Tail ] with {
+    given fieldRemoverByTypeZero[ T, SubT <: Subtype.Tpe[ T ], Tail <: Tuple ] : SubtypeTypeRemover[ T, Nat._0, SubT *: Tail ] with {
         type Out = Tail
 
         def remove( fields : SubT *: Tail ) : Tail = fields.tail
     }
 
-    given fieldRemoverByTypeNonZero[ T, N <: Nat, DecN <: Nat, SubT, Tail <: Tuple, Res <: Tuple ](
+    given fieldRemoverByTypeNonZero[ T, N <: Nat, DecN <: Nat, SubT <: Subtype.Tpe[ T ], Tail <: Tuple, Res <: Tuple ](
         using
-        ev1 : SubtypeOfType[ T, SubT ],
-        ev2 :  Nat.DecA[ N, DecN ],
+        ev :  Nat.DecA[ N, DecN ],
         next : SubtypeTypeRemover.Aux[ T, DecN, Tail, Res ],
     ) : SubtypeTypeRemover[ T, N, SubT *: Tail ] with {
         type Out = SubT *: Res

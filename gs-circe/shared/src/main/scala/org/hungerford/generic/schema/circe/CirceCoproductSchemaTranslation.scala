@@ -27,12 +27,12 @@ trait CirceCoproductSchemaTranslation {
         given subtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S ](
             using
             st : SchemaTranslator[ ST, S, Codec ]
-        ) : CoproductReader[ Json, Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, S ], Unit, Nothing ] with {
+        ) : CoproductReader[ Json, Subtype[ T, ST, Unit, Nothing, Unit, N, S ], Unit, Nothing ] with {
             type Out = Option[ T ]
 
             override def read(
                 from: Json,
-                subtypes: Subtype.Aux[ T, ST, Unit, Nothing, Unit, N, S ]
+                subtypes: Subtype[ T, ST, Unit, Nothing, Unit, N, S ]
             ) : subtypeReaderWithoutDiscriminator.this.Out = {
                 val decoder = st.translate( subtypes.schema )
                 decoder( from.hcursor ) match {
@@ -50,16 +50,16 @@ trait CirceCoproductSchemaTranslation {
             dst : SchemaTranslator[ D, DS, Codec ],
             st : SchemaTranslator[ ST, S, Codec ],
             vo : ValueOf[ DN ],
-        ) : CoproductReader.Aux[ Json, Subtype.Aux[ T, ST, D, DN, DV, N, S ], D, DN, Option[ T ] ] = {
+        ) : CoproductReader.Aux[ Json, Subtype[ T, ST, D, DN, DV, N, S ], D, DN, Option[ T ] ] = {
             val discrFieldName = vo.value
             val dSch = dst.translate( dsp.provide )
 
-            new CoproductReader[ Json, Subtype.Aux[ T, ST, D, DN, DV, N, S ], D, DN ] {
+            new CoproductReader[ Json, Subtype[ T, ST, D, DN, DV, N, S ], D, DN ] {
                 type Out = Option[ T ]
 
                 override def read(
                     from: Json,
-                    subtypes: Subtype.Aux[ T, ST, D, DN, DV, N, S ]
+                    subtypes: Subtype[ T, ST, D, DN, DV, N, S ]
                 ): Out = {
                     from.hcursor.get[ D ]( discrFieldName )( dSch ) match {
                         case Left( e ) => throw e
@@ -114,12 +114,12 @@ trait CirceCoproductSchemaTranslation {
         given subtypeWriter[ T, ST, D, DN, DV, N <: TypeName, STS ](
             using
             st : SchemaTranslator[ ST, STS, Codec ],
-        ) : CoproductWriter[ T, Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ] with {
+        ) : CoproductWriter[ T, Subtype[ T, ST, D, DN, DV, N, STS ] ] with {
             type Out = Option[ Json ]
 
             override def write(
                 value: T,
-                informedBy: Subtype.Aux[ T, ST, D, DN, DV, N, STS ],
+                informedBy: Subtype[ T, ST, D, DN, DV, N, STS ],
             ) : Out = {
                 informedBy.fromSuper( value ).map( stVal => {
                     val encoder = st.translate( informedBy.schema )

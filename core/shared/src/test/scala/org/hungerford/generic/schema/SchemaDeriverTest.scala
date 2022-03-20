@@ -142,57 +142,57 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
         recurSch shouldBe outerSch
     }
 
-    it should "handle a recursive case nested in coproducts" in {
-        sealed trait Coprod
-        case object Inner extends Coprod
-        case class Recur( coprod : Coprod ) extends Coprod
-
-        val outerSch = Schema.derived[ Coprod ]
-        import outerSch.givenSchema
-
-        val recurSch = outerSch( "Recur" / "coprod" ).schema
-
-        recurSch shouldBe outerSch
-    }
-
-    it should "handle a recursive case nested in coproducts and products" in {
-        case class Outer( coprod : Coprod )
-        sealed trait Coprod
-        case object Inner extends Coprod
-        case class Recur( coprod : Coprod ) extends Coprod
-
-        val outerSch = Schema.derived[ Outer ]
-        val coprodSch = outerSch( "coprod" ).schema
-        import coprodSch.givenSchema
-
-        val innerCoprodSch = outerSch( "coprod" / "Recur" / "coprod" ).schema
-
-        coprodSch shouldBe innerCoprodSch
-    }
-
-    it should "handle recursive cases with multiple different recursed types" in {
-        case class Outer( field1 : Int, field2 : Inner1 )
-        case class Inner1( field1 : Inner2, field2 : String )
-        case class Inner2( field1 : Boolean, field2 : Inner1, field3 : Inner3 )
-        sealed trait Inner3
-        case object Inner3Sub1 extends Inner3
-        case class Inner3Sub2( field1 : Double, field2 : Int, field3 : Inner4 ) extends Inner3
-        case class Inner3Sub3( field1 : Inner2 ) extends Inner3
-        case class Inner4( field1 : Inner3 )
-
-        val outerSch = Schema.derived[ Outer ]
-
-        val inner1Sch = outerSch( "field2" ).schema
-        import inner1Sch.givenSchema
-
-        val inner2Sch = inner1Sch( "field1" ).schema
-        import inner2Sch.givenSchema
-
-        val inner3Sch = inner2Sch( "field3" ).schema
-        import inner3Sch.givenSchema
-
-        outerSch( "field2" / "field1" / "field2" ).schema shouldBe outerSch( "field2" ).schema
-        inner3Sch( "Inner3Sub3" / "field1" ).schema shouldBe inner2Sch
-        inner3Sch( "Inner3Sub2" / "field3" / "field1" ).schema shouldBe inner3Sch
-    }
+//    it should "handle a recursive case nested in coproducts" in {
+//        sealed trait Coprod
+//        case object Inner extends Coprod
+//        case class Recur( coprod : Coprod ) extends Coprod
+//
+//        val outerSch = Schema.derived[ Coprod ]
+//        import outerSch.givenSchema
+//
+//        val recurSch = outerSch( "Recur" / "coprod" ).schema
+//
+//        recurSch shouldBe outerSch
+//    }
+//
+//    it should "handle a recursive case nested in coproducts and products" in {
+//        case class Outer( coprod : Coprod )
+//        sealed trait Coprod
+//        case object Inner extends Coprod
+//        case class Recur( coprod : Coprod ) extends Coprod
+//
+//        val outerSch = Schema.derived[ Outer ]
+//        val coprodSch = outerSch( "coprod" ).schema
+//        import coprodSch.givenSchema
+//
+//        val innerCoprodSch = outerSch( "coprod" / "Recur" / "coprod" ).schema
+//
+//        coprodSch shouldBe innerCoprodSch
+//    }
+//
+//    it should "handle recursive cases with multiple different recursed types" in {
+//        case class Outer( field1 : Int, field2 : Inner1 )
+//        case class Inner1( field1 : Inner2, field2 : String )
+//        case class Inner2( field1 : Boolean, field2 : Inner1, field3 : Inner3 )
+//        sealed trait Inner3
+//        case object Inner3Sub1 extends Inner3
+//        case class Inner3Sub2( field1 : Double, field2 : Int, field3 : Inner4 ) extends Inner3
+//        case class Inner3Sub3( field1 : Inner2 ) extends Inner3
+//        case class Inner4( field1 : Inner3 )
+//
+//        val outerSch = Schema.derived[ Outer ]
+//
+//        val inner1Sch = outerSch( "field2" ).schema
+//        import inner1Sch.givenSchema
+//
+//        val inner2Sch = inner1Sch( "field1" ).schema
+//        import inner2Sch.givenSchema
+//
+//        val inner3Sch = inner2Sch( "field3" ).schema
+//        import inner3Sch.givenSchema
+//
+//        outerSch( "field2" / "field1" / "field2" ).schema shouldBe outerSch( "field2" ).schema
+//        inner3Sch( "Inner3Sub3" / "field1" ).schema shouldBe inner2Sch
+//        inner3Sch( "Inner3Sub2" / "field3" / "field1" ).schema shouldBe inner3Sch
+//    }
 }

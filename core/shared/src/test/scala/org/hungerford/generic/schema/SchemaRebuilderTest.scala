@@ -28,17 +28,17 @@ class SchemaRebuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sh
         sch2.shape.fieldDescriptions.size shouldBe 2
     }
 
-    it should "rebuild a coproduct schema" in {
-        case class Possible( number : String )
-
-        val sch = Schema.coproductBuilder[ Possible ]
-          .buildSubtype[ Int ]( _.typeName( "PosInt" ).primitive.validate( Validator.positiveOrZero, Validator.nonZero ).toSuper( v => Possible( v.toString ) ).fromSuper( v => Try( v.number.toInt ).toOption ).build )
-          .buildSubtype[ Double ]( _.typeName( "NegDbl" ).primitive.validate( Validator.negativeOrZero, Validator.nonZero ).toSuper( v => Possible( v.toString ) ).fromSuper( v => Try( v.number.toDouble ).toOption ).build )
-          .build
-
-        val sch2 = sch.rebuild
-          .buildSubtype[ Float ]( _.typeName( "ZeroFloat" ).primitive.validate( Validator.oneOf( 0F ) ).toSuper( v => Possible( v.toString ) ).fromSuper( v => Try( v.number.toFloat ).toOption ).build )
-          .description( "A numeric type supporting integers for positive numbers, doubles for negative numbers, and 0 as float" )
-          .build
-    }
+//    it should "rebuild a coproduct schema" in {
+//        case class Possible( number : String )
+//
+//        val sch = Schema.coproductBuilder[ Possible ]
+//          .buildSubtype[ Int ]( _.typeName( "PosInt" ).primitive.validate( Validator.positiveOrZero, Validator.nonZero ).toSuper( v => Possible( v.toString ) ).fromSuper( v => Try( v.number.toInt ).toOption ).build )
+//          .buildSubtype[ Double ]( _.typeName( "NegDbl" ).primitive.validate( Validator.negativeOrZero, Validator.nonZero ).toSuper( v => Possible( v.toString ) ).fromSuper( v => Try( v.number.toDouble ).toOption ).build )
+//          .build
+//
+//        val sch2 = sch.rebuild
+//          .buildSubtype[ Float ]( _.typeName( "ZeroFloat" ).primitive.validate( Validator.oneOf( 0F ) ).toSuper( v => Possible( v.toString ) ).fromSuper( v => Try( v.number.toFloat ).toOption ).build )
+//          .description( "A numeric type supporting integers for positive numbers, doubles for negative numbers, and 0 as float" )
+//          .build
+//    }
 }

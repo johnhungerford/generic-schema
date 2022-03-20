@@ -54,12 +54,12 @@ object CoproductMirDeriver {
         ctx : CtxWrapTuplesConstraint[ Subtype.Tpe, R, Elems ],
         uniq : UniqueTypeNames[ R ],
         uniqDv : UniqueDiscriminatorValues[ R ],
-        vd : ValidDiscriminator[ Unit, Nothing, R ],
-    ) : CoproductMirDeriver.Aux[ T, TsTail, Elems, ElemLabels, CoproductShape[ T, R, Elems, Unit, Nothing ] ] = {
+        vd : ValidDiscriminator[ Unit, Unit, R ],
+    ) : CoproductMirDeriver.Aux[ T, TsTail, Elems, ElemLabels, CoproductShape[ T, R, Elems, Unit, Unit ] ] = {
         new CoproductMirDeriver[ T, TsTail, Elems, ElemLabels ] {
-            type Out = CoproductShape[ T, R, Elems, Unit, Nothing ]
+            type Out = CoproductShape[ T, R, Elems, Unit, Unit ]
 
-            def derive: Out = CoproductShape[ T, R, Elems, Unit, Nothing ](
+            def derive: Out = CoproductShape[ T, R, Elems, Unit, Unit ](
                 der.derive( 0 )
             )
         }

@@ -30,40 +30,40 @@ class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matc
           .build
     }
 
-//    case class SubCase2( int : Int ) extends SuperTrait
-//
-//    it should "not be able to add two subtypes with the same name" in {
-//        val csb = Schema.coproductBuilder[ SuperTrait ]
-//          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).build )
-//
-//        assertDoesNotCompile(
-//            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case" )
-//              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
-//        )
-//
-//        assertCompiles(
-//            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" )
-//              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
-//        )
-//    }
-//
-//    it should "not be able to add two subtypes with same discriminator value" in {
-//        val csb = Schema.coproductBuilder[ SuperTrait ]
-//          .discriminator[ Int ]( "int" )
-//          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).discriminatorValue( 1 ).build )
-//
-//        assertDoesNotCompile(
-//            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" ).discriminatorValue( 1 )
-//              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
-//        )
-//
-//        assertCompiles(
-//            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" ).discriminatorValue( 2 )
-//              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
-//        )
-//
-//    }
-//
+    case class SubCase2( int : Int ) extends SuperTrait
+
+    it should "not be able to add two subtypes with the same name" in {
+        val csb = Schema.coproductBuilder[ SuperTrait ]
+          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).build )
+
+        assertDoesNotCompile(
+            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case" )
+              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
+        )
+
+        assertCompiles(
+            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" )
+              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
+        )
+    }
+
+    it should "not be able to add two subtypes with same discriminator value" in {
+        val csb = Schema.coproductBuilder[ SuperTrait ]
+          .discriminator[ Int ]( "int" )
+          .buildSubtype[ SubCase ]( _.typeName( "sub-case" ).fromSchema( Schema.derived ).fromSuper( { case v@SubCase(_) => Some( v ); case _ => None } ).discriminatorValue( 1 ).build )
+
+        assertDoesNotCompile(
+            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" ).discriminatorValue( 1 )
+              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
+        )
+
+        assertCompiles(
+            """csb.buildSubtype[ SubCase2 ]( _.typeName( "sub-case-2" ).discriminatorValue( 2 )
+              |.fromSchema( Schema.derived ).fromSuper( { case v@SubCase2(_) => Some( v ); case _ => None } ).build )""".stripMargin,
+        )
+
+    }
+
 //    it should "be able to remove a subfield by name" in {
 //        val csb = Schema.derivedBuilder[ SuperTrait ]
 //          .removeSubtype( "SubCase" )

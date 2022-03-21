@@ -24,6 +24,11 @@ object CoproductDeriver {
         cd : CoproductDeriver[ T, EmptyTuple ],
     ) : CoproductDeriver.Aux[ T, EmptyTuple, cd.Out ] = cd
 
+    def withAncestors[ T, TsTail <: Tuple ](
+        using
+        cd : CoproductDeriver[ T, TsTail ],
+    ) : CoproductDeriver.Aux[ T, TsTail, cd.Out ] = cd
+
     transparent inline given [ T, TsTail <: Tuple, Elems <: NonEmptyTuple, ElemLabels <: NonEmptyTuple ](
         using
         mir : Mirror.Of[ T ],
@@ -109,7 +114,7 @@ trait SubtypesDeriverPriority1 {
                     ( t : T ) => if ( mir.ordinal( t ) == ordinal ) Some( t.asInstanceOf[ ST ] ) else None,
                     (),
                     (),
-                    ) *: tDer.derive( ordinal + 1 )
+                ) *: tDer.derive( ordinal + 1 )
             }
         }
     }
@@ -120,9 +125,9 @@ object SubtypesDeriver extends SubtypesDeriverPriority1 {
         SubtypesDeriver[ T, TsTails, STs, Ns ] { type Out = O }
 
 
-    given [ T, TsTail <: Tuple, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
+    given lazyDeriver[ T, TsTail <: Tuple, ST, STS, STTail <: Tuple, N <: TypeName, NTail <: Tuple, Next <: Tuple ](
         using
-        ev : Contains[ TsTail, T ],
+        ev : Contains[ T *: TsTail, ST ],
         mir : Mirror.SumOf[ T ],
         ev2 : NotGiven[ N =:= Nothing ],
         tsGen : ToSuperGenerator.Aux[ T, ST, ST => T ],

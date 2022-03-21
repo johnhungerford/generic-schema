@@ -27,12 +27,12 @@ trait UPickleCoproductSchemaTranslation {
         given subtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S ](
             using
             st : SchemaTranslator[ ST, S, ReadWriter ]
-        ) : CoproductReader[ Value.Value, Subtype[ T, ST, Unit, Nothing, Unit, N, S ], Unit, Nothing ] with {
+        ) : CoproductReader[ Value.Value, Subtype[ T, ST, Unit, Unit, Unit, N, S ], Unit, Unit ] with {
             type Out = Option[ T ]
 
             override def read(
                 from: Value.Value,
-                subtypes: Subtype[ T, ST, Unit, Nothing, Unit, N, S ]
+                subtypes: Subtype[ T, ST, Unit, Unit, Unit, N, S ]
             ) : subtypeReaderWithoutDiscriminator.this.Out = {
                 given reader : Reader[ ST ] = st.translate( subtypes.schema )
                 Try( upkRead[ ST ]( from ) ).toOption flatMap { t =>

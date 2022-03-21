@@ -14,34 +14,34 @@ object SingletonJsonTranslationTest {
 abstract class SingletonJsonTranslationTest[ OtherSchema[ _ ] ]
   extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
-//    import SingletonJsonTranslationTest.*
-//    import org.hungerford.generic.schema.Default.dsl.*
-//
-//    val tsSchema = Schema.derived[ TestSingleton.type ]
-//    val stSchema = Schema.derived[ SuperT ]
-//
-//    def tsOSchema: OtherSchema[ TestSingleton.type ]
-//
-//    def stOSchema: OtherSchema[ SuperT ]
-//
-//    def writeJson[ T ]( value: T, schm: OtherSchema[ T ] ): String
-//
-//    def readJson[ T ]( json: String, schm: OtherSchema[ T ] ): Option[ T ]
-//
-//    behavior of "UpickleSingletonSchemaTranslation"
-//
-//    it should "translate a singleton to a value that can be encoded and decoded" in {
-//        writeJson( TestSingleton, tsOSchema ) shouldBe """"TestSingleton""""
-//
-//        readJson( "\"TestSingleton\"", tsOSchema ) shouldBe Some( TestSingleton )
-//    }
-//
-//    it should "translate a singleton within a coproduct" in {
-//        val testVal: SuperT = SubT
-//
-//        writeJson( testVal, stOSchema ) shouldBe """"SubT""""
-//
-//        readJson[ SuperT ]( "\"SubT\"", stOSchema ) shouldBe Some( SubT )
-//    }
+    import SingletonJsonTranslationTest.*
+    import org.hungerford.generic.schema.Default.dsl.*
+
+    val tsSchema = Schema.derived[ TestSingleton.type ]
+    val stSchema = Schema.derived[ SuperT ]
+
+    def tsOSchema: OtherSchema[ TestSingleton.type ]
+
+    def stOSchema: OtherSchema[ SuperT ]
+
+    def writeJson[ T ]( value: T, schm: OtherSchema[ T ] ): String
+
+    def readJson[ T ]( json: String, schm: OtherSchema[ T ] ): Option[ T ]
+
+    behavior of "UpickleSingletonSchemaTranslation"
+
+    it should "translate a singleton to a value that can be encoded and decoded" in {
+        writeJson( TestSingleton, tsOSchema ) shouldBe """"TestSingleton""""
+
+        readJson( "\"TestSingleton\"", tsOSchema ) shouldBe Some( TestSingleton )
+    }
+
+    it should "translate a singleton within a coproduct" in {
+        val testVal: SuperT = SubT
+
+        writeJson( testVal, stOSchema ) shouldBe """"SubT""""
+
+        readJson[ SuperT ]( "\"SubT\"", stOSchema ) shouldBe Some( SubT )
+    }
 
 }

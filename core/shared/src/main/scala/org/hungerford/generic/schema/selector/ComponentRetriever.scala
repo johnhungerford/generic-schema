@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.selector
 
 import org.hungerford.generic.schema.{Schema, selector}
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeRetriever, SubtypeTypeRetriever, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, LazySubtype, SubtypeRetriever, SubtypeTypeRetriever, TypeName}
 import org.hungerford.generic.schema.coproduct.{CoproductSchemaBuilder, CoproductShape, subtype}
 import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldReplacer, FieldRetriever, FieldTypeRetriever, LazyField}
 import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape}
@@ -154,13 +154,26 @@ object ComponentRetriever extends LowPriorityComponentRetrievers {
         }
     }
 
-    given fromCoproductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, D, DN, N <: TypeName, ST, DV, STS ](
+    given fromLazySubtypeDescription[ T, ST, D, DN, DV, N <: TypeName, STS, SelR, I ](
         using
-        fr : SubtypeRetriever.Aux[ SelN, R, Subtype[ T, ST, D, DN, DV, N, STS] ],
-    ) : ComponentRetriever[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ] ] with {
-        override type Inner = Subtype[ T, ST, D, DN, DV, N, STS]
+        ev : NotGiven[ SelR <:< Tuple ],
+        sch : Schema.Aux[ ST, STS ],
+        fr : selector.ComponentRetriever.Aux[ Schema.Aux[ ST, STS ], SelR, I ],
+    ) : ComponentRetriever[ LazySubtype[ T, ST, D, DN, DV, N ], SelR ] with {
+        override type Inner = I
 
-        override def retrieve( from : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ) : Inner = {
+        override def retrieve( from : LazySubtype[ T, ST, D, DN, DV, N ] ) : Inner = {
+            fr.retrieve( sch )
+        }
+    }
+
+    given fromCoproductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, D, DN, SubT <: Subtype.Subtype ](
+        using
+        fr : SubtypeRetriever.Aux[ SelN, R, SubT ],
+    ) : ComponentRetriever[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ] ] with {
+        override type Inner = SubT
+
+        override def retrieve( from : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ) : SubT = {
             fr.retrieve( from.shape.subtypeDescriptions )
         }
     }

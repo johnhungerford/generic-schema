@@ -231,8 +231,8 @@ trait TapirSchemaCoproductTranslation {
             schema: Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
         ): TapirSchema[ T ] = {
             val stList : List[ (T, T => Option[ String ]) ] = schema.shape.subtypeDescriptions.toList map {
-                case Subtype( _, ComplexSchema( SingletonShape( caseName, caseValue ), _, _, _, _, _ ), _, matcher, _, _, _, _, _, _ ) =>
-                    (caseValue.asInstanceOf[ T ], ( t : T ) => matcher.asInstanceOf[ Function1[ T, Option[ Any ] ] ]( t ).map( _ => caseName.asInstanceOf[ String ] ))
+                case Subtype( _, ComplexSchema( SingletonShape( caseName, caseValue ), _, _, _, _, _ ), _, matcher, _, _, _, _, _, _, _ ) =>
+                    (caseValue.asInstanceOf[ T ], ( t : T ) => matcher.asInstanceOf[ Function1[ T, Option[ Any ] ] ]( t ).map( _ => caseName.asInstanceOf[ String ] ) )
             }
 
             val encoder : T => Option[ String ] = stList.foldLeft( ( t : T ) => None : Option[ String ] ) { ( lastFn, nextTup ) =>

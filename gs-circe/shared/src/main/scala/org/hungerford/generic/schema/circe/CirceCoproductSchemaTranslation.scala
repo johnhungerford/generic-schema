@@ -27,12 +27,12 @@ trait CirceCoproductSchemaTranslation {
         given subtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S ](
             using
             st : SchemaTranslator[ ST, S, Codec ]
-        ) : CoproductReader[ Json, Subtype[ T, ST, Unit, Nothing, Unit, N, S ], Unit, Nothing ] with {
+        ) : CoproductReader[ Json, Subtype[ T, ST, Unit, Unit, Unit, N, S ], Unit, Unit ] with {
             type Out = Option[ T ]
 
             override def read(
                 from: Json,
-                subtypes: Subtype[ T, ST, Unit, Nothing, Unit, N, S ]
+                subtypes: Subtype[ T, ST, Unit, Unit, Unit, N, S ]
             ) : subtypeReaderWithoutDiscriminator.this.Out = {
                 val decoder = st.translate( subtypes.schema )
                 decoder( from.hcursor ) match {

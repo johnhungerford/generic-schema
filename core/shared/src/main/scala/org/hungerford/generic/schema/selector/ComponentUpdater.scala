@@ -206,20 +206,20 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
 
     given fromCoproductSchema[ SelN <: Singleton, T, R <: Tuple, RV <: Tuple, D, DN, N <: TypeName, ST, DV, STS, NewDV, NewN <: TypeName, NewSTS, NewR <: Tuple, NewRV <: Tuple ](
         using
-        strt : SubtypeRetriever.Aux[ SelN, R, Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ],
-        strp : SubtypeReplacer.Aux[ SelN, Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
-        ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, D ], NewR, NewRV ],
+        strt : SubtypeRetriever.Aux[ SelN, R, Subtype[ T, ST, D, DN, DV, N, STS ] ],
+        strp : SubtypeReplacer.Aux[ SelN, Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
+        ctx : CtxWrapTuplesConstraint[ Subtype.Tpe, NewR, NewRV ],
         uniqT : UniqueTypeNames[ NewR ],
         uniqDV : UniqueDiscriminatorValues[ NewR ],
         dEv : ValidDiscriminator[ D, DN, NewR ],
-    ) : ComponentUpdater.Aux[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, N, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], Schema.Aux[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ] ] = {
-        new ComponentUpdater[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, N, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
+    ) : ComponentUpdater.Aux[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ], Subtype[ T, ST, D, DN, DV, N, STS ], Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ], Schema.Aux[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ] ] = {
+        new ComponentUpdater[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ SelN ], Subtype[ T, ST, D, DN, DV, N, STS ], Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
             type NewOuter = Schema.Aux[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ]
 
             def update(
                 outer : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
             )(
-                updater : Subtype.Aux[ T, ST, D, DN, DV, N, STS ] => Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ],
+                updater : Subtype[ T, ST, D, DN, DV, N, STS ] => Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ],
             ) : NewOuter = {
                 val inner = strt.retrieve( outer.shape.subtypeDescriptions )
                 val newInner = updater( inner )
@@ -237,20 +237,20 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
 
     given fromCoproductSchemaUsingType[ ST, SelN <: Nat, T, R <: Tuple, RV <: Tuple, D, DN, N <: TypeName, DV, STS, NewDV, NewN <: TypeName, NewSTS, NewR <: Tuple, NewRV <: Tuple ](
         using
-        strt : SubtypeTypeRetriever.Aux[ ST, SelN, R, Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ],
-        strp : SubtypeTypeReplacer.Aux[ ST, SelN, Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
-        ctx : CtxWrapTuplesConstraint[ Subtype.Ctx[ T, D ], NewR, NewRV ],
+        strt : SubtypeTypeRetriever.Aux[ ST, SelN, R, Subtype[ T, ST, D, DN, DV, N, STS ] ],
+        strp : SubtypeTypeReplacer.Aux[ ST, SelN, Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
+        ctx : CtxWrapTuplesConstraint[ Subtype.Tpe, NewR, NewRV ],
         uniqT : UniqueTypeNames[ NewR ],
         uniqDV : UniqueDiscriminatorValues[ NewR ],
         dEv : ValidDiscriminator[ D, DN, NewR ],
-    ) : ComponentUpdater.Aux[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ TypeSelector[ ST, SelN ] ], Subtype.Aux[ T, ST, D, DN, DV, N, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], Schema.Aux[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ] ] = {
-        new ComponentUpdater[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ TypeSelector[ ST, SelN ] ], Subtype.Aux[ T, ST, D, DN, DV, N, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
+    ) : ComponentUpdater.Aux[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ TypeSelector[ ST, SelN ] ], Subtype[ T, ST, D, DN, DV, N, STS ], Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ], Schema.Aux[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ] ] = {
+        new ComponentUpdater[ Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], SubTypeSelector[ TypeSelector[ ST, SelN ] ], Subtype[ T, ST, D, DN, DV, N, STS ], Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
             type NewOuter = Schema.Aux[ T, CoproductShape[ T, NewR, NewRV, D, DN ] ]
 
             def update(
                 outer : Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
             )(
-                updater : Subtype.Aux[ T, ST, D, DN, DV, N, STS ] => Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ],
+                updater : Subtype[ T, ST, D, DN, DV, N, STS ] => Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ],
             ) : NewOuter = {
                 val inner = strt.retrieve( outer.shape.subtypeDescriptions )
                 val newInner = updater( inner )
@@ -268,19 +268,19 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
 
     given fromCoproductSchemaBuilder[ SelN <: Singleton, T, R <: Tuple, D, DN, N <: TypeName, ST, DV, STS, NewDV, NewN <: TypeName, NewSTS, NewR <: Tuple ](
         using
-        strt : SubtypeRetriever.Aux[ SelN, R, Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ],
-        strp : SubtypeReplacer.Aux[ SelN, Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
+        strt : SubtypeRetriever.Aux[ SelN, R, Subtype[ T, ST, D, DN, DV, N, STS ] ],
+        strp : SubtypeReplacer.Aux[ SelN, Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
         uniqT : UniqueTypeNames[ NewR ],
         uniqDV : UniqueDiscriminatorValues[ NewR ],
         dEv : ValidDiscriminator[ D, DN, NewR ],
-    ) : ComponentUpdater.Aux[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, N, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], CoproductSchemaBuilder[ T, NewR, D, DN ] ] = {
-        new ComponentUpdater[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ], Subtype.Aux[ T, ST, D, DN, DV, N, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
+    ) : ComponentUpdater.Aux[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ], Subtype[ T, ST, D, DN, DV, N, STS ], Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ], CoproductSchemaBuilder[ T, NewR, D, DN ] ] = {
+        new ComponentUpdater[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ SelN ], Subtype[ T, ST, D, DN, DV, N, STS ], Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
             type NewOuter = CoproductSchemaBuilder[ T, NewR, D, DN ]
 
             def update(
                 outer : CoproductSchemaBuilder[ T, R, D, DN ],
             )(
-                updater : Subtype.Aux[ T, ST, D, DN, DV, N, STS ] => Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ],
+                updater : Subtype[ T, ST, D, DN, DV, N, STS ] => Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ],
             ) : NewOuter = {
                 val inner = strt.retrieve( outer.sts )
                 val newInner = updater( inner )
@@ -292,19 +292,19 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
 
     given fromCoproductSchemaBuilderUsingType[ ST, SelN <: Nat, T, R <: Tuple, D, DN, N <: TypeName, DV, STS, NewDV, NewN <: TypeName, NewSTS, NewR <: Tuple ](
         using
-        strt : SubtypeTypeRetriever.Aux[ ST, SelN, R, Subtype.Aux[ T, ST, D, DN, DV, N, STS ] ],
-        strp : SubtypeTypeReplacer.Aux[ ST, SelN, Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
+        strt : SubtypeTypeRetriever.Aux[ ST, SelN, R, Subtype[ T, ST, D, DN, DV, N, STS ] ],
+        strp : SubtypeTypeReplacer.Aux[ ST, SelN, Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ], R, NewR ],
         uniqT : UniqueTypeNames[ NewR ],
         uniqDV : UniqueDiscriminatorValues[ NewR ],
         dEv : ValidDiscriminator[ D, DN, NewR ],
-    ) : ComponentUpdater.Aux[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ TypeSelector[ ST, SelN ] ], Subtype.Aux[ T, ST, D, DN, DV, N, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ], CoproductSchemaBuilder[ T, NewR, D, DN ] ] = {
-        new ComponentUpdater[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ TypeSelector[ ST, SelN ] ], Subtype.Aux[ T, ST, D, DN, DV, N, STS ], Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
+    ) : ComponentUpdater.Aux[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ TypeSelector[ ST, SelN ] ], Subtype[ T, ST, D, DN, DV, N, STS ], Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ], CoproductSchemaBuilder[ T, NewR, D, DN ] ] = {
+        new ComponentUpdater[ CoproductSchemaBuilder[ T, R, D, DN ], SubTypeSelector[ TypeSelector[ ST, SelN ] ], Subtype[ T, ST, D, DN, DV, N, STS ], Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ] ] {
             type NewOuter = CoproductSchemaBuilder[ T, NewR, D, DN ]
 
             def update(
                 outer : CoproductSchemaBuilder[ T, R, D, DN ],
             )(
-                updater : Subtype.Aux[ T, ST, D, DN, DV, N, STS ] => Subtype.Aux[ T, ST, D, DN, NewDV, NewN, NewSTS ],
+                updater : Subtype[ T, ST, D, DN, DV, N, STS ] => Subtype[ T, ST, D, DN, NewDV, NewN, NewSTS ],
             ) : NewOuter = {
                 val inner = strt.retrieve( outer.sts )
                 val newInner = updater( inner )
@@ -318,13 +318,13 @@ object ComponentUpdater extends LowPriorityComponentUpdaters {
         using
         ev : NotGiven[ SelR <:< Tuple ],
         ev1 : CorrectDV[ D, DV ],
-        ev2 : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] *: EmptyTuple ],
+        ev2 : ValidDiscriminator[ D, DN, Subtype[ T, ST, D, DN, DV, N, NewS ] *: EmptyTuple ],
         scu : ComponentUpdater.Aux[ Schema.Aux[ ST, S ], SelR, I, NewI, Schema.Aux[ ST, NewS ] ],
-    ) : ComponentUpdater.Aux[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], SelR, I, NewI, Subtype.Aux[ T, ST, D, DN, DV, N, NewS ] ] = {
-        new ComponentUpdater[ Subtype.Aux[ T, ST, D, DN, DV, N, S ], SelR, I, NewI ] {
-            override type NewOuter = Subtype.Aux[ T, ST, D, DN, DV, N, NewS ]
+    ) : ComponentUpdater.Aux[ Subtype[ T, ST, D, DN, DV, N, S ], SelR, I, NewI, Subtype[ T, ST, D, DN, DV, N, NewS ] ] = {
+        new ComponentUpdater[ Subtype[ T, ST, D, DN, DV, N, S ], SelR, I, NewI ] {
+            override type NewOuter = Subtype[ T, ST, D, DN, DV, N, NewS ]
 
-            override def update( outer : Subtype.Aux[ T, ST, D, DN, DV, N, S ] )( updater : I => NewI ) : NewOuter =
+            override def update( outer : Subtype[ T, ST, D, DN, DV, N, S ] )( updater : I => NewI ) : NewOuter =
                 SubtypeBuilder.from( outer ).fromSchema( scu.update( outer.schema )( updater ) ).build
         }
     }

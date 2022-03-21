@@ -145,22 +145,22 @@ class SchemaDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
         val sch = Schema.derived[ Wrapper ]
 
         val subComponent = sch( field( t[ SuperT ] ) / t[ SubT2 ] / t[ SubT2B ] / t[ NestedSuperT ] / t[ NSub2 ] / t[ Float ] )
-//        subComponent.fieldName shouldBe "flt"
-//        subComponent.schema.shape shouldBe ()
-//        subComponent.description shouldBe None
-//
-//        val newSch = sch.modifyComponent( field( t[ SuperT ] ) / t[ SubT2 ] / t[ SubT2B ] / t[ NestedSuperT ] / t[ NSub2 ] / t[ Float ] )(
-//            _.rebuild
-//              .name( "NEW_NAME" )
-//              .description( "test-description" )
-//              .build
-//            )
-//
-//        val newSc = newSch( field( t[ SuperT ] ) / t[ SubT2 ] / t[ SubT2B ] / t[ NestedSuperT ] / t[ NSub2 ] / t[ Float ] )
-//
-//        newSc.fieldName shouldBe "NEW_NAME"
-//        newSc.schema.shape shouldBe ()
-//        newSc.description shouldBe Some( "test-description" )
+            subComponent.fieldName shouldBe "flt"
+            subComponent.schema.shape shouldBe ()
+            subComponent.description shouldBe None
+
+            val newSch = sch.modifyComponent( field( t[ SuperT ] ) / t[ SubT2 ] / t[ SubT2B ] / t[ NestedSuperT ] / t[ NSub2 ] / t[ Float ] )(
+                _.rebuild
+                  .name( "NEW_NAME" )
+                  .description( "test-description" )
+                  .build
+                )
+
+            val newSc = newSch( field( t[ SuperT ] ) / t[ SubT2 ] / t[ SubT2B ] / t[ NestedSuperT ] / t[ NSub2 ] / t[ Float ] )
+
+            newSc.fieldName shouldBe "NEW_NAME"
+            newSc.schema.shape shouldBe ()
+            newSc.description shouldBe Some( "test-description" )
     }
 
 }

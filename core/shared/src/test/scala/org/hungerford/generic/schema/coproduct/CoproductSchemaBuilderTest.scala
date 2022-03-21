@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.coproduct
 
 import org.hungerford.generic.schema.{Schema, Primitive}
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeCase, SubtypeBuilder}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 import org.hungerford.generic.schema.Default.dsl.*
@@ -18,7 +18,7 @@ class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matc
           .buildSubtype[ String ]( _.typeName( "str" ).primitive.toSuper( SomeTrait.apply ).fromSuper( v => v.value match { case _ : Int => None; case other => Some( other.toString ) } ).build )
           .build
 
-        summon[ csb.type <:< Schema.Aux[ SomeTrait, CoproductShape[ SomeTrait, (Subtype.Aux[ SomeTrait, Int, Unit, Nothing, Unit, "int",  Unit ], Subtype.Aux[ SomeTrait, String, Unit, Nothing, Unit, "str", Unit ]), (Int, String), Unit, Nothing ] ] ]
+        summon[ csb.type <:< Schema.Aux[ SomeTrait, CoproductShape[ SomeTrait, (Subtype[ SomeTrait, Int, Unit, Unit, Unit, "int",  Unit ], Subtype[ SomeTrait, String, Unit, Unit, Unit, "str", Unit ]), (Int, String), Unit, Unit ] ] ]
     }
 
     sealed trait SuperTrait

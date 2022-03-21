@@ -11,7 +11,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
 
     behavior of "SubtypeBuilder.empty"
 
-    val testBuilder = SubtypeBuilder.empty[ TestType, Int, Unit, Nothing ]
+    val testBuilder = SubtypeBuilder.empty[ TestType, Int, Unit, Unit ](())
 
     trait TestType
 
@@ -62,7 +62,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
     it should "be able to add a discriminator value, and not be able to build" in {
         case class TestProd( int : Int, str : String )
 
-        val tb = SubtypeBuilder.empty[ TestType, TestProd, String, "str" ]
+        val tb = SubtypeBuilder.empty[ TestType, TestProd, String, "str" ]( "str" )
 
         tb.dv shouldBe ()
 
@@ -91,7 +91,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
         trait SuperT
         case class SubT(int: Int) extends SuperT
 
-        val st = SubtypeBuilder.empty[ SuperT, SubT, Unit, Nothing ]
+        val st = SubtypeBuilder.empty[ SuperT, SubT, Unit, Unit ](())
           .typeName( "name" )
           .fromSuper( { case v@SubT(_) => Some( v ); case _ => None } )
           .primitive
@@ -105,7 +105,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
         case class SuperC(int: Int)
         case class SubC(int: Int)
 
-        val b1 = SubtypeBuilder.empty[ SuperC, SubC, Unit, Nothing ]
+        val b1 = SubtypeBuilder.empty[ SuperC, SubC, Unit, Unit ](())
           .typeName( "name" )
           .primitive
 
@@ -127,7 +127,7 @@ class SubtypeBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.sho
           .construct( SubC.apply )
           .build
 
-        val b1 = SubtypeBuilder.empty[ SuperC, SubC, Int, "int" ]
+        val b1 = SubtypeBuilder.empty[ SuperC, SubC, Int, "int" ]( "int" )
           .typeName( "name" )
           .fromSchema( subcSch )
           .discriminatorValue( 500 )

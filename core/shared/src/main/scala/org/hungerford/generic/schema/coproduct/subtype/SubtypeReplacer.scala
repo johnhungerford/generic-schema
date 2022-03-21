@@ -25,11 +25,11 @@ object SubtypeReplacer extends LowPrioritySubtypeReplacer {
     type Aux[ N <: Singleton, NewSubT, R <: Tuple, O ] = SubtypeReplacer[ N, NewSubT, R ] { type Out = O }
 
     given found[ N <: TypeName, NewSubT, OldT, OldST, OldD, OldDN, OldDV, OldS, Tail <: Tuple  ] :
-      SubtypeReplacer[ N, NewSubT, Subtype.Aux[ OldT, OldST, OldD, OldDN, OldDV, N, OldS ] *: Tail ] with {
+      SubtypeReplacer[ N, NewSubT, Subtype[ OldT, OldST, OldD, OldDN, OldDV, N, OldS ] *: Tail ] with {
         type Out = NewSubT *: Tail
 
         override def replace(
-            subtypes: Subtype.Aux[ OldT, OldST, OldD, OldDN, OldDV, N, OldS ] *: Tail,
+            subtypes: Subtype[ OldT, OldST, OldD, OldDN, OldDV, N, OldS ] *: Tail,
             withSubtype: NewSubT
         ) : Out = withSubtype *: subtypes.tail
     }
@@ -76,25 +76,25 @@ trait LowPrioritySubtypeTypeReplacer {
 object SubtypeTypeReplacer extends LowPrioritySubtypeTypeReplacer {
     type Aux[ T, N <: Nat, NewSubT, R <: Tuple, O ] = SubtypeTypeReplacer[ T, N, NewSubT, R ] { type Out = O }
 
-    given found[ ST, NewSubT, OldT, OldD, OldDN, OldDV, OldN <: TypeName, OldS, Tail <: Tuple  ] :
-      SubtypeTypeReplacer[ ST, Nat._0, NewSubT, Subtype.Aux[ OldT, ST, OldD, OldDN, OldDV, OldN, OldS ] *: Tail ] with {
+    given found[ ST, NewSubT, OldT, OldD, OldDN, OldDV, OldN <: TypeName, SubT <: Subtype.OrLazy[ OldT, ST, OldD, OldDN, OldDV, OldN ], Tail <: Tuple  ] :
+      SubtypeTypeReplacer[ ST, Nat._0, NewSubT, SubT *: Tail ] with {
         type Out = NewSubT *: Tail
 
         override def replace(
-            subtypes: Subtype.Aux[ OldT, ST, OldD, OldDN, OldDV, OldN, OldS ] *: Tail,
+            subtypes: SubT *: Tail,
             withSubtype: NewSubT
         ) : Out = withSubtype *: subtypes.tail
     }
 
-    given foundNext[ ST, N <: Nat, DecN <: Nat, NewSubT, T, D, DN, DV, TN <: TypeName, S, Tail <: Tuple, Next <: Tuple ](
+    given foundNext[ ST, N <: Nat, DecN <: Nat, NewSubT, T, D, DN, DV, TN <: TypeName, SubT <: Subtype.OrLazy[ T, ST, D, DN, DV, TN ], Tail <: Tuple, Next <: Tuple ](
         using
         ev : Nat.DecA[ N, DecN ],
         next : SubtypeTypeReplacer.Aux[ ST, DecN, NewSubT, Tail, Next ],
-    ) : SubtypeTypeReplacer[ ST, N, NewSubT, Subtype.Aux[ T, ST, D, DN, DV, TN, S ] *: Tail ] with {
-        type Out = Subtype.Aux[ T, ST, D, DN, DV, TN, S ] *: Next
+    ) : SubtypeTypeReplacer[ ST, N, NewSubT, SubT *: Tail ] with {
+        type Out = SubT *: Next
 
         override def replace(
-            subtypes: Subtype.Aux[ T, ST, D, DN, DV, TN, S ] *: Tail,
+            subtypes: SubT *: Tail,
             withSubtype: NewSubT
         ) : Out = subtypes.head *: next.replace( subtypes.tail, withSubtype )
     }

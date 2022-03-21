@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.coproduct
 
-import org.hungerford.generic.schema.coproduct.subtype.Subtype
+import org.hungerford.generic.schema.coproduct.subtype.{LazySubtype, Subtype}
 import org.hungerford.generic.schema.types.Zipper
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.singleton.SingletonShape
@@ -51,6 +51,21 @@ class CoproductDeriverTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         val st2 = sts.tail.head
 
         st1.schema.shape shouldBe SingletonShape[ SubS1.type, "SubS1" ]( "SubS1", SubS1 )
+        st2.schema.shape shouldBe SingletonShape[ SubS2.type, "SubS2" ]( "SubS2", SubS2 )
+    }
+
+    it should "derive a coproduct with a lazy subtype when the subtype is an ancestor" in  {
+        val shape = CoproductDeriver.withAncestors[ SupS, SubS1.type *: Tuple ].derive
+
+        val sts = shape.subtypeDescriptions
+        sts.size shouldBe 2
+        val st1 = sts.head
+        val st2 = sts.tail.head
+
+        st1 match {
+            case LazySubtype( typeName, _, _, _, _, _, _, _, _, _ ) =>
+            case _ => fail( "subs1 was not lazy" )
+        }
         st2.schema.shape shouldBe SingletonShape[ SubS2.type, "SubS2" ]( "SubS2", SubS2 )
     }
 

@@ -6,7 +6,7 @@ import sttp.tapir.Validator as TapirValidator
 import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.coproduct.CoproductShape
-import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeCase, TypeName}
+import org.hungerford.generic.schema.coproduct.subtype.{Subtype, TypeName}
 import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.hungerford.generic.schema.product.field.FieldName
 import org.hungerford.generic.schema.singleton.SingletonShape
@@ -124,11 +124,11 @@ trait TapirSchemaCoproductTranslation {
          * Translate singleton subtype to string schema + matcher
          */
         given singletonTrans[ T, ST <: Singleton, D, DN, DV, N <: TypeName, SN <: TypeName ] :
-          TapirCoproductTranslator[ T, Subtype.Aux[ T, ST, D, DN, DV, N, SingletonShape[ ST, SN ] ] ] with {
+          TapirCoproductTranslator[ T, Subtype[ T, ST, D, DN, DV, N, SingletonShape[ ST, SN ] ] ] with {
             type Out = (List[ String ], T => Boolean)
 
             override def translate(
-                shape: Subtype.Aux[ T, ST, D, DN, DV, N, SingletonShape[ ST, SN ] ]
+                shape: Subtype[ T, ST, D, DN, DV, N, SingletonShape[ ST, SN ] ]
             ): (List[ String ], T => Boolean) = {
                 (List[ String ]( shape.schema.shape.name ), ( t : T ) => shape.fromSuper( t ).isDefined)
             }
@@ -140,12 +140,12 @@ trait TapirSchemaCoproductTranslation {
         given [ T, ST, D, DN, DV, N <: TypeName, S ](
           using
           stst : SchemaTranslator[ ST, S, TapirSchema ],
-          ev : NotGiven[ IsSingletonSubtype[ Subtype.Aux[ T, ST, D, DN, DV, N, S ] ] ],
-        ) : TapirCoproductTranslator[ T, Subtype.Aux[ T, ST, D, DN, DV, N, S ] ] with {
+          ev : NotGiven[ IsSingletonSubtype[ Subtype[ T, ST, D, DN, DV, N, S ] ] ],
+        ) : TapirCoproductTranslator[ T, Subtype[ T, ST, D, DN, DV, N, S ] ] with {
             type Out = (TapirSchema[ _ ], T => Option[ TapirSchema[ _ ] ])
 
             override def translate(
-                shape: Subtype.Aux[ T, ST, D, DN, DV, N, S ]
+                shape: Subtype[ T, ST, D, DN, DV, N, S ]
             ): (TapirSchema[ _ ], T => Option[ TapirSchema[ _ ] ]) = {
                 val tSchema = stst.translate( shape.schema )
                 val fromSuper = ( v: T ) => shape.fromSuper( v ).map( _ => tSchema )
@@ -231,8 +231,8 @@ trait TapirSchemaCoproductTranslation {
             schema: Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
         ): TapirSchema[ T ] = {
             val stList : List[ (T, T => Option[ String ]) ] = schema.shape.subtypeDescriptions.toList map {
-                case SubtypeCase( _, ComplexSchema( SingletonShape( caseName, caseValue ), _, _, _, _, _ ), _, matcher, _, _, _, _, _, _ ) =>
-                    (caseValue.asInstanceOf[ T ], ( t : T ) => matcher.asInstanceOf[ Function1[ T, Option[ Any ] ] ]( t ).map( _ => caseName.asInstanceOf[ String ] ))
+                case Subtype( _, ComplexSchema( SingletonShape( caseName, caseValue ), _, _, _, _, _ ), _, matcher, _, _, _, _, _, _, _ ) =>
+                    (caseValue.asInstanceOf[ T ], ( t : T ) => matcher.asInstanceOf[ Function1[ T, Option[ Any ] ] ]( t ).map( _ => caseName.asInstanceOf[ String ] ) )
             }
 
             val encoder : T => Option[ String ] = stList.foldLeft( ( t : T ) => None : Option[ String ] ) { ( lastFn, nextTup ) =>

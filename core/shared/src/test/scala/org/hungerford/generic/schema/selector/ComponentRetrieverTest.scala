@@ -60,7 +60,7 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         val sch = Schema.derived[ OuterT ]
 
         val st = ComponentRetriever.retrieve( sch )( Selector.subtype( "InnerT" ) /~ "CoreT" /~ "SubT3" )
-        summon[ st.type <:< Subtype[ CoreT, SubT3, Unit ] ]
+        summon[ st.type <:< Subtype.SubOf[ CoreT, SubT3 ] ]
         st.typeName shouldBe "SubT3"
         st.description shouldBe None
         st.validators shouldBe Set.empty[ Validator[ SubT3 ] ]
@@ -71,7 +71,7 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         val sch = Schema.derived[ OuterT ]
 
         val st = ComponentRetriever.retrieve( sch )( Selector.subtype( 1 ) /~ 2 /~ 0 )
-        summon[ st.type <:< Subtype[ CoreT, SubT3, Unit ] ]
+        summon[ st.type <:< Subtype.SubOf[ CoreT, SubT3 ] ]
         st.typeName shouldBe "SubT3"
         st.description shouldBe None
         st.validators shouldBe Set.empty[ Validator[ SubT3 ] ]
@@ -82,7 +82,7 @@ class ComponentRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers
         val sch = Schema.derived[ OuterT ]
 
         val st = ComponentRetriever.retrieve( sch )( subtype( t[ InnerT ] ) /~ t[ CoreT ] /~ t[ SubT3 ] )
-        summon[ st.type <:< Subtype[ CoreT, SubT3, Unit ] ]
+        summon[ st.type <:< Subtype.SubOf[ CoreT, SubT3 ] ]
         st.typeName shouldBe "SubT3"
         st.description shouldBe None
         st.validators shouldBe Set.empty[ Validator[ SubT3 ] ]

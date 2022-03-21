@@ -14,6 +14,7 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, TS, FS, N, S, Sch ] (
     private[subtype] val sch: Sch,
     private[subtype] val ts : TS,
     private[subtype] val fs : FS,
+    private[subtype] val dn : DN,
     private[subtype] val dv : DV,
     private[subtype] val desc: Option[ String ] = None,
     private[subtype] val vals: Set[ Validator[ ST ] ] = Set.empty[ Validator[ ST ] ],
@@ -69,13 +70,14 @@ case class SubtypeBuilder[ T, ST, D, DN, DV, TS, FS, N, S, Sch ] (
         fsEv : FS =:= ( T => Option[ ST ] ),
         dvEv : CorrectDV[ D, DV ],
         tnEv : Sub.Aux[ N, TypeName, CorrectN ],
-        vd : ValidDiscriminator[ D, DN, Subtype.Aux[ T, ST, D, DN, DV, CorrectN, S ] *: EmptyTuple ],
-    ) : Subtype.Aux[ T, ST, D, DN, DV, CorrectN, S ] = {
-        SubtypeCase[ T, ST, D, DN, DV, CorrectN, S ](
+        vd : ValidDiscriminator[ D, DN, Subtype[ T, ST, D, DN, DV, CorrectN, S ] *: EmptyTuple ],
+    ) : Subtype[ T, ST, D, DN, DV, CorrectN, S ] = {
+        Subtype[ T, ST, D, DN, DV, CorrectN, S ](
             tnEv( tn ),
             schEv( sch ),
             tsEv( ts ),
             fsEv( fs ),
+            dn,
             dv,
             desc,
             vals,
@@ -128,6 +130,8 @@ object ToSuperGenerator {
 
 object SubtypeBuilder {
     def empty[ T, ST, D, DN ](
+        discriminatorName : DN,
+    )(
         using
         tsEv : ToSuperGenerator[ T, ST ],
     ) : SubtypeBuilder[ T, ST, D, DN, Unit, tsEv.TS, Unit, Unit, Nothing, Unit ] =
@@ -136,17 +140,19 @@ object SubtypeBuilder {
             (),
             tsEv.toSuper,
             (),
+            discriminatorName,
             (),
         )
 
     def from[ T, ST, D, DN, DV, N <: TypeName, S ](
-        subtype : Subtype.Aux[ T, ST, D, DN, DV, N, S ],
+        subtype : Subtype[ T, ST, D, DN, DV, N, S ],
     ) : SubtypeBuilder[ T, ST, D, DN, DV, ST => T, T => Option[ ST ], N, S, Schema.Aux[ ST, S ] ] = {
         SubtypeBuilder[ T, ST, D, DN, DV, ST => T, T => Option[ ST ], N, S, Schema.Aux[ ST, S ] ](
             subtype.typeName,
             subtype.schema,
             subtype.toSuper,
             subtype.fromSuper,
+            subtype.discriminatorName,
             subtype.discriminatorValue,
             subtype.description,
             subtype.validators,

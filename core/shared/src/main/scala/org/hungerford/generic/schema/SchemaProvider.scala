@@ -56,11 +56,11 @@ object SchemaExtractor {
     given subtypeSchemaExtractor[ T, STT, ST, STS, STD, STDN, STDV, STN <: TypeName, S ](
         using
         extr : SchemaExtractor.Aux[ T, Schema.Aux[ ST, STS ], S ],
-    ) : SchemaExtractor[ T, Subtype.Aux[ STT, ST, STD, STDN, STDV, STN, STS ] ] with {
+    ) : SchemaExtractor[ T, Subtype[ STT, ST, STD, STDN, STDV, STN, STS ] ] with {
         type Shape = S
 
         override def extract(
-            from: Subtype.Aux[ STT, ST, STD, STDN, STDV, STN, STS ],
+            from: Subtype[ STT, ST, STD, STDN, STDV, STN, STS ],
         ): Schema.Aux[ T, S ] = extr.extract( from.schema )
     }
 

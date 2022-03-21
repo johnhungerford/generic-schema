@@ -37,7 +37,7 @@ class CoproductSchemaExtractorTest extends AnyFlatSpecLike with org.scalatest.ma
     sealed trait Sup3
     sealed trait Sup3Nest extends Sup3
     case object TC3 extends Sup3 with Sup3Nest
-    
+
     it should "extract a schema from a subtype prior to a nested subtype" in {
         val tc3Sch = Schema.derived[ TC3.type ]
         import tc3Sch.given

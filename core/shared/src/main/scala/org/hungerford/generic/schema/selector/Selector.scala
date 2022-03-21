@@ -81,14 +81,14 @@ trait SelectorDsl extends SelectorConversion {
 
     extension [ N1 <: Singleton ]( selection : N1 )
         def /[ T2, N2 <: Nat ]( field : TypeSelector[ T2, N2 ] ) :
-        Selector[ AmbigSelector[ N1 ] *: AmbigSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {
-            new Selector[ AmbigSelector[N1] *: AmbigSelector[TypeSelector[ T2, N2 ]] *: EmptyTuple ]
-        }
+            Selector[ AmbigSelector[ N1 ] *: AmbigSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[N1] *: AmbigSelector[TypeSelector[ T2, N2 ]] *: EmptyTuple ]
+            }
 
         def /[ N2 <: Singleton ]( field : N2 ) :
-        Selector[ AmbigSelector[ N1 ] *: AmbigSelector[ N2 ] *: EmptyTuple ] = {
-            new Selector[ AmbigSelector[N1] *: AmbigSelector[N2] *: EmptyTuple ]
-        }
+            Selector[ AmbigSelector[ N1 ] *: AmbigSelector[ N2 ] *: EmptyTuple ] = {
+                new Selector[ AmbigSelector[N1] *: AmbigSelector[N2] *: EmptyTuple ]
+            }
 
         def /-[ T2, N2 <: Nat ]( sel : TypeSelector[ T2, N2 ] ) :
             Selector[ AmbigSelector[ N1 ] *: FieldSelector[ TypeSelector[ T2, N2 ] ] *: EmptyTuple ] = {

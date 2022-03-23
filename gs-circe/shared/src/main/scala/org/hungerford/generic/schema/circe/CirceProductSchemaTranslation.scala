@@ -1,12 +1,64 @@
 package org.hungerford.generic.schema.circe
 
 import io.circe.Decoder.{Result, currencyDecoder}
-import org.hungerford.generic.schema.product.field.Field
+import org.hungerford.generic.schema.product.field.{Field, FieldName, LazyField}
 import org.hungerford.generic.schema.product.translation.BiMapProductTranslation
-import io.circe.{Codec, Decoder, Encoder, HCursor, Json}
+import io.circe.{Codec, Decoder, Encoder, HCursor, Json, JsonObject}
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.product.ProductShape
+import org.hungerford.generic.schema.translation.SchemaTranslator
 
-trait CirceProductSchemaTranslation
-  extends BiMapProductTranslation[ Codec, Json, Map[ String, Json ] ] {
+import scala.compiletime.summonInline
+import scala.collection.mutable
+
+trait CirceProductSchemaTranslation {
+
+    inline def translateProductWriter[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
+        product : ProductShape[ T, R, RV, AF, AFS, AFE, C ],
+    ) : Encoder[ T ] = {
+        val fields : mutable.Map[ String, Json ] = mutable.Map()
+        Encoder.instance { ( value : T ) =>
+            processFields( value, product.fieldDescriptions, fields )
+            Json.obj( fields.toList : _* )
+        }
+    }
+
+    inline def processFields[ T, FS <: Tuple ]( source : T, fields : FS, target : mutable.Map[ String, Json ] ) : Unit = {
+        inline fields match {
+            case EmptyTuple =>
+            case headField *: next =>
+                inline headField match {
+                    case hf : Field[ T, f, n, s ] =>
+                        val enc = summonInline[ SchemaTranslator[ f, s, Encoder ] ].translate( hf.schema )
+                        val fieldVal = hf.extractor( source )
+                        val fieldJson = enc( fieldVal )
+                        target += ((hf.fieldName, fieldJson))
+                        processFields( source, next, target )
+
+                    case hlf : LazyField[ T, f, n ] =>
+                        val schema = summonInline[ Schema[ f ] ]
+                        inline schema match {
+                            case sch : Schema.Aux[ f, s ] =>
+                                val enc = summonInline[ SchemaTranslator[ f, s, Encoder ] ].translate( sch )
+                                val fieldVal = hlf.extractor( source )
+                                val fieldJson = enc( fieldVal )
+                                target += ((hlf.fieldName, fieldJson))
+                                processFields( source, next, target )
+                        }
+                }
+        }
+    }
+
+    inline def writeField[ T, F, N <: FieldName, S ](
+        field : Field[ T, F, N, S ],
+        source : F,
+        target : mutable.Map[ String, Json ],
+    ) : Unit = {
+        val translator = summonInline[ SchemaTranslator[ F, S, Encoder ] ]
+        val encoder = translator.translate( field.schema )
+        val fieldJson = encoder( source )
+        target += ((field.fieldName, fieldJson))
+    }
 
     /**
      * Construct a schema from the two parts of a bimap.

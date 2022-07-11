@@ -134,6 +134,8 @@ abstract class ProductJsonTranslationTest[ OtherSchema[ _ ] ](
 ) extends AnyFlatSpecLike with Matchers {
 
     def writeJson[ T ]( value: T, schm: OtherSchema[ T ] ): String
+    
+    behavior of "ProductSchemaTranslator"
 
     it should "translate a product schema without additional fields" in {
 

@@ -28,7 +28,7 @@ abstract class SingletonJsonTranslationTest[ OtherSchema[ _ ] ]
 
     def readJson[ T ]( json: String, schm: OtherSchema[ T ] ): Option[ T ]
 
-    behavior of "UpickleSingletonSchemaTranslation"
+    behavior of "SingletonSchemaTranslation"
 
     it should "translate a singleton to a value that can be encoded and decoded" in {
         writeJson( TestSingleton, tsOSchema ) shouldBe """"TestSingleton""""

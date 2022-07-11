@@ -65,7 +65,7 @@ abstract class CoproductJsonTranslationTest[ OtherSchema[ _ ] ](
 
     def writeJson[ T ]( value: T, schm: OtherSchema[ T ] ): String
 
-    behavior of "Encoding"
+    behavior of "CoproductSchemaTranslator Encoding"
 
     it should "encode a sealed trait correctly to json" in {
         val value : SuperT = SubT2( 0.234D, 3422315, false )

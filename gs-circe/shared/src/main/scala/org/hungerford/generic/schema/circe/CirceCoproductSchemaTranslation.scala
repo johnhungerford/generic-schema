@@ -35,16 +35,11 @@ trait CirceCoproductSchemaTranslation {
                 subtypes: Subtype[ T, ST, Unit, Unit, Unit, N, S ],
                 trans: Trans,
             ) : subtypeReaderWithoutDiscriminator.this.Out = {
-                println( s"Reading: ${vo.value}" )
                 val decoder = st.translate( subtypes.schema, trans )
                 decoder( from.hcursor ) match {
                     case Left( e ) =>
-                        println( "FAILED SUBTYPE READING WITHOUT DISCR:" )
-                        println( e )
                         None
                     case Right( v ) =>
-                        println( "SUCCESSFUL SUBTYPE READING WITHOUT DISCR:" )
-                        println( v )
                         if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
                         else None
                 }
@@ -66,16 +61,10 @@ trait CirceCoproductSchemaTranslation {
             ) : Out = {
                 val translator = tr.getTranslator( trans ).asInstanceOf[ SchemaTranslator[ ST, S, Decoder ] ]
                 val decoder = translator.translate( subtypes.schema )
-                println( s"Reading (lazy subtype): ${vo.value}" )
                 decoder( from.hcursor ) match {
                     case Left( e ) =>
-                        println( "FAILED LAZY SUBTYPE READING WITHOUT DISCR" )
-                        println( from )
-                        println( e )
                         None
                     case Right( v ) =>
-                        println( "SUCCESSFUL LAZY SUBTYPE READING WITHOUT DISCR" )
-                        println( v )
                         if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
                         else None
                 }
@@ -102,13 +91,11 @@ trait CirceCoproductSchemaTranslation {
                 ): Out = {
                     from.hcursor.get[ D ]( discrFieldName )( dSch ) match {
                         case Left( e ) =>
-                            println( "UNABLE TO GET DSCRFIELDNAME" )
                             throw e
                         case Right( `discrFieldName` ) =>
                             val decoder = st.translate( subtypes.schema, trans )
                             val stValue = decoder( from.hcursor ) match {
                                 case Left( e ) =>
-                                    println( "SDFSDFSFD" )
                                     None
                                 case Right( v ) =>
                                     Some( v )
@@ -140,11 +127,8 @@ trait CirceCoproductSchemaTranslation {
             ) : Out = {
                 h.read( from, subtypes.head, trans ) match {
                     case res@Some( v ) =>
-                        println( "SUCCESSFUL SUBTYPES READING:" )
-                        println( v )
                         res
                     case _ =>
-                        println( "FAILED SUBTYPES READING" )
                         t.read( from, subtypes.tail, trans )
                 }
             }
@@ -172,7 +156,6 @@ trait CirceCoproductSchemaTranslation {
                 informedBy: Subtype[ T, ST, D, DN, DV, N, STS ],
                 trans: Trans,
             ) : Out = {
-//                println( s"Writing subtype: ${vo.value}" )
                 informedBy.fromSuper( value ).map( stVal => {
                     val encoder = st.translate( informedBy.schema, trans )
                     encoder( stVal )
@@ -193,7 +176,6 @@ trait CirceCoproductSchemaTranslation {
                 informedBy: LazySubtype[ T, ST, D, DN, DV, N ],
                 trans: Trans,
             ) : Out = {
-//                println( s"Writing lazy subtype: ${vo.value}" )
                 informedBy.fromSuper( value ).map( stVal => {
                     val encoder = tr.getTranslator( trans ).asInstanceOf[ SchemaTranslator[ ST, STS, Encoder ] ].translate( sch )
                     encoder( stVal )
@@ -231,7 +213,6 @@ trait CirceCoproductSchemaTranslation {
             schema: Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
             trans : Trans,
         ): Decoder[ T ] = {
-            println(schema.shape)
             ( c: HCursor ) => Try( reader.read( c.value, schema.shape.subtypeDescriptions, self *: trans ) ) match {
                 case Failure( exception : DecodingFailure ) => Left( exception )
                 case Failure( exception ) => Left( DecodingFailure.fromThrowable( exception, Nil ) )

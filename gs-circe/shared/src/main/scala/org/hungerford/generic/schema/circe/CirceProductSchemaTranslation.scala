@@ -8,30 +8,32 @@ import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.constructor.ProductConstructor
-import org.hungerford.generic.schema.translation.SchemaTranslator
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator}
 
-import scala.compiletime.{erasedValue, summonInline, error}
+import scala.compiletime.{erasedValue, error, summonFrom, summonInline}
 import scala.collection.mutable
 import scala.util.Try
 
 trait CirceProductSchemaTranslation {
 
-    inline given translateProductReader[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
+    inline given translateProductReaderRecursive[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Trans <: Tuple ](
         using
         pc : ProductConstructor[ C, RV, AF, T ],
-    ) : SchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Decoder ] = {
-        val fieldsReader: (ACursor, R) => RV = readFields[ R, RV ]
+    ) : RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, Decoder ] = {
+        type NextTrans = RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, Decoder ] *: Trans
+        val fieldsReader: (ACursor, R, NextTrans) => RV = readFields[ R, RV, NextTrans ]
         val afReader: (Schema.Aux[ AF, AFS ], ACursor, Set[ String ]) => Map[ String, AF ] =
             readAdditionalFields[ AF, AFS ]
 
-        new SchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Decoder ] {
+        new RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, Decoder ] { self =>
             override def translate(
-                schema: Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ]
+                schema: Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
+                trans: Trans,
             ): Decoder[ T ] =
                 Decoder.instance { ( cursor: HCursor ) =>
                     val cons = pc.construct( schema.shape.constructor )
                     ( Try {
-                        val fieldsTuple: RV = fieldsReader( cursor, schema.shape.fieldDescriptions )
+                        val fieldsTuple: RV = fieldsReader( cursor, schema.shape.fieldDescriptions, self *: trans )
                         val afMap: Map[ String, AF ] = afReader( schema.shape.additionalFieldsSchema, cursor, schema.shape.fieldNames )
 
                         cons( fieldsTuple, afMap )
@@ -47,9 +49,9 @@ trait CirceProductSchemaTranslation {
                     Map.empty[ String, AF ]
                 }
             case _ =>
-                val tr = summonInline[ SchemaTranslator[ AF, AFS, Decoder ] ]
+                val tr = summonInline[ RecursiveSchemaTranslator[ AF, AFS, EmptyTuple, Decoder ] ]
                 (schema: Schema.Aux[ AF, AFS ], cursor: ACursor, usedFieldNames: Set[ String ]) => {
-                    given Decoder[ AF ] = tr.translate( schema )
+                    given Decoder[ AF ] = tr.translate( schema, EmptyTuple )
                     cursor.keys match {
                         case None => Map.empty[ String, AF ]
                         case Some(keys) => ( keys.collect {
@@ -64,11 +66,11 @@ trait CirceProductSchemaTranslation {
         }
     }
 
-    inline def readFields[ FS <: Tuple, Res <: Tuple ] : (ACursor, FS) => Res = {
+    inline def readFields[ FS <: Tuple, Res <: Tuple, Trans <: Tuple ] : (ACursor, FS, Trans) => Res = {
         inline erasedValue[FS] match {
             case _: EmptyTuple =>
                 inline erasedValue[ Res ] match {
-                    case _ : EmptyTuple => (_: ACursor, EmptyTuple) => EmptyTuple.asInstanceOf[ Res ]
+                    case _ : EmptyTuple => (_: ACursor, _: FS, _: Trans) => EmptyTuple.asInstanceOf[ Res ]
                 }
             case _: (head *: tail) =>
                 type Head = head
@@ -83,16 +85,19 @@ trait CirceProductSchemaTranslation {
                                 type N = n
                                 type S = s
                                 val fieldName = summonInline[ ValueOf[ N ] ]
-                                val fieldTrans = summonInline[ SchemaTranslator[ ResHead, S, Decoder ] ]
-                                val nextFieldsReader = readFields[Tail, ResTail]
-                                (fromCursor: ACursor, fields: FS) => {
+                                val fieldTrans = summonInline[ RecursiveSchemaTranslator[ ResHead, S, Trans, Decoder ] ]
+                                val nextFieldsReader = readFields[Tail, ResTail, Trans ]
+                                (fromCursor: ACursor, fields: FS, trans: Trans) => {
                                     val field : Field.Named[ N ] & Field.Shaped[ ResHead, S ]  =
                                         fields.asInstanceOf[*:[Any, Tail]].head
                                           .asInstanceOf[Field.Named[ N ] & Field.Shaped[ ResHead, S ]]
-                                    given Decoder[ ResHead ] = fieldTrans.translate( field.schema )
+                                    given Decoder[ ResHead ] = fieldTrans.translate( field.schema, trans )
                                     val extraction = fromCursor.downField( fieldName.value.asInstanceOf[ String ] )
-                                      .as[ ResHead ]
-                                    ( extraction *: nextFieldsReader( fromCursor, fields.asInstanceOf[ Head *: tail ].tail ) )
+                                      .as[ ResHead ] match {
+                                        case Left( e ) => throw e
+                                        case Right( v ) => v
+                                    }
+                                    ( extraction *: nextFieldsReader( fromCursor, fields.asInstanceOf[ Head *: tail ].tail, trans ) )
                                       .asInstanceOf[ Res ]
                                 }
 
@@ -100,36 +105,44 @@ trait CirceProductSchemaTranslation {
                                 type N = n
                                 val fieldName = summonInline[ ValueOf[ N ] ]
                                 val fieldSchema = summonInline[ Schema[ ResHead ] ]
-                                inline fieldSchema match {
-                                    case sch : Schema.Aux[ ResHead, s ] =>
-                                        type S = s
-                                        val fieldTrans = summonInline[ SchemaTranslator[ ResHead, S, Decoder ] ]
-                                        given Decoder[ ResHead ] = fieldTrans.translate( sch )
-                                        val nextFieldsReader = readFields[ Tail, ResTail ]
-                                        (fromCursor: ACursor, fields: FS) => {
-                                            val extraction = fromCursor.downField( fieldName.value.asInstanceOf[ String ] )
-                                              .as[ ResHead ]
-                                            ( extraction *: nextFieldsReader( fromCursor, fields.asInstanceOf[ Head *: Tail ].tail ) )
-                                              .asInstanceOf[ Res ]
-                                        }
-                                }
 
+                                // DANGER WILL ROBINSON!
+                                // Assuming that given schema has same shape as the cached translator
+                                // (never able to prove -- why??)
+                                val transRetriever = summonInline[ TransRetriever[ Trans, ResHead, Decoder ] ]
+                                  .asInstanceOf[ TransRetriever.Aux[ Trans, ResHead, fieldSchema.Shape, Decoder ] ]
+
+                                val nextFieldsReader = readFields[ Tail, ResTail, Trans ]
+                                (fromCursor: ACursor, fields: FS, trans: Trans) => {
+                                    val tr = transRetriever.getTranslator( trans )
+
+                                    given Decoder[ ResHead ] = tr.translate( fieldSchema )
+                                    val extraction = fromCursor.downField( fieldName.value.asInstanceOf[ String ] )
+                                      .as[ ResHead ] match {
+                                        case Left( e ) => throw e
+                                        case Right( v ) => v
+                                    }
+                                    ( extraction *: nextFieldsReader( fromCursor, fields.asInstanceOf[ Head *: Tail ].tail, trans ) )
+                                      .asInstanceOf[ Res ]
+                                }
                         }
                 }
         }
     }
 
-    inline given translateProductWriter[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ] : SchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Encoder ] = {
-        val fieldWriter = writeFields[ T, R ]
+    inline given translateProductWriter[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Trans <: Tuple ] : RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, Encoder ] = {
+        type NextTrans = RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, Encoder ] *: Trans
+        val fieldWriter = writeFields[ T, R, NextTrans ]
         val afWriter = writeAdditionalFields[ T, AF, AFS, AFE ]
         val fields : mutable.Map[ String, (Int, Json) ] = mutable.Map() // need to track insertion order bc mutable.ListMap doesn't work!
 
-        new SchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Encoder ] {
+        new RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, Encoder ] { self =>
             override def translate(
-                schema: Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ]
+                schema: Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
+                translators: Trans,
             ): Encoder[ T ] =
                 Encoder.instance { ( value : T ) =>
-                    fieldWriter( value, schema.shape.fieldDescriptions, fields )
+                    fieldWriter( value, schema.shape.fieldDescriptions, fields, self *: translators )
                     afWriter( value, schema.shape.afExtractor, schema.shape.additionalFieldsSchema, fields, schema.shape.fieldNames )
                     Json.obj( fields.toList.sortBy( _._2._1 ).map( tp => tp._1 -> tp._2._2 ) : _* )
                 }
@@ -159,9 +172,9 @@ trait CirceProductSchemaTranslation {
     }
 
     // source : T, fields : FS, target : mutable.Map[ String, Json ] => Unit
-    inline def writeFields[ T, FS <: Tuple ] : (T, FS, mutable.Map[ String, (Int, Json) ]) => Unit = {
+    inline def writeFields[ T, FS <: Tuple, Trans <: Tuple ] : (T, FS, mutable.Map[ String, (Int, Json) ], Trans) => Unit = {
         inline erasedValue[FS] match {
-            case _ : EmptyTuple => (_: T, _: FS, _: mutable.Map[ String, (Int, Json) ]) => () // don't do anything
+            case _ : EmptyTuple => (_: T, _: FS, _: mutable.Map[ String, (Int, Json) ], _: Trans) => () // don't do anything
             case _ : (headField *: next) =>
                 type HeadField = headField
                 type Next = next
@@ -170,54 +183,55 @@ trait CirceProductSchemaTranslation {
                         type F = f
                         type N = n
                         type S = s
-                        val encTrans = summonInline[ SchemaTranslator[ F, S, Encoder ] ]
-                        val nextWriter = writeFields[ T, Next ]
-                        ( source : T, fields : FS, target : mutable.Map[ String, (Int, Json) ] ) => {
+                        val encTrans = summonInline[ RecursiveSchemaTranslator[ F, S, Trans, Encoder ] ]
+                        val nextWriter = writeFields[ T, Next, Trans ]
+                        ( source : T, fields : FS, target : mutable.Map[ String, (Int, Json) ], trans: Trans ) => {
                             val fs = fields.asInstanceOf[ Field[ T, F, N, S ] *: Next ]
                             val fh = fs.head
                             val next = fs.tail
-                            val enc = encTrans.translate( fh.schema )
+                            val enc = encTrans.translate( fh.schema, trans )
                             val fieldVal = fh.extractor( source )
                             val fieldJson = enc( fieldVal )
                             target += ((fh.fieldName, (target.size, fieldJson)))
-                            nextWriter( source, next, target )
+                            nextWriter( source, next, target, trans )
                         }
 
                     case _ : LazyField[ T, f, n ] =>
                         type F = f
                         type N = n
                         val schema = summonInline[ Schema[ f ] ]
-                        inline schema match {
-                            case sch : Schema.Aux[ F, s ] =>
-                                type S = s
-                                val encTrans = summonInline[ SchemaTranslator[ F, S, Encoder ] ]
-                                val nextWriter = writeFields[ T, Next ]
-                                ( source : T, fields : FS, target : mutable.Map[ String, (Int, Json) ] ) => {
-                                    val fs = fields.asInstanceOf[ Field[ T, F, N, S ] *: Next ]
-                                    val fh = fs.head
-                                    val next = fs.tail
-                                    val enc = encTrans.translate( sch )
-                                    val fieldVal = fh.extractor( source )
-                                    val fieldJson = enc( fieldVal )
-                                    target += ((fh.fieldName, (target.size, fieldJson)))
-                                    nextWriter( source, next, target )
-                                }
-                        }
+                        // DANGER WILL ROBINSON!
+                        // Assuming that given schema has same shape as the cached translator
+                        // (never able to prove -- why??)
+                        val transRetriever = summonInline[ TransRetriever[ Trans, F, Encoder ] ]
+                          .asInstanceOf[ TransRetriever.Aux[ Trans, F, schema.Shape, Encoder ] ]
 
+                        val nextWriter = writeFields[ T, Next, Trans ]
+                        ( source : T, fields : FS, target : mutable.Map[ String, (Int, Json) ], trans: Trans ) => {
+                            val fs = fields.asInstanceOf[ LazyField[ T, F, N ] *: Next ]
+                            val fh = fs.head
+                            val next = fs.tail
+                            val encTrans = transRetriever.getTranslator( trans )
+                            val enc = encTrans.translate( schema )
+                            val fieldVal = fh.extractor( source )
+                            val fieldJson = enc( fieldVal )
+                            target += ((fh.fieldName, (target.size, fieldJson)))
+                            nextWriter( source, next, target, trans )
+                        }
                 }
         }
     }
 
-    inline def writeField[ T, F, N <: FieldName, S ](
-        field : Field[ T, F, N, S ],
-        source : F,
-        target : mutable.Map[ String, Json ],
-    ) : Unit = {
-        val translator = summonInline[ SchemaTranslator[ F, S, Encoder ] ]
-        val encoder = translator.translate( field.schema )
-        val fieldJson = encoder( source )
-        target += ((field.fieldName, fieldJson))
-    }
+//    inline def writeField[ T, F, N <: FieldName, S ](
+//        field : Field[ T, F, N, S ],
+//        source : F,
+//        target : mutable.Map[ String, Json ],
+//    ) : Unit = {
+//        val translator = summonInline[ RecursiveSchemaTranslator[ F, S, Encoder ] ]
+//        val encoder = translator.translate( field.schema )
+//        val fieldJson = encoder( source )
+//        target += ((field.fieldName, fieldJson))
+//    }
 
     protected def codecFromEncoderDecoder[ T ]( to : T => Json, from : Json => T ) : Codec[ T ] = {
         val encoder : Encoder[ T ] = ( a : T ) => to( a )

@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.circe
 
-import org.hungerford.generic.schema.translation.{SchemaTranslator, SingletonJsonTranslationTest}
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, SingletonJsonTranslationTest}
 import org.hungerford.generic.schema.Schema
 import io.circe.*
 import io.circe.parser.*
@@ -29,3 +29,69 @@ class CirceSingletonSchemaTranslationTest
     }
 
 }
+
+//object TestyTest {
+//
+//    CirceSingletonSchemaTranslation.singletonDecoderTrans[
+//      SingletonJsonTranslationTest.SubT.type,
+//      "SubT",
+//      RecursiveSchemaTranslator[
+//        SingletonJsonTranslationTest.SuperT,
+//        org.hungerford.generic.schema.coproduct.CoproductShape[
+//          SingletonJsonTranslationTest.SuperT,
+//          org.hungerford.generic.schema.coproduct.subtype.Subtype[
+//            SingletonJsonTranslationTest.SuperT,
+//            SingletonJsonTranslationTest.SubT.type,
+//            Unit,
+//            Unit,
+//            Unit,
+//            "SubT",
+//            org.hungerford.generic.schema.singleton.SingletonShape[
+//              SingletonJsonTranslationTest.SubT.type,
+//              "SubT",
+//            ] *: EmptyTuple.type,
+//          ] *: EmptyTuple,
+//          SingletonJsonTranslationTest.SubT.type *: EmptyTuple.type,
+//          Unit,
+//          Unit,
+//        ] *: EmptyTuple.type,
+//        EmptyTuple.type,
+//        io.circe.Encoder,
+//      ] *: EmptyTuple.type,
+//    ]
+
+//
+//    summon[
+//      RecursiveSchemaTranslator[
+//        SingletonJsonTranslationTest.SubT.type,
+//        org.hungerford.generic.schema.singleton.SingletonShape[
+//          SingletonJsonTranslationTest.SubT.type,
+//          "SubT",
+//        ],
+//        RecursiveSchemaTranslator[
+//          SingletonJsonTranslationTest.SuperT,
+//          org.hungerford.generic.schema.coproduct.CoproductShape[
+//            SingletonJsonTranslationTest.SuperT,
+//            org.hungerford.generic.schema.coproduct.subtype.Subtype[
+//              SingletonJsonTranslationTest.SuperT,
+//              SingletonJsonTranslationTest.SubT.type,
+//              Unit,
+//              Unit,
+//              Unit,
+//              "SubT",
+//              org.hungerford.generic.schema.singleton.SingletonShape[
+//                SingletonJsonTranslationTest.SubT.type,
+//                "SubT",
+//              ] *: EmptyTuple.type,
+//            ] *: EmptyTuple,
+//            SingletonJsonTranslationTest.SubT.type *: EmptyTuple.type,
+//            Unit,
+//            Unit,
+//          ] *: EmptyTuple.type,
+//          EmptyTuple.type,
+//          io.circe.Encoder,
+//        ] *: EmptyTuple.type,
+//        io.circe.Codec,
+//      ]
+//    ]
+//}

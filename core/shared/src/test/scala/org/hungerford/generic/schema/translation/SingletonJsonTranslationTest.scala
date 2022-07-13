@@ -36,12 +36,12 @@ abstract class SingletonJsonTranslationTest[ OtherSchema[ _ ] ]
         readJson( "\"TestSingleton\"", tsOSchema ) shouldBe Some( TestSingleton )
     }
 
-    it should "translate a singleton within a coproduct" in {
-        val testVal: SuperT = SubT
-
-        writeJson( testVal, stOSchema ) shouldBe """"SubT""""
-
-        readJson[ SuperT ]( "\"SubT\"", stOSchema ) shouldBe Some( SubT )
-    }
+//    it should "translate a singleton within a coproduct" in {
+//        val testVal: SuperT = SubT
+//
+//        writeJson( testVal, stOSchema ) shouldBe """"SubT""""
+//
+//        readJson[ SuperT ]( "\"SubT\"", stOSchema ) shouldBe Some( SubT )
+//    }
 
 }

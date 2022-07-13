@@ -114,9 +114,23 @@ object ProductTranslationTestSchemata {
         import org.hungerford.generic.schema.primitives.Primitives.given
         SchemaProvider.schema[ Outside ]
     }
+
+    sealed trait RecursiveCoproduct
+    case object Terminal extends RecursiveCoproduct
+    final case class RecursiveProduct( a: Int, b: RecursiveCoproduct ) extends RecursiveCoproduct
+
+    val recursiveSchemaDerived = {
+        import org.hungerford.generic.schema.primitives.Primitives.given
+        SchemaProvider.schema[ RecursiveProduct ]
+    }
+
+    val recursiveCoproductSch = recursiveSchemaDerived(t[ RecursiveCoproduct ]).schema
 }
 
 import ProductTranslationTestSchemata.*
+
+import recursiveSchemaDerived.givenSchema
+import recursiveCoproductSch.givenSchema
 
 abstract class ProductJsonTranslationTest[ OtherSchema[ _ ] ](
     using
@@ -131,10 +145,11 @@ abstract class ProductJsonTranslationTest[ OtherSchema[ _ ] ](
     transInside: SchemaTranslator[ Inside, insideSchema.Shape, OtherSchema ],
     transOutsideIns: SchemaTranslator[ Outside, outsideSchUsingInside.Shape, OtherSchema ],
     transOutsideDer: SchemaTranslator[ Outside, outsideSchemaDerived.Shape, OtherSchema ],
+    recursiveSchemaDer: SchemaTranslator[ RecursiveProduct, recursiveSchemaDerived.Shape, OtherSchema ],
 ) extends AnyFlatSpecLike with Matchers {
 
     def writeJson[ T ]( value: T, schm: OtherSchema[ T ] ): String
-    
+
     behavior of "ProductSchemaTranslator"
 
     it should "translate a product schema without additional fields" in {
@@ -182,6 +197,15 @@ abstract class ProductJsonTranslationTest[ OtherSchema[ _ ] ](
         val testOutside = Outside( Inside( "hello" ) )
 
         writeJson( testOutside, outsideRW ) shouldBe """{"inside":{"str":"hello"}}"""
+    }
+
+    it should "be able to translate a recursive product with lazy fields" in {
+        implicit val recursiveProductRW: OtherSchema[ RecursiveProduct ] =
+            SchemaTranslator.translate( recursiveSchemaDerived )( using recursiveSchemaDer )
+
+        val testRecursiveProduct = RecursiveProduct(25, RecursiveProduct( 3, Terminal ) )
+
+        writeJson( testRecursiveProduct, recursiveProductRW ) shouldBe """{"a":25,"b":{"a":3,"b":"Terminal"}}"""
     }
 
 }

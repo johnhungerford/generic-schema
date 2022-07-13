@@ -54,7 +54,7 @@ trait CirceCoproductSchemaTranslation {
         given lazySubtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S, Trans <: Tuple ](
             using
             sch : Schema.Aux[ ST, S ],
-            tr: TransRetriever[ Trans, ST, Decoder ],
+            tr: TransRetriever.Aux[ Trans, ST, S, Decoder ],
             vo: ValueOf[ N ],
         ) : CoproductReader[ Json, LazySubtype[ T, ST, Unit, Unit, Unit, N ], Unit, Unit, Trans ] with {
             type Out = Option[ T ]

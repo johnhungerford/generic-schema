@@ -36,7 +36,7 @@ sealed case class LazySubtype[ T, ST, D, DN, DV, N <: TypeName ] private[ schema
     override val default: Option[ ST ] = None,
     override val examples: Seq[ ST ] = Seq.empty[ ST ],
     override val deprecated: Boolean = false,
-) extends Subtype.OrLazy[ T, ST, D, DN, DV, N ] {
+) extends Subtype.OrLazy[ T, ST, D, DN, DV, N ] with Subtype.IsLazy {
     type Self = LazySubtype[ T, ST, D, DN, DV, N ]
 
     def schema[ S ](
@@ -87,7 +87,7 @@ object Subtype {
     type NoDiscr = Discr[ Nothing, Nothing, Unit ]
     type WithDiscr[ D, DN <: TypeName, DV <: D & Singleton ] = Discr[ D, DN, DV ]
 
-    sealed trait Shaped[ ST, Shape ] extends Subtype.Tpe[ ST ] {
+    sealed trait Shaped[ ST, Shape ] extends Subtype.Tpe[ ST ] with Subtype.NotLazy {
         def schema : Schema.Aux[ ST, Shape ]
     }
 
@@ -100,6 +100,10 @@ object Subtype {
       extends Subtype.SubOf[ T, ST ]
         with Subtype.Discr[ D, DN, DV ]
         with Subtype.Named[ N ]
+    
+    sealed trait IsLazy
+    
+    sealed trait NotLazy
 }
 
 

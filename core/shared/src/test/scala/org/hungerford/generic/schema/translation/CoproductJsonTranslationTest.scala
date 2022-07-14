@@ -13,11 +13,11 @@ case class SubT2( dbl : Double, lng : Long, bool : Boolean ) extends SuperT
 case object SubT3 extends SuperT
 
 case class Super( str : String )
-case class Sub( str : String )
+case class Sub( subStr : String )
 
 sealed trait RecurT
 case object Terminal extends RecurT
-case class Rec(a: RecurT) extends RecurT
+case class Rec(a: RecurT, b: Int) extends RecurT
 
 abstract class CoproductJsonTranslationTest[ OtherSchema[ _ ] ](
     using
@@ -40,9 +40,9 @@ abstract class CoproductJsonTranslationTest[ OtherSchema[ _ ] ](
     val superSch = Schema.coproductBuilder[ Super ]
       .buildSubtype[ Sub ](
           _.typeName( "Sub" )
-            .validate( Validator( v => Try( v.str.toInt >= 0 ).getOrElse( true ) && Try( v.str.toDouble < 0 ).getOrElse( true ) ) )
+            .validate( Validator( v => Try( v.subStr.toInt >= 0 ).getOrElse( true ) && Try( v.subStr.toDouble < 0 ).getOrElse( true ) ) )
             .fromSchema( Schema.derived[ Sub ] )
-            .toSuper( v => Super( v.str ) )
+            .toSuper( v => Super( v.subStr ) )
             .fromSuper( v => Some( Sub( v.str ) ) )
             .build
           )
@@ -85,30 +85,40 @@ abstract class CoproductJsonTranslationTest[ OtherSchema[ _ ] ](
 
     it should "decode a sealed trait correctly from json" in {
         readJson[ SuperT ]( """{"dbl":0.234,"lng":3422315,"bool":false}""", superTOs ) shouldBe SubT2( 0.234D, 3422315, false )
+
+        readJson[ SuperT ]( """"SubT3"""", superTOs ) shouldBe SubT3
     }
 
-    it should "encode a non-sealed trait coproduct (a custom coproduct) to json correctly, using validators to choose cases" in {
+    it should "encode a non-sealed-trait coproduct (a custom coproduct) to json correctly, using validators to choose cases" in {
         val val1 : Super = Super( "32.4353" )
         writeJson( val1, superOs ) shouldBe """32.4353"""
 
         val val2 : Super = Super( "-3454" )
         writeJson( val2, superOs ) shouldBe """-3454"""
 
-        val val3 : Super = Super( "hello world" )
-        writeJson( val3, superOs ) shouldBe """{"str":"hello world"}"""
+        val val4 : Super = Super( "-23.343" )
+        writeJson( val4, superOs ) shouldBe """{"subStr":"-23.343"}"""
+    }
+
+    it should "decode a non-sealed-trait coproduct (a custom coproduct) from json correctly, using validators to choose cases" in {
+        val val1 : Super = Super( "32.4353" )
+        readJson[ Super ]( """"32.4353"""", superOs ) shouldBe val1
+
+        val val2 : Super = Super( "-3454" )
+        readJson[ Super ]( """"-3454"""", superOs ) shouldBe val2
 
         val val4 : Super = Super( "-23.343" )
-        writeJson( val4, superOs ) shouldBe """{"str":"-23.343"}"""
+        readJson[ Super ]( """{"subStr":"-23.343"}""", superOs ) shouldBe val4
     }
 
     it should "encode a product with a recursive coproduct field" in {
-        val val1 : Rec = Rec( Rec( Rec( Rec( Terminal ) ) ) )
-        writeJson( val1, recurSchOs ) shouldBe """{"a":{"a":{"a":{"a":"Terminal"}}}}"""
+        val val1 : Rec = Rec( Rec( Rec( Rec( Terminal, 2 ), 3 ), 4 ), 5 )
+        writeJson( val1, recurSchOs ) shouldBe """{"a":{"a":{"a":{"a":"Terminal","b":2},"b":3},"b":4},"b":5}"""
     }
 
     it should "decode a product with a recursive coproduct field" in {
-        val val1 : String = """{"a":{"a":{"a":{"a":"Terminal"}}}}"""
-        readJson[ Rec ]( val1, recurSchOs ) shouldBe Rec( Rec( Rec( Rec( Terminal ) ) ) )
+        val val1 : String = """{"a":{"a":{"a":{"a":"Terminal","b":2},"b":3},"b":4},"b":5}"""
+        readJson[ Rec ]( val1, recurSchOs ) shouldBe Rec( Rec( Rec( Rec( Terminal, 2 ), 3 ), 4 ), 5 )
     }
 
 }

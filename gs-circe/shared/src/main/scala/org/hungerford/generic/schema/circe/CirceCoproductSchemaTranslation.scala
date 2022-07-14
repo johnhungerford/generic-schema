@@ -166,7 +166,7 @@ trait CirceCoproductSchemaTranslation {
         given lazySubtypeWriter[ T, ST, D, DN, DV, N <: TypeName, STS, Trans <: Tuple ](
             using
             sch : Schema.Aux[ ST, STS ],
-            tr : TransRetriever[ Trans, ST, Encoder ],
+            tr : TransRetriever.Aux[ Trans, ST, STS, Encoder ],
             vo : ValueOf[ N ],
         ) : CoproductWriter[ T, LazySubtype[ T, ST, D, DN, DV, N ], Trans ] with {
             type Out = Option[ Json ]
@@ -177,8 +177,9 @@ trait CirceCoproductSchemaTranslation {
                 trans: Trans,
             ) : Out = {
                 informedBy.fromSuper( value ).map( stVal => {
-                    val encoder = tr.getTranslator( trans ).asInstanceOf[ SchemaTranslator[ ST, STS, Encoder ] ].translate( sch )
-                    encoder( stVal )
+                    val encoder = tr.getTranslator( trans ).translate( sch )
+                    val res = encoder( stVal )
+                    res
                 } )
             }
         }

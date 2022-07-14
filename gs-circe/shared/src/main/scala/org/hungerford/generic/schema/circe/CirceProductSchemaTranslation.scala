@@ -92,10 +92,11 @@ trait CirceProductSchemaTranslation {
                                         fields.asInstanceOf[*:[Any, Tail]].head
                                           .asInstanceOf[Field.Named[ N ] & Field.Shaped[ ResHead, S ]]
                                     given Decoder[ ResHead ] = fieldTrans.translate( field.schema, trans )
-                                    val extraction = fromCursor.downField( fieldName.value.asInstanceOf[ String ] )
+                                    val extraction = fromCursor.downField( fieldName.value )
                                       .as[ ResHead ] match {
                                         case Left( e ) => throw e
-                                        case Right( v ) => v
+                                        case Right( v ) =>
+                                            v
                                     }
                                     ( extraction *: nextFieldsReader( fromCursor, fields.asInstanceOf[ Head *: tail ].tail, trans ) )
                                       .asInstanceOf[ Res ]
@@ -131,13 +132,14 @@ trait CirceProductSchemaTranslation {
         type NextTrans = RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, Encoder ] *: Trans
         val fieldWriter = writeFields[ T, R, NextTrans ]
         val afWriter = writeAdditionalFields[ T, AF, AFS, AFE ]
-        val fields : mutable.Map[ String, (Int, Json) ] = mutable.Map() // need to track insertion order bc mutable.ListMap doesn't work!
 
         new RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, Encoder ] { self =>
             override def translate(
                 schema: Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
                 translators: Trans,
             ): Encoder[ T ] =
+                // need to track insertion order bc mutable.ListMap doesn't work!
+                val fields : mutable.Map[ String, (Int, Json) ] = mutable.Map()
                 Encoder.instance { ( value : T ) =>
                     fieldWriter( value, schema.shape.fieldDescriptions, fields, self *: translators )
                     afWriter( value, schema.shape.afExtractor, schema.shape.additionalFieldsSchema, fields, schema.shape.fieldNames )
@@ -216,27 +218,6 @@ trait CirceProductSchemaTranslation {
                         }
                 }
         }
-    }
-
-//    inline def writeField[ T, F, N <: FieldName, S ](
-//        field : Field[ T, F, N, S ],
-//        source : F,
-//        target : mutable.Map[ String, Json ],
-//    ) : Unit = {
-//        val translator = summonInline[ RecursiveSchemaTranslator[ F, S, Encoder ] ]
-//        val encoder = translator.translate( field.schema )
-//        val fieldJson = encoder( source )
-//        target += ((field.fieldName, fieldJson))
-//    }
-
-    protected def codecFromEncoderDecoder[ T ]( to : T => Json, from : Json => T ) : Codec[ T ] = {
-        val encoder : Encoder[ T ] = ( a : T ) => to( a )
-
-        val decoder : Decoder[ T ] = ( c: HCursor ) => {
-            Right( from( c.value ) )
-        }
-
-        Codec.from( decoder, encoder )
     }
 
 }

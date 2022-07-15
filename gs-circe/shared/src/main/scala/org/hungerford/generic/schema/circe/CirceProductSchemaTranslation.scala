@@ -1,72 +1,48 @@
 package org.hungerford.generic.schema.circe
 
 import io.circe.Decoder.{Result, currencyDecoder}
-import org.hungerford.generic.schema.product.field.Field
+import org.hungerford.generic.schema.product.field.{Field, FieldName, LazyField}
 import org.hungerford.generic.schema.product.translation.BiMapProductTranslation
-import io.circe.{Codec, Decoder, Encoder, HCursor, Json}
+import io.circe.{ACursor, Codec, Decoder, DecodingFailure, Encoder, HCursor, Json, JsonObject}
+import org.hungerford.generic.schema.Schema
+import org.hungerford.generic.schema.Schema.Aux
+import org.hungerford.generic.schema.product.ProductShape
+import org.hungerford.generic.schema.product.constructor.ProductConstructor
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, SchemaCacheRetriever}
+
+import scala.compiletime.{erasedValue, error, summonFrom, summonInline}
+import scala.collection.mutable
+import scala.util.Try
 
 trait CirceProductSchemaTranslation
-  extends BiMapProductTranslation[ Codec, Json, Map[ String, Json ] ] {
+  extends BiMapProductTranslation[ Codec, Decoder, Encoder, Json, Json ] {
 
-    /**
-     * Construct a schema from the two parts of a bimap.
-     *
-     * @param to   T => MapVal : writer
-     * @param from MapVal => T : reader
-     * @tparam T type being read/written
-     * @return type class instance for some reader/writer
-     */
-    protected def schemaFromBimap[ T ]( to : T => Json, from : Json => T ) : Codec[ T ] = {
-        val encoder : Encoder[ T ] = ( a : T ) => to( a )
+    def buildProductSchema[ T ](
+        enc: Encoder[ T ], dec: Decoder[ T ]
+    ): Codec[ T ] = Codec.from( dec, enc )
 
-        val decoder : Decoder[ T ] = ( c: HCursor ) => {
-            Right( from( c.value ) )
-        }
+    def mergeFields[ T ](
+        fieldMap: List[ (String, Json) ]
+    ): Json = Json.obj( fieldMap* )
 
-        Codec.from( decoder, encoder )
-    }
+    def getFieldNames(
+        from: Json
+    ): Set[ String ] = from.hcursor.keys.toSet.flatMap( _.toSet )
 
-    /**
-     * Initial empty value for the type being mapped to and from, that can be built
-     * by adding field values. For instance, if the value type is Map[ String, T ],
-     * initMapVal would be Map.empty[ String, T ]
-     *
-     * @return initial value of buildable bimap type
-     */
-    protected def initMapVal : Map[ String, Json ] = Map.empty[ String, Json ]
+    def writeField[ T ]( value: T, encoder: Encoder[ T ] ): Json = encoder( value )
 
-    /**
-     * Construct the final type to be bimapped to and from
-     *
-     * @param buildableValue
-     * @return
-     */
-    protected def buildMapVal( buildableValue : Map[ String, Json ] ) : Json = {
-        Json.obj( buildableValue.toSeq: _* )
-    }
+    def getField[ AF ](
+        from: Json, fieldName: String, decoder: Decoder[ AF ]
+    ): Option[ AF ] = from.hcursor.downField( fieldName ).as[ AF ]( decoder ).toOption
 
-    protected def extractField[ T, F ]( from : Json, field : Field.Extr[ T, F ], schema : Codec[ F ] ) : F = {
-        schema( from.hcursor.downField( field.fieldName ).focus.get.hcursor )
-          .getOrElse( throw new Exception() )
-    }
+    def buildProductDecoder[ T ](
+        decode: Json => Option[ T ]
+    ): Decoder[ T ] = Decoder.instance( cursor => decode( cursor.value ) match {
+        case None => Left( DecodingFailure( "failed", Nil ) )
+        case Some( v ) => Right( v )
+    } )
 
-    protected def extractAdditionalFields[ T ]( from : Json, informedBy : Codec[ T ] ) : Map[ String, T ] = {
-        given Decoder[ T ] = informedBy
-        from.as[ Map[ String, T ] ].getOrElse( throw new Exception() )
-    }
-
-    protected def writeField[ F ]( value : F, to : Map[ String, Json ], field : Field.Of[ F ], schema : Codec[ F ] ) : Map[ String, Json ] = {
-        val json = schema( value )
-        to + (field.fieldName -> json)
-    }
-
-    protected def writeAdditionalFields[ T ]( from : Map[ String, T ], to : Map[ String, Json ], informedBy : Codec[ T ] ) : Map[ String, Json ] = {
-        val encoder = informedBy
-        from.foldLeft( to )( ( lastMap, currentField ) => {
-            val (fieldName, fieldValue) = currentField
-            lastMap + (fieldName -> encoder( fieldValue ) )
-        } )
-    }
-
+    def buildProductEncoder[ T ]( decode: T => Json ): Encoder[ T ] =
+        Encoder.instance( decode )
 
 }

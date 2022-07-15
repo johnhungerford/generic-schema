@@ -14,6 +14,9 @@ import scala.Tuple.Concat
 import scala.util.NotGiven
 import scala.quoted.ToExpr.EmptyTupleToExpr
 
+sealed trait RecursiveCoproduct
+case object Term extends RecursiveCoproduct
+final case class RecursiveProduct( b: RecursiveCoproduct, a: Int ) extends RecursiveCoproduct
 
 object ProductTranslationTestSchemata {
     import org.hungerford.generic.schema.Default.dsl.*
@@ -114,6 +117,17 @@ object ProductTranslationTestSchemata {
         import org.hungerford.generic.schema.primitives.Primitives.given
         SchemaProvider.schema[ Outside ]
     }
+
+    val recursiveSchemaDerived = {
+        import org.hungerford.generic.schema.Default.dsl.*
+        import org.hungerford.generic.schema.primitives.Primitives.given
+        SchemaProvider.schema[ RecursiveProduct ]
+    }
+
+    val recursiveCoproductSch = {
+        import org.hungerford.generic.schema.Default.dsl.*
+        recursiveSchemaDerived(t[ RecursiveCoproduct ]).schema
+    }
 }
 
 import ProductTranslationTestSchemata.*
@@ -124,62 +138,68 @@ abstract class ProductJsonTranslationTest[ OtherSchema[ _ ] ](
     strSch: OtherSchema[ String ],
     dblSch: OtherSchema[ Double ],
     boolSch: OtherSchema[ Boolean ],
-    transNoAf: SchemaTranslator[ NoAF, noAfSchema.Shape, OtherSchema ],
-    trnasHasAf: SchemaTranslator[ HasAF, hasAfSchema.Shape, OtherSchema ],
-    transHasAfPrim: SchemaTranslator[ HasAF, hasAfPrimitiveSch.Shape, OtherSchema ],
-    transOutside: SchemaTranslator[ Outside, outsideSch.Shape, OtherSchema ],
-    transInside: SchemaTranslator[ Inside, insideSchema.Shape, OtherSchema ],
-    transOutsideIns: SchemaTranslator[ Outside, outsideSchUsingInside.Shape, OtherSchema ],
-    transOutsideDer: SchemaTranslator[ Outside, outsideSchemaDerived.Shape, OtherSchema ],
 ) extends AnyFlatSpecLike with Matchers {
 
+    def osNoAf: OtherSchema[ NoAF ]
+    def osHasAf: OtherSchema[ HasAF ]
+    def osHasAfPrim: OtherSchema[ HasAF ]
+    def osOutside: OtherSchema[ Outside ]
+    def osOutsideIns: OtherSchema[ Outside ]
+    def osOutsideDer: OtherSchema[ Outside ]
+    def osRecursiveSchemaDer: OtherSchema[ RecursiveProduct ]
+
     def writeJson[ T ]( value: T, schm: OtherSchema[ T ] ): String
+    def readJson[ T ]( value : String, schm: OtherSchema[ T ] ): T
+
+    behavior of "ProductSchemaTranslator"
 
     it should "translate a product schema without additional fields" in {
 
-        val noAfRw = SchemaTranslator.translate( noAfSchema )
-
-        writeJson( NoAF( 1, "hello" ), noAfRw ) shouldBe """{"int_field":1,"str_field":"hello"}"""
+        writeJson( NoAF( 1, "hello" ), osNoAf ) shouldBe """{"int_field":1,"str_field":"hello"}"""
+        readJson[ NoAF ]( """{"int_field":1,"str_field":"hello"}""", osNoAf ) shouldBe NoAF( 1, "hello" )
     }
 
     it should "translate a product schema with additional fields" in {
 
-        val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( hasAfSchema )( using trnasHasAf )
-
-        val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
-        res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
+        val correctJson = """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
+        val value = HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) )
+        writeJson( value, osHasAf ) shouldBe correctJson
+        readJson[ HasAF ]( correctJson, osHasAf ) shouldBe value
     }
 
     it should "use implicit primitive types" in {
-        val hasAFrw: OtherSchema[ HasAF ] = SchemaTranslator.translate( hasAfPrimitiveSch )( using transHasAfPrim )
-
-        val res = writeJson( HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) ), hasAFrw )
-        res shouldBe """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
+        val correctJson = """{"str_field":"hello","bool_field":true,"test":0.2,"test-2":3.5}"""
+        val value = HasAF( "hello", bool = true, Map( "test" -> 0.2, "test-2" -> 3.5 ) )
+        writeJson( value, osHasAfPrim ) shouldBe correctJson
+        readJson[ HasAF ]( correctJson, osHasAfPrim ) shouldBe value
     }
 
     it should "be able to use nested product schemas through nested building" in {
-
-        val outsideRW: OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSch )( using transOutside )
-
-        val testOutside = Outside( Inside( "hello" ) )
-
-        writeJson( testOutside, outsideRW ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+        val correctJson = """{"inside_field":{"str_field":"hello"}}"""
+        val value = Outside( Inside( "hello" ) )
+        writeJson( value, osOutside ) shouldBe correctJson
+        readJson[ Outside ]( correctJson, osOutside ) shouldBe value
     }
 
     it should "be able to use nested product schemas through implicit resolution" in {
-        implicit val outsideRW: OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSchUsingInside )( using transOutsideIns )
-
-        val testOutside = Outside( Inside( "hello" ) )
-
-        writeJson( testOutside, outsideRW ) shouldBe """{"inside_field":{"str_field":"hello"}}"""
+        val correctJson = """{"inside_field":{"str_field":"hello"}}"""
+        val value = Outside( Inside( "hello" ) )
+        writeJson( value, osOutsideIns ) shouldBe correctJson
+        readJson[ Outside ]( correctJson, osOutsideIns ) shouldBe value
     }
 
     it should "be able to translated nested product schemas provided by derivation" in {
-        implicit val outsideRW: OtherSchema[ Outside ] = SchemaTranslator.translate( outsideSchemaDerived )( using transOutsideDer )
+        val correctJson = """{"inside":{"str":"hello"}}"""
+        val value = Outside( Inside( "hello" ) )
+        writeJson( value, osOutsideDer ) shouldBe correctJson
+        readJson[ Outside ]( correctJson, osOutsideDer ) shouldBe value
+    }
 
-        val testOutside = Outside( Inside( "hello" ) )
-
-        writeJson( testOutside, outsideRW ) shouldBe """{"inside":{"str":"hello"}}"""
+    it should "be able to translate a recursive product with lazy fields" in {
+        val correctJson = """{"b":{"b":{"b":{"b":"Term","a":2},"a":3},"a":4},"a":5}"""
+        val value = RecursiveProduct( RecursiveProduct( RecursiveProduct( RecursiveProduct( Term, 2 ), 3 ), 4 ), 5 )
+        readJson[ RecursiveProduct ]( correctJson, osRecursiveSchemaDer ) shouldBe value
+        writeJson( value, osRecursiveSchemaDer ) shouldBe correctJson
     }
 
 }

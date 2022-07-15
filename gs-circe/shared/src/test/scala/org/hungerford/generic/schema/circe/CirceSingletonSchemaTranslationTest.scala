@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.circe
 
-import org.hungerford.generic.schema.translation.{SchemaTranslator, SingletonJsonTranslationTest}
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, SingletonJsonTranslationTest}
 import org.hungerford.generic.schema.Schema
 import io.circe.*
 import io.circe.parser.*

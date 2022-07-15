@@ -1,21 +1,22 @@
 package org.hungerford.generic.schema.tapir
 
-import org.hungerford.generic.schema.translation.SchemaTranslator
+import org.hungerford.generic.schema.translation.{CI, RecursiveSchemaTranslator, SchemaTranslator}
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.Default.dsl.*
-
 import sttp.tapir
-import sttp.tapir.{Schema => TapirSchema}
-import sttp.tapir.SchemaType.{SProductField, SProduct}
+import sttp.tapir.Schema as TapirSchema
+import sttp.tapir.Schema.SName
+import sttp.tapir.SchemaType.{SCoproduct, SInteger, SProduct, SProductField, SRef}
 
 class TapirSchemaProductTranslationTest
   extends AnyFlatSpecLike
     with Matchers
-    with TapirSchemaProductTranslation {
+    with TapirSchemaCoproductTranslation
+    with TapirSchemaProductTranslation
+    with TapirSchemaSingletonTranslation {
 
     behavior of "TapirSchemaProductTranslation"
 
@@ -59,6 +60,46 @@ class TapirSchemaProductTranslationTest
         }
 
         tapirSchema.description should contain( "test-case-description" )
+    }
+
+    sealed trait Recur
+    case object Terminal extends Recur
+    final case class RecurOnce( a : Int, b : Recur ) extends Recur
+
+    it should "translate a recursive product correctly" in {
+
+//        val sch = Schema.derived[ RecurOnce ]
+//        val recurSch = sch( 1 ).schema
+
+//        RecursiveSchemaTranslator.translate[ Recur, recurSch.Shape, CI[ Recur, String ] *: EmptyTuple, TapirSchema ]( recurSch, CI.of[ Recur ]( "TYPENAME" ) *: EmptyTuple )
+
+        val sch = Schema.derived[ RecurOnce ]
+        val tapirSch : TapirSchema[ RecurOnce ] = SchemaTranslator.translate( sch )
+
+        tapirSch.schemaType match {
+            case SProduct( fields : List[ SProductField[ TestCase ] ] ) =>
+                fields.size shouldBe 2
+                fields.head.name.name shouldBe "a"
+                fields.head.schema.schemaType match {
+                    case SInteger() =>
+                    case other =>
+                        fail( s"RecurOnce field \"a\" is not integer: ${other}" )
+                }
+                fields.tail.head.name.name shouldBe "b"
+                fields.tail.head.schema.schemaType match {
+                    case SCoproduct( subtypes, _ ) =>
+                        subtypes.size shouldBe 2
+                        subtypes.tail.head.name should contain( SName( "RecurOnce" ) )
+                        subtypes.tail.head.schemaType match {
+                            case SRef( name ) =>
+                                name shouldBe SName( "RecurOnce" )
+                            case other =>
+                                fail( s"wrong schema type (should be SRef): ${other}" )
+                        }
+                }
+
+            case _ => fail( "Product schema did not generate an SProduct tapir schema type" )
+        }
     }
 
 }

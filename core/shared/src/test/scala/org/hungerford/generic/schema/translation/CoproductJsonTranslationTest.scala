@@ -102,10 +102,10 @@ abstract class CoproductJsonTranslationTest[ OtherSchema[ _ ] ](
 
     it should "decode a non-sealed-trait coproduct (a custom coproduct) from json correctly, using validators to choose cases" in {
         val val1 : Super = Super( "32.4353" )
-        readJson[ Super ]( """"32.4353"""", superOs ) shouldBe val1
+        readJson[ Super ]( "32.4353", superOs ) shouldBe val1
 
         val val2 : Super = Super( "-3454" )
-        readJson[ Super ]( """"-3454"""", superOs ) shouldBe val2
+        readJson[ Super ]( "-3454", superOs ) shouldBe val2
 
         val val4 : Super = Super( "-23.343" )
         readJson[ Super ]( """{"subStr":"-23.343"}""", superOs ) shouldBe val4

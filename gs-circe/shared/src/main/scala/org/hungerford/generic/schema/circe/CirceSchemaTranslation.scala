@@ -12,12 +12,6 @@ trait CirceSchemaTranslation
     with CirceCoproductSchemaTranslation
     with CirceSingletonSchemaTranslation {
 
-    given [ T ](
-        using
-        enc : Encoder[ T ],
-        dec : Decoder[ T ],
-    ) : Codec[ T ] = Codec.from( dec, enc )
-
     given [ T, S, Trans <: Tuple ](
         using
         encTr: RecursiveSchemaTranslator[ T, S, EmptyTuple, Encoder ],

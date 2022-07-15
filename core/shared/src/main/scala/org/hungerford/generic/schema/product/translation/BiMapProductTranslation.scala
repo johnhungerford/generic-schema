@@ -15,16 +15,4 @@ trait BiMapProductTranslation[ RW[ _ ], DecoderSch[ _ ], EncoderSch[ _ ], Source
 
     def buildProductSchema[ T ]( enc : EncoderSch[ T ], dec : DecoderSch[ T ] ) : RW[ T ]
 
-    given bimapProductTrans[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
-        using
-        encTr : RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], EmptyTuple, EncoderSch ],
-        decTr : RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], EmptyTuple, DecoderSch ],
-    ) : SchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], RW ] with {
-        override def translate( schema: Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ): RW[ T ] =
-            buildProductSchema(
-                encTr.translate( schema, EmptyTuple ),
-                decTr.translate( schema, EmptyTuple ),
-            )
-    }
-
 }

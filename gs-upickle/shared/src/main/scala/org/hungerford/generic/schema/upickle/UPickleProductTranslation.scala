@@ -9,73 +9,42 @@ import scala.collection.immutable.ListMap
 import scala.util.Try
 
 trait UPickleProductTranslation
-  extends BiMapProductTranslation[ ReadWriter, Value.Value, ListMap[ String, Value.Value ] ] {
+  extends BiMapProductTranslation[ ReadWriter, Reader, Writer, Value.Value, Value.Value ] {
 
-   /**
-    * Construct a schema from the two parts of a bimap.
-    *
-    * @param to   T => MapVal : writer
-    * @param from MapVal => T : reader
-    * @tparam T type being read/written
-    * @return type class instance for some reader/writer
-    */
-   override def schemaFromBimap[ T ]( to : T => Value, from : Value => T ) : ReadWriter[ T ] = {
-       readwriter[ Value.Value ].bimap[ T ]( to, from )
-   }
+    def buildProductSchema[ T ](
+        enc: Writer[ T ], dec: Reader[ T ]
+    ): ReadWriter[ T ] = ReadWriter.join( dec, enc )
 
-   /**
-    * Initial empty value for the type being mapped to and from, that can be built
-    * by adding field values. For instance, if the value type is Map[ String, T ],
-    * initMapVal would be Map.empty[ String, T ]
-    *
-    * @return initial value of buildable bimap type
-    */
-   override def initMapVal : ListMap[ String, Value.Value ] = ListMap.empty
+    def mergeFields[ T ](
+        fieldMap: List[ (String, Value.Value) ]
+    ): Value.Value =
+        fieldMap match {
+            case Nil => ujson.Obj()
+            case head :: tail => ujson.Obj( head, tail* )
+        }
 
-   /**
-    * Construct the final type to be bimapped to and from
-    *
-    * @param buildableValue
-    * @return
-    */
-   override def buildMapVal( buildableValue : ListMap[ String, Value.Value ] ) : Value.Value = {
-       val bvSeq : Seq[ (String, Value) ] = buildableValue.toSeq
-       ujson.Obj( bvSeq.head, bvSeq : _* )
-   }
+    def getFieldNames(
+        from: Value.Value
+    ): Set[ String ] = from.obj.keySet.toSet
 
-    protected def extractField[ T, F ](
-        from : Value.Value,
-        field : Field.Extr[ T, F ],
-        schema : ReadWriter[ F ],
-    ) : F = {
-       val fieldValue : Value = from.obj( field.fieldName )
-       read[ F ]( fieldValue )( schema )
-   }
+    def writeField[ T ]( value: T, encoder: Writer[ T ] ): Value.Value =
+        given Writer[ T ] = encoder
+        writeJs[ T ]( value )
 
-   override def extractAdditionalFields[ T ]( from : Value, informedBy : ReadWriter[ T ] ) : Map[ String, T ] = {
-       from.obj.toMap collect {
-           case (fieldName, value) if Try( read[ T ]( value )( informedBy ) ).toOption.nonEmpty =>
-               fieldName -> read[ T ]( value )( informedBy )
-       }
-   }
+    def getField[ AF ](
+        from: Value.Value, fieldName: String, decoder: Reader[ AF ]
+    ): Option[ AF ] =
+        Try( from( fieldName ) ).toOption flatMap { fieldValue =>
+            given Reader[ AF ] = decoder
+            Try( read[ AF ]( fieldValue ) ).toOption
+        }
 
-    protected def writeField[ F ](
-        value : F,
-        to : ListMap[ String, Value.Value ],
-        field : Field.Of[ F ],
-        schema : ReadWriter[ F ],
-    ) : ListMap[ String, Value.Value ] = {
-       val valueJson : Value.Value = writeJs( value )( schema )
-       to + ( (field.fieldName, valueJson) )
-   }
+    def buildProductDecoder[ T ](
+        decode: Value.Value => Option[ T ]
+    ): Reader[ T ] = reader[ Value.Value ].map( v => decode( v ).get )
 
-   override def writeAdditionalFields[ T ]( from : Map[ String, T ], to : ListMap[ String, Value ], informedBy : ReadWriter[ T ] ) : ListMap[ String, Value ] = {
-       from.mapValues( v => writeJs( v )( informedBy ) )
-       from.foldLeft( to )( (oldFields : ListMap[ String, Value ], nextField : (String, T) ) => {
-           val (fieldName, fieldValue) = nextField
-           oldFields + (fieldName -> writeJs( fieldValue )( informedBy ))
-       } )
-   }
+    def buildProductEncoder[ T ]( decode: T => Value.Value ): Writer[ T ] =
+        readwriter[ Value.Value ].bimap[ T ]( decode, _.asInstanceOf[ T ] )
 
 }
 

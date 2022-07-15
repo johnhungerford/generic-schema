@@ -14,7 +14,8 @@ import scala.compiletime.{erasedValue, error, summonFrom, summonInline}
 import scala.collection.mutable
 import scala.util.Try
 
-trait CirceProductSchemaTranslation extends BiMapProductTranslation[ Codec, Decoder, Encoder, Json, Json ] {
+trait CirceProductSchemaTranslation
+  extends BiMapProductTranslation[ Codec, Decoder, Encoder, Json, Json ] {
 
     def buildProductSchema[ T ](
         enc: Encoder[ T ], dec: Decoder[ T ]

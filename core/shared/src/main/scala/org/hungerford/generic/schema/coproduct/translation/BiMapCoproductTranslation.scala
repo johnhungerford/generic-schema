@@ -10,16 +10,4 @@ trait BiMapCoproductTranslation[ RW[ _ ], DecoderSch[ _ ], EncoderSch[ _ ], Sour
 
     def buildCoproductSchema[ T ]( enc : EncoderSch[ T ], dec : DecoderSch[ T ] ) : RW[ T ]
 
-    given bimapCoproductTrans[ T, R <: Tuple, RV <: Tuple, D, DN ](
-        using
-        encTr : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], EmptyTuple, EncoderSch ],
-        decTr : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], EmptyTuple, DecoderSch ],
-    ) : SchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], RW ] with {
-        override def translate( schema: Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ): RW[ T ] =
-            buildCoproductSchema(
-                encTr.translate( schema, EmptyTuple ),
-                decTr.translate( schema, EmptyTuple ),
-            )
-    }
-
 }

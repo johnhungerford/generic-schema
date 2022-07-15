@@ -36,13 +36,6 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
                       if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
                       else None
                   }
-                //                decoder( from.hcursor ) match {
-                //                    case Left( e ) =>
-                //                        None
-                //                    case Right( v ) =>
-                //                        if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
-                //                        else None
-                //                }
             }
         }
 

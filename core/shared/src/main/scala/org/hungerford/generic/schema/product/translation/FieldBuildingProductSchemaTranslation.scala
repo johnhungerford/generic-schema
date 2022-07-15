@@ -11,15 +11,24 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
 
     def fieldsInit[ T ] : Fields[ T ]
 
-    trait LazyFieldAdder[ T, F, N <: FieldName, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, O ] {
-        def addField(
+    trait LazyFieldAdder[ T, F, N <: FieldName, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Trans <: Tuple, O ](
+        using
+        fg : FieldGetter.Aux[ N, R, RV, F ],
+        rt : SchemaCacheRetriever.Aux[ Trans, F, O ],
+    ) {
+        final def addFieldWithTrans(
             field : Field.OrLazy[ T, F, N ],
-            cacheItem : CI[ F, O ],
             to : Fields[ T ],
             informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
-        )(
-            using
-            fg : FieldGetter.Aux[ N, R, RV, F ],
+            trans : Trans,
+        ) : Fields[ T ] =
+            addField( field, to, informedBy, rt.getter( trans ) )
+
+        protected def addField(
+            field : Field.OrLazy[ T, F, N ],
+            to : Fields[ T ],
+            informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
+            cachedItem : CI[ F, O ],
         ) : Fields[ T ]
     }
 
@@ -97,9 +106,8 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
 
         given lazyField[ T, F, N <: FieldName, Tail <: Tuple, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Trans <: Tuple, O ] (
             using
+            fa : LazyFieldAdder[ T, F, N, R, RV, AF, AFS, AFE, C, Trans, O ],
             fg : FieldGetter.Aux[ N, R, RV, F ],
-            rt : SchemaCacheRetriever.Aux[ Trans, F, O ],
-            fa : LazyFieldAdder[ T, F, N, R, RV, AF, AFS, AFE, C, O ],
             nb : FieldTupleBuilder[ T, Tail, R, RV, AF, AFS, AFE, C, Trans ],
         ) : FieldTupleBuilder[ T, LazyField[ T, F, N ] *: Tail, R, RV, AF, AFS, AFE, C, Trans ] with {
             def addFields(
@@ -109,8 +117,7 @@ trait FieldBuildingProductSchemaTranslation[ OtherSchema[ _ ], Fields[ _ ] ] {
                 trans : Trans,
             ) : Fields[ T ] = {
                 val field = fields.head
-                val cachedItem = rt.getter( trans )
-                val updatedFields = fa.addField( field, cachedItem, to, informedBy )
+                val updatedFields = fa.addFieldWithTrans( field, to, informedBy, trans )
                 nb.addFields( fields.tail, updatedFields, informedBy, trans )
             }
         }

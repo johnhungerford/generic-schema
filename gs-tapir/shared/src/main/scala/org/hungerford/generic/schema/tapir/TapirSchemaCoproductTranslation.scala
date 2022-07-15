@@ -7,7 +7,7 @@ import org.hungerford.generic.schema.{ComplexSchema, Schema}
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.coproduct.CoproductShape
 import org.hungerford.generic.schema.coproduct.subtype.{LazySubtype, Subtype, TypeName}
-import org.hungerford.generic.schema.translation.{Cached, RecursiveSchemaTranslator, SchemaCacheRetriever, SchemaTranslator}
+import org.hungerford.generic.schema.translation.{CI, Cached, RecursiveSchemaTranslator, SchemaCacheRetriever, SchemaTranslator}
 import org.hungerford.generic.schema.product.field.FieldName
 import org.hungerford.generic.schema.singleton.SingletonShape
 import org.hungerford.generic.schema.tapir.TapirValidatorTranslation
@@ -166,7 +166,7 @@ trait TapirSchemaCoproductTranslation {
          */
         given lazySubtype[ T, ST, D, DN, DV, N <: TypeName, Trans <: Tuple ](
             using
-            scr : SchemaCacheRetriever.Aux[ Trans, ST, String ],
+            scr : SchemaCacheRetriever.Aux[ Trans, ST, (Option[ String ], String) ],
         ) : TapirCoproductTranslator[ T, LazySubtype[ T, ST, D, DN, DV, N ], Trans ] with {
             type Out = (TapirSchema[ _ ], T => Option[ TapirSchema[ _ ] ])
 
@@ -174,8 +174,8 @@ trait TapirSchemaCoproductTranslation {
                 shape: LazySubtype[ T, ST, D, DN, DV, N ],
                 trans : Trans,
             ): (TapirSchema[ _ ], T => Option[ TapirSchema[ _ ] ]) = {
-                val refName = scr.getter( trans ).get()
-                val tSchema = TapirSchema[ ST ](SRef[ ST ]( SName( refName ) ) )
+                val (nameOpt, refName) = scr.getter( trans ).get()
+                val tSchema = TapirSchema[ ST ](SRef[ ST ]( SName( nameOpt.getOrElse( refName ) ) ), Some( SName( refName ) ) )
                 val fromSuper = ( v: T ) => shape.fromSuper( v ).map( _ => tSchema )
                 (tSchema, fromSuper)
             }
@@ -222,11 +222,10 @@ trait TapirSchemaCoproductTranslation {
         }
     }
 
-    given tapirSchemaCoproductTranslation[ T, R <: NonEmptyTuple, RV <: NonEmptyTuple, D, DN, Trans <: Tuple, NewTrans <: Tuple ](
+    given tapirSchemaCoproductTranslation[ T : ClassTag, R <: NonEmptyTuple, RV <: NonEmptyTuple, D, DN, Trans <: Tuple ](
         using
         ev : NotGiven[ ExistsFor[ IsSingletonSubtype, R ] ],
-        c : Cached.AuxINT[ Trans, T, Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ], NewTrans ],
-        cpt : TapirCoproductTranslator.Aux[ T, R, (List[ TapirSchema[ _ ] ], T => Option[ TapirSchema[ _ ] ]), NewTrans ],
+        cpt : TapirCoproductTranslator.Aux[ T, R, (List[ TapirSchema[ _ ] ], T => Option[ TapirSchema[ _ ] ]), CI[ T, (Option[ String ], String) ] *: Trans ],
         dt : TapirDiscriminatorTranslation.Aux[ T, D, DN, R, Option[ SDiscriminator ] ],
         vd : TapirValidatorTranslation[ T ],
     ) : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, TapirSchema ] with {
@@ -235,8 +234,9 @@ trait TapirSchemaCoproductTranslation {
             trans: Trans,
         ): TapirSchema[ T ] = {
             lazy val res : TapirSchema[ T ] = {
-                val newTrans = c.cached( schema, trans )
-                val (subtypes, fromSuper) = cpt.translate( schema.shape.subtypeDescriptions, newTrans )
+
+                val cachedItem = CI.of[ T ]( schema.name, summon[ ClassTag[ T ] ].runtimeClass.getSimpleName )
+                val (subtypes, fromSuper) = cpt.translate( schema.shape.subtypeDescriptions, cachedItem *: trans )
                 val discr = dt.translate( schema.shape.subtypeDescriptions )
 
                 TapirSchema(
@@ -290,14 +290,12 @@ trait TapirSchemaCoproductTranslation {
 
     given [ Trans <: Tuple, T : ClassTag, R <: Tuple, RV <: Tuple, D, DN ] : Cached[ Trans, T ] with {
         type In = Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ]
-        type Out = String
+        type Out = (Option[ String ], String)
 
         override def cacheItem(
             value: Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ]
-        ): String = {
-            value.name getOrElse {
-                summon[ ClassTag[ T ] ].runtimeClass.getSimpleName
-            }
+        ): (Option[ String ], String) = {
+            (value.name, summon[ ClassTag[ T ] ].runtimeClass.getSimpleName)
         }
     }
 

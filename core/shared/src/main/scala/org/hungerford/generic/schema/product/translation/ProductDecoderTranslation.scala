@@ -5,7 +5,7 @@ import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.constructor.ProductConstructor
 import org.hungerford.generic.schema.product.field.{Field, LazyField}
-import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, TransRetriever}
+import org.hungerford.generic.schema.translation.{CI, RecursiveSchemaTranslator, SchemaCacheRetriever, SchemaTranslator}
 
 import scala.collection.mutable
 import scala.compiletime.{erasedValue, error, summonInline}
@@ -24,7 +24,7 @@ trait ProductDecoderTranslation[ DecoderSch[ _ ], Source ]
         using
         pc : ProductConstructor[ C, RV, AF, T ],
     ) : RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, DecoderSch ] = {
-        type NextTrans = RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, DecoderSch ] *: Trans
+        type NextTrans = CI[ T, DecoderSch[ T ] ] *: Trans
         val fieldsReader: (Source, R, NextTrans) => RV = readFields[ R, RV, NextTrans ]
         val afReader: (Schema.Aux[ AF, AFS ], Source, Set[ String ]) => Map[ String, AF ] =
             readAdditionalFields[ AF, AFS ]
@@ -34,15 +34,17 @@ trait ProductDecoderTranslation[ DecoderSch[ _ ], Source ]
                 schema: Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
                 trans: Trans,
             ): DecoderSch[ T ] =
-                buildProductDecoder { source =>
+                lazy val res: DecoderSch[ T ] = buildProductDecoder { source =>
+                    val cacheItem = CI.of[ T ]( res )
                     val cons = pc.construct( schema.shape.constructor )
                     ( Try {
-                        val fieldsTuple: RV = fieldsReader( source, schema.shape.fieldDescriptions, self *: trans )
+                        val fieldsTuple: RV = fieldsReader( source, schema.shape.fieldDescriptions, cacheItem *: trans )
                         val afMap: Map[ String, AF ] = afReader( schema.shape.additionalFieldsSchema, source, schema.shape.fieldNames )
 
                         cons( fieldsTuple, afMap )
                     } ).toOption
                 }
+                res
         }
     }
 
@@ -83,12 +85,13 @@ trait ProductDecoderTranslation[ DecoderSch[ _ ], Source ]
                     case _ : (resHead *: resTail) =>
                         type ResHead = resHead
                         type ResTail = resTail
+                        val nextFieldsReader = readFields[Tail, ResTail, Trans ]
                         inline erasedValue[head] match {
                             case _ : (Field.Named[ n ] & Field.Shaped[ ResHead, s ]) =>
                                 type N = n
                                 type S = s
                                 val fieldTrans = summonInline[ RecursiveSchemaTranslator[ ResHead, S, Trans, DecoderSch ] ]
-                                val nextFieldsReader = readFields[Tail, ResTail, Trans ]
+
                                 (fromSource: Source, fields: FS, trans: Trans) => {
                                     val field : Field.Named[ N ] & Field.Shaped[ ResHead, S ]  =
                                         fields.asInstanceOf[*:[Any, Tail]].head
@@ -104,18 +107,13 @@ trait ProductDecoderTranslation[ DecoderSch[ _ ], Source ]
                                 type N = n
                                 val fieldName = summonInline[ ValueOf[ N ] ]
 
-                                inline summonInline[ TransRetriever[ Trans, ResHead, DecoderSch ] ] match {
-                                    case transRetriever : TransRetriever.Aux[ Trans, ResHead, s, DecoderSch ] =>
-                                        type S = s
-                                        val fieldSchema = summonInline[ Schema.Aux[ ResHead, S ] ]
-                                        val nextFieldsReader = readFields[ Tail, ResTail, Trans ]
-                                        (fromSource: Source, fields: FS, trans: Trans) => {
-                                            val tr = transRetriever.getTranslator( trans )
-                                            val decoder = tr.translate( fieldSchema )
-                                            val extraction = getField( fromSource, fieldName.value.asInstanceOf[ String ], decoder ).get
-                                            ( extraction *: nextFieldsReader( fromSource, fields.asInstanceOf[ Head *: Tail ].tail, trans ) )
-                                              .asInstanceOf[ Res ]
-                                        }
+                                val transRetriever = summonInline[ SchemaCacheRetriever.Aux[ Trans, ResHead, DecoderSch[ ResHead ] ] ]
+
+                                (fromSource: Source, fields: FS, trans: Trans) => {
+                                    val decoder = transRetriever.getter( trans ).get()
+                                    val extraction = getField( fromSource, fieldName.value.asInstanceOf[ String ], decoder ).get
+                                    ( extraction *: nextFieldsReader( fromSource, fields.asInstanceOf[ Head *: Tail ].tail, trans ) )
+                                      .asInstanceOf[ Res ]
                                 }
                         }
                 }

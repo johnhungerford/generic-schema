@@ -5,7 +5,7 @@ import org.hungerford.generic.schema.coproduct.CoproductShape
 import org.hungerford.generic.schema.{Schema, SchemaProvider}
 import org.hungerford.generic.schema.coproduct.subtype.{LazySubtype, Subtype, TypeName}
 import org.hungerford.generic.schema.product.field.FieldName
-import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, TransRetriever}
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, SchemaCacheRetriever}
 
 trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
   extends WithSubtypeReader[ OtherSchema, Source ] {
@@ -39,10 +39,9 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
             }
         }
 
-        given lazySubtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S, Trans <: Tuple ](
+        given lazySubtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, Trans <: Tuple ](
             using
-            sch : Schema.Aux[ ST, S ],
-            tr: TransRetriever.Aux[ Trans, ST, S, OtherSchema ],
+            tr: SchemaCacheRetriever.Aux[ Trans, ST, OtherSchema[ ST ] ],
             str : SubtypeReader[ ST, N ],
         ) : CoproductReader[ T, LazySubtype[ T, ST, Unit, Unit, Unit, N ], Unit, Unit, Trans ] with {
             override def read(
@@ -50,21 +49,13 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
                 subtypes: LazySubtype[ T, ST, Unit, Unit, Unit, N ],
                 trans: Trans,
             ) : Option[ T ] = {
-                val translator = tr.getTranslator( trans )
-                val decoder = translator.translate( subtypes.schema )
+                val decoder = tr.getter( trans ).get()
                 str
                   .read( from, subtypes, decoder )
                   .flatMap { v =>
                       if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
                       else None
                   }
-                //                decoder( from.hcursor ) match {
-                //                    case Left( e ) =>
-                //                        None
-                //                    case Right( v ) =>
-                //                        if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
-                //                        else None
-                //                }
             }
         }
 
@@ -138,13 +129,14 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
 
     given decoderTranslator[ T, R <: Tuple, RV <: Tuple, D, DN, Trans <: Tuple ](
         using
-        reader : CoproductReader[ T, R, D, DN, RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, OtherSchema ] *: Trans ],
-    ) : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, OtherSchema ] with { self =>
+        reader : CoproductReader[ T, R, D, DN, (() => OtherSchema[ T ]) *: Trans ],
+    ) : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, OtherSchema ] with {
         override def translate(
             schema: Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
             trans : Trans,
         ): OtherSchema[ T ] = {
-            val nextTrans : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, OtherSchema ] *: Trans = self *: trans
+            val selfCall = () => translate(schema, trans)
+            val nextTrans : (() => OtherSchema[ T ]) *: Trans = selfCall *: trans
             buildCoproductDecoder[ T ]( source => reader.read( source, schema.shape.subtypeDescriptions, nextTrans ) )
         }
     }

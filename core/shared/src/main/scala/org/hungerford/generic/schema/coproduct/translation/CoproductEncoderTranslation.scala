@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.coproduct.CoproductShape
 import org.hungerford.generic.schema.coproduct.subtype.{LazySubtype, Subtype, TypeName}
-import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, TransRetriever}
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaCacheRetriever}
 
 trait CoproductEncoderTranslation[ OtherSchema[ _ ], Sink ]
   extends WithSubtypeWriter[ OtherSchema, Sink ] {
@@ -35,10 +35,9 @@ trait CoproductEncoderTranslation[ OtherSchema[ _ ], Sink ]
             }
         }
 
-        given lazySubtypeWriter[ T, ST, D, DN, DV, N <: TypeName, STS, Trans <: Tuple ](
+        given lazySubtypeWriter[ T, ST, D, DN, DV, N <: TypeName, Trans <: Tuple ](
             using
-            sch : Schema.Aux[ ST, STS ],
-            tr : TransRetriever.Aux[ Trans, ST, STS, OtherSchema ],
+            tr : SchemaCacheRetriever.Aux[ Trans, ST, OtherSchema[ ST ] ],
             sw : SubtypeWriter[ ST, N ],
         ) : CoproductWriter[ T, LazySubtype[ T, ST, D, DN, DV, N ], Trans ] with {
             override def write(
@@ -47,8 +46,8 @@ trait CoproductEncoderTranslation[ OtherSchema[ _ ], Sink ]
                 trans: Trans,
             ) : Option[ Sink ] = {
                 informedBy.fromSuper( value ).map( stVal => {
-                    val os = tr.getTranslator( trans ).translate( sch )
-                    sw.write( stVal, informedBy, os )
+                    val encoder = tr.getter( trans ).get()
+                    sw.write( stVal, informedBy, encoder )
                 } )
             }
         }

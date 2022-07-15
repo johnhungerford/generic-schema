@@ -8,7 +8,7 @@ import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.constructor.ProductConstructor
-import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, TransRetriever}
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, SchemaCacheRetriever}
 
 import scala.compiletime.{erasedValue, error, summonFrom, summonInline}
 import scala.collection.mutable

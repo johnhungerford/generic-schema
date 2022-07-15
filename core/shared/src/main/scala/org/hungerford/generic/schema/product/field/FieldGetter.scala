@@ -9,9 +9,9 @@ trait FieldGetter[ N <: FieldName, R <: Tuple, RV <: Tuple ] {
 object FieldGetter {
     type Aux[ N <: FieldName, R <: Tuple, RV <: Tuple, O ] = FieldGetter[ N, R, RV ] { type Out = O }
 
-    given [ T, F, N <: FieldName, S, RTail <: Tuple, RVHead, RVTail <: Tuple ] :
-        FieldGetter.Aux[ N, Field[ T, F, N, S ] *: RTail, RVHead *: RVTail, RVHead ] = {
-        new FieldGetter[ N, Field[ T, F, N, S ] *: RTail, RVHead *: RVTail ] {
+    given [ T, F, N <: FieldName, Field <: Field.OrLazy[ T, F, N ], RTail <: Tuple, RVHead, RVTail <: Tuple ] :
+        FieldGetter.Aux[ N, Field *: RTail, RVHead *: RVTail, RVHead ] = {
+        new FieldGetter[ N, Field *: RTail, RVHead *: RVTail ] {
             type Out = RVHead
 
             def get( from : RVHead *: RVTail ) : RVHead = from.head
@@ -28,7 +28,7 @@ object FieldGetter {
             def get( from : RVHead *: RVTail ) : next.Out = next.get( from.tail )
         }
     }
-    
+
     def get[ N <: FieldName, R <: Tuple, RV <: Tuple ](
         from : RV,
         field : N,

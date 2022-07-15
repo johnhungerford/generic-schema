@@ -6,7 +6,7 @@ import sttp.tapir.Schema as TapirSchema
 import sttp.tapir.Validator as TapirValidator
 import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.hungerford.generic.schema.types.ExistsFor
-import sttp.tapir.SchemaType.{SCoproduct, SProduct, SString}
+import sttp.tapir.SchemaType.{SCoproduct, SProduct, SRef, SString}
 
 class TapirSchemaCoproductTranslationTest
   extends AnyFlatSpecLike
@@ -155,6 +155,47 @@ class TapirSchemaCoproductTranslationTest
                         fields.head.name.name shouldBe "str"
                     case Some( _ ) => fail( "not a product!" )
                     case None => fail( "couldn't find schema from value")
+                }
+
+            case _ => fail( "wrong schema type!" )
+        }
+    }
+
+    sealed trait Recur
+    case object Terminal extends Recur
+    final case class RecurOnce( a : Int, b : Recur ) extends Recur
+
+    it should "be able to translate a recursive schema" in {
+        import org.hungerford.generic.schema.Default.dsl.*
+
+        val sch = Schema.derived[ Recur ]
+
+        val tapirSch : TapirSchema[ Recur ] = SchemaTranslator.translate( sch )
+
+        tapirSch.schemaType match {
+            case sc@SCoproduct( subtypes, discriminator ) =>
+                discriminator shouldBe None
+                subtypes.length shouldBe 2
+                subtypes.head.schemaType match {
+                    case SString() =>
+                    case _ =>
+                        println( tapirSch )
+                        fail( "first subtype was not a string schema" )
+                }
+                subtypes.tail.head.schemaType match {
+                    case SProduct( fields ) =>
+                        fields.length shouldBe 2
+                        fields.head.name.name shouldBe "a"
+                        fields.tail.head.name.name shouldBe "b"
+                        fields.tail.head.schema.schemaType match {
+                            case SRef( TapirSchema.SName( "Recur", Nil ) ) =>
+                            case _ =>
+                                println( tapirSch )
+                                fail( s"Not the correct schematype: ${fields.tail.head.schema.schemaType}" )
+                        }
+                    case _ =>
+                        println( tapirSch )
+                        fail( "second subtype had wrong schema" )
                 }
 
             case _ => fail( "wrong schema type!" )

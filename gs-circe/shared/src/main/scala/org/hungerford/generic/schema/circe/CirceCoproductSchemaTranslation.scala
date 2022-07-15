@@ -7,234 +7,41 @@ import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.{Schema, SchemaProvider}
 import org.hungerford.generic.schema.coproduct.CoproductShape
 import org.hungerford.generic.schema.coproduct.subtype.{LazySubtype, Subtype, TypeName}
+import org.hungerford.generic.schema.coproduct.translation.BiMapCoproductTranslation
 import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator}
 import org.hungerford.generic.schema.product.field.FieldName
 
 import scala.util.{Failure, Success, Try}
 
-trait CirceCoproductSchemaTranslation {
+trait CirceCoproductSchemaTranslation
+  extends BiMapCoproductTranslation[ Codec, Decoder, Encoder, Json, Json ] {
 
-    trait CoproductReader[ Source, R, D, DN, Trans <: Tuple ] {
-        type Out
+    def buildCoproductSchema[ T ]( enc : Encoder[ T ], dec : Decoder[ T ] ) : Codec[ T ] =
+        Codec.from( dec, enc )
 
-        def read( from : Source, subtypes : R, trans : Trans ) : Out
+    def buildCoproductDecoder[ T ](
+        decode: Json => Option[ T ]
+    ): Decoder[ T ] = Decoder.instance( cursor => decode( cursor.value ) match {
+        case None => Left( DecodingFailure( "failed", Nil ) )
+        case Some( v ) => Right( v )
+    } )
+
+    def buildCoproductEncoder[ T ]( decode: T => Json ): Encoder[ T ] =
+        Encoder.instance( decode )
+
+    given [ ST, N <: TypeName ] : SubtypeReader[ ST, N ] with {
+        def read( from : Json, subtype : Subtype.Tpe[ ST ] & Subtype.Named[ N ], schema : Decoder[ ST ] ) : Option[ ST ] =
+            schema( from.hcursor ).toOption
     }
 
-    object CoproductReader {
-        type Aux[ Source, R, D, DN, O, Trans <: Tuple ] = CoproductReader[ Source, R, D, DN, Trans ] { type Out = O }
-
-        given subtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S, Trans <: Tuple ](
-            using
-            st : RecursiveSchemaTranslator[ ST, S, Trans, Codec ],
-            vo : ValueOf[ N ],
-        ) : CoproductReader[ Json, Subtype[ T, ST, Unit, Unit, Unit, N, S ], Unit, Unit, Trans ] with {
-            type Out = Option[ T ]
-
-            override def read(
-                from: Json,
-                subtypes: Subtype[ T, ST, Unit, Unit, Unit, N, S ],
-                trans: Trans,
-            ) : subtypeReaderWithoutDiscriminator.this.Out = {
-                val decoder = st.translate( subtypes.schema, trans )
-                decoder( from.hcursor ) match {
-                    case Left( e ) =>
-                        None
-                    case Right( v ) =>
-                        if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
-                        else None
-                }
-            }
-        }
-
-        given lazySubtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S, Trans <: Tuple ](
-            using
-            sch : Schema.Aux[ ST, S ],
-            tr: TransRetriever.Aux[ Trans, ST, S, Decoder ],
-            vo: ValueOf[ N ],
-        ) : CoproductReader[ Json, LazySubtype[ T, ST, Unit, Unit, Unit, N ], Unit, Unit, Trans ] with {
-            type Out = Option[ T ]
-
-            override def read(
-                from: Json,
-                subtypes: LazySubtype[ T, ST, Unit, Unit, Unit, N ],
-                trans: Trans,
-            ) : Out = {
-                val translator = tr.getTranslator( trans ).asInstanceOf[ SchemaTranslator[ ST, S, Decoder ] ]
-                val decoder = translator.translate( subtypes.schema )
-                decoder( from.hcursor ) match {
-                    case Left( e ) =>
-                        None
-                    case Right( v ) =>
-                        if ( subtypes.validators.forall( _.isValid( v ) ) ) Some( subtypes.toSuper( v ) )
-                        else None
-                }
-            }
-        }
-
-        given subtypeReaderWithDiscriminator[ T, ST, N <: TypeName, S, D, DN <: FieldName, DV <: D & Singleton, DS, Trans <: Tuple ](
-            using
-            dsp : SchemaProvider.Aux[ D, DS ],
-            dst : SchemaTranslator[ D, DS, Codec ],
-            st : RecursiveSchemaTranslator[ ST, S, Trans, Codec ],
-            vo : ValueOf[ DN ],
-        ) : CoproductReader.Aux[ Json, Subtype[ T, ST, D, DN, DV, N, S ], D, DN, Option[ T ], Trans ] = {
-            val discrFieldName = vo.value
-            val dSch = dst.translate( dsp.provide )
-
-            new CoproductReader[ Json, Subtype[ T, ST, D, DN, DV, N, S ], D, DN, Trans ] {
-                type Out = Option[ T ]
-
-                override def read(
-                    from: Json,
-                    subtypes: Subtype[ T, ST, D, DN, DV, N, S ],
-                    trans: Trans,
-                ): Out = {
-                    from.hcursor.get[ D ]( discrFieldName )( dSch ) match {
-                        case Left( e ) =>
-                            throw e
-                        case Right( `discrFieldName` ) =>
-                            val decoder = st.translate( subtypes.schema, trans )
-                            val stValue = decoder( from.hcursor ) match {
-                                case Left( e ) =>
-                                    None
-                                case Right( v ) =>
-                                    Some( v )
-                            }
-                            stValue.map( subtypes.toSuper )
-                        case _ => None
-                    }
-                }
-            }
-        }
-
-        given emptyReader[ T, D, DN, Trans <: Tuple ] : CoproductReader[ Json, EmptyTuple, D, DN, Trans ] with {
-            type Out = Option[ T ]
-
-            override def read(
-                from: Json, subtypes: EmptyTuple, trans: Trans,
-            ) : Out = None
-        }
-
-        given tupleReader[ T, D, DN, H, Tail <: Tuple, Trans <: Tuple ](
-            using
-            h : CoproductReader.Aux[ Json, H, D, DN, Option[ T ], Trans ],
-            t : CoproductReader.Aux[ Json, Tail, D, DN, Option[ T ], Trans ],
-        ) : CoproductReader[ Json, H *: Tail, D, DN, Trans ] with {
-            type Out = Option[ T ]
-
-            override def read(
-                from: Json, subtypes: H *: Tail, trans: Trans,
-            ) : Out = {
-                h.read( from, subtypes.head, trans ) match {
-                    case res@Some( v ) =>
-                        res
-                    case _ =>
-                        t.read( from, subtypes.tail, trans )
-                }
-            }
-        }
+    given [ DV ] : DiscrReader[ DV ] with {
+        def read( from : Json, name : String, schema : Decoder[ DV ] ) : Option[ DV ] =
+            schema( from.hcursor ).toOption
     }
 
-    trait CoproductWriter[ V, R, Trans <: Tuple ] {
-        type Out
-
-        def write( value : V, informedBy : R, trans : Trans ) : Out
-    }
-
-    object CoproductWriter {
-        type Aux[ T, R, O, Trans <: Tuple ] = CoproductWriter[ T, R, Trans ] { type Out = O }
-
-        given subtypeWriter[ T, ST, D, DN, DV, N <: TypeName, STS, Trans <: Tuple ](
-            using
-            st : RecursiveSchemaTranslator[ ST, STS, Trans, Encoder ],
-            vo : ValueOf[ N ],
-        ) : CoproductWriter[ T, Subtype[ T, ST, D, DN, DV, N, STS ], Trans ] with {
-            type Out = Option[ Json ]
-
-            override def write(
-                value: T,
-                informedBy: Subtype[ T, ST, D, DN, DV, N, STS ],
-                trans: Trans,
-            ) : Out = {
-                informedBy.fromSuper( value ).map( stVal => {
-                    val encoder = st.translate( informedBy.schema, trans )
-                    encoder( stVal )
-                } )
-            }
-        }
-
-        given lazySubtypeWriter[ T, ST, D, DN, DV, N <: TypeName, STS, Trans <: Tuple ](
-            using
-            sch : Schema.Aux[ ST, STS ],
-            tr : TransRetriever.Aux[ Trans, ST, STS, Encoder ],
-            vo : ValueOf[ N ],
-        ) : CoproductWriter[ T, LazySubtype[ T, ST, D, DN, DV, N ], Trans ] with {
-            type Out = Option[ Json ]
-
-            override def write(
-                value: T,
-                informedBy: LazySubtype[ T, ST, D, DN, DV, N ],
-                trans: Trans,
-            ) : Out = {
-                informedBy.fromSuper( value ).map( stVal => {
-                    val encoder = tr.getTranslator( trans ).translate( sch )
-                    val res = encoder( stVal )
-                    res
-                } )
-            }
-        }
-
-        given emptyWriter[ T, Trans <: Tuple ] : CoproductWriter[ T, EmptyTuple, Trans ] with {
-            type Out = Option[ Json ]
-
-            override def write( value: T, informedBy : EmptyTuple, trans: Trans ): Out = None
-        }
-
-        given tupleWriter[ T, H, Tail <: Tuple, Trans <: Tuple ](
-            using
-            h : CoproductWriter.Aux[ T, H, Option[ Json ], Trans ],
-            t : CoproductWriter.Aux[ T, Tail, Option[ Json ], Trans ],
-        ) : CoproductWriter[ T, H *: Tail, Trans ] with {
-            type Out = Option[ Json ]
-
-            override def write( value: T, informedBy: H *: Tail, trans: Trans ) : Out = {
-                h.write( value, informedBy.head, trans ) match {
-                    case res@Some( _ ) => res
-                    case _ => t.write( value, informedBy.tail, trans )
-                }
-            }
-        }
-    }
-
-    given decoderTranslator[ T, R <: Tuple, RV <: Tuple, D, DN, Trans <: Tuple ](
-        using
-        reader : CoproductReader.Aux[ Json, R, D, DN, Option[ T ], RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, Decoder ] *: Trans ],
-    ) : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, Decoder ] with { self =>
-        override def translate(
-            schema: Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
-            trans : Trans,
-        ): Decoder[ T ] = {
-            ( c: HCursor ) => Try( reader.read( c.value, schema.shape.subtypeDescriptions, self *: trans ) ) match {
-                case Failure( exception : DecodingFailure ) => Left( exception )
-                case Failure( exception ) => Left( DecodingFailure.fromThrowable( exception, Nil ) )
-                case Success( value ) => value match {
-                    case Some( v ) => Right( v )
-                    case None => Left( DecodingFailure.apply( s"unable to decode any of ${schema.shape.subtypeDescriptions.size} subtypes from json", Nil ) )
-                }
-            }
-        }
-    }
-
-    given encoderTranslator[ T, R <: Tuple, RV <: Tuple, D, DN, Trans <: Tuple ](
-        using
-        writer : CoproductWriter.Aux[ T, R, Option[ Json ], RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, Encoder ] *: Trans ],
-    ) : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, Encoder ] with { self =>
-        override def translate(
-            schema: Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
-            trans : Trans,
-        ): Encoder[ T ] = {
-            ( a: T ) => writer.write( a, schema.shape.subtypeDescriptions, self *: trans ).get
-        }
+    given [ T, ST, N <: TypeName ] : SubtypeWriter[ ST, N ] with {
+        def write( value : ST, subtype : Subtype.Tpe[ ST ] & Subtype.Named[ N ], schema : Encoder[ ST ] ) : Json =
+            (schema : Encoder[ ST ])( value )
     }
 
 }

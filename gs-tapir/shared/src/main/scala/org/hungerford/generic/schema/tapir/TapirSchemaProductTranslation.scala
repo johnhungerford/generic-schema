@@ -16,6 +16,8 @@ import sttp.tapir.FieldName as TapirFieldName
 import sttp.tapir.SchemaType.SRef
 import sttp.tapir.Schema.SName
 
+import scala.util.Try
+
 import scala.reflect.ClassTag
 
 type TapirFields[ X ] = List[ SProductField[ X ] ]
@@ -79,7 +81,7 @@ trait TapirSchemaProductTranslation
         val classTag = summon[ClassTag[T]]
         TapirSchema(
             schemaType = SProduct( fields ),
-            name = Some( TapirSchema.SName( schema.name.getOrElse( classTag.runtimeClass.getSimpleName ) ) ),
+            name = schema.name.orElse(Try( classTag.runtimeClass.getSimpleName ).toOption).map( n => TapirSchema.SName( n ) ),
             isOptional = false,
             description = schema.genericDescription,
             encodedExample = schema.genericExamples.headOption,
@@ -96,7 +98,7 @@ trait TapirSchemaProductTranslation
         override def genCachedValue(
             value: Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ]
         ): (Option[ String ], String) = {
-            (value.name, summon[ ClassTag[ T ] ].runtimeClass.getSimpleName)
+            (value.name, Try( summon[ ClassTag[ T ] ].runtimeClass.getSimpleName ).getOrElse( value.name.getOrElse( "NAMELESS" ) ) )
         }
     }
 

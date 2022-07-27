@@ -14,6 +14,8 @@ import org.hungerford.generic.schema.tapir.TapirValidatorTranslation
 import org.hungerford.generic.schema.types.{ExistsFor, Partition}
 import sttp.tapir.Schema.SName
 
+import scala.util.Try
+
 import scala.reflect.ClassTag
 import scala.util.NotGiven
 
@@ -238,13 +240,13 @@ trait TapirSchemaCoproductTranslation {
             val classTag = summon[ClassTag[T]]
 
             lazy val res : TapirSchema[ T ] = {
-                val nextCache = cache.add[T]( schema.name, summon[ ClassTag[ T ] ].runtimeClass.getSimpleName ).asInstanceOf[NextCache]
+                val nextCache = cache.add[T]( schema.name, Try( summon[ ClassTag[ T ] ].runtimeClass.getSimpleName ).getOrElse( schema.name.getOrElse( "NAMELESS" ) ) ).asInstanceOf[NextCache]
                 val (subtypes, fromSuper) = cpt.translate( schema.shape.subtypeDescriptions, nextCache )
                 val discr = dt.translate( schema.shape.subtypeDescriptions )
 
                 TapirSchema(
                     schemaType = SCoproduct( subtypes, discr )( (t : T) => fromSuper( t ).map( (s : TapirSchema[_]) => SchemaWithValue[ T ]( s.asInstanceOf[ TapirSchema[ T ] ], t ) ) ),
-                    name =Some( TapirSchema.SName( schema.name.getOrElse( classTag.runtimeClass.getSimpleName ) ) ),
+                    name =  schema.name.orElse( Try( classTag.runtimeClass.getSimpleName ).toOption ).map( n => TapirSchema.SName( n ) ),
                     isOptional = false,
                     description = schema.genericDescription,
                     encodedExample = schema.genericExamples.headOption,
@@ -278,7 +280,7 @@ trait TapirSchemaCoproductTranslation {
 
             TapirSchema(
                 schemaType = SString(),
-                name = Some( TapirSchema.SName( schema.name.getOrElse( classTag.runtimeClass.getSimpleName ) ) ),
+                name = schema.name.orElse( Try( classTag.runtimeClass.getSimpleName ).toOption ).map( n => TapirSchema.SName( n ) ),
                 isOptional = false,
                 description = schema.genericDescription,
                 encodedExample = schema.genericExamples.headOption,
@@ -295,7 +297,7 @@ trait TapirSchemaCoproductTranslation {
         override def genCachedValue(
             value: Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ]
         ): (Option[ String ], String) = {
-            (value.name, summon[ ClassTag[ T ] ].runtimeClass.getSimpleName)
+            (value.name, Try( summon[ ClassTag[ T ] ].runtimeClass.getSimpleName ).getOrElse( value.name.getOrElse( "NAMELESS" ) ) )
         }
 
     }

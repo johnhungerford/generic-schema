@@ -50,7 +50,7 @@ class TapirSchemaCoproductTranslationTest
                         fail( "second subtype had wrong schema" )
                 }
                 sc.subtypeSchema( SubT2( "hello" ) ) match {
-                    case Some( SchemaWithValue( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _, _, _ ), _ ) ), =>
+                    case Some( SchemaWithValue( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _, _, _ ), _ ) ) =>
                         fields.length shouldBe 1
                         fields.head.name.name shouldBe "str"
                     case Some( _ ) => fail( "not a product!" )

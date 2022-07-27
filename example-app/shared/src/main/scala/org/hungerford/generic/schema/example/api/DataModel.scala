@@ -12,6 +12,7 @@ object DataModel {
     case object Cash extends Payment
     final case class Check( checkNumber : Int, memo : String, date : Date ) extends Payment
     case object Other extends Payment
+    case class ExRequest(req : Request) extends Payment
 
     case class Date( year : Int, month : Int )
 
@@ -28,5 +29,4 @@ object DataModel {
     case object Pending extends JobStatus
     case object Failed extends JobStatus
     case object Complete extends JobStatus
-
 }

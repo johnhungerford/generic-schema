@@ -7,9 +7,13 @@ import org.hungerford.generic.schema.circe.CirceSchemaTranslation
 
 trait Serialization {
 
+    import org.hungerford.generic.schema.Default.dsl.{*, given}
+
     import CirceSchemaTranslation.given
 
-    given requestCodec : Codec[ Request ] = SchemaTranslator.translate( DataSchema.requestSchema )
+    import DataSchema.requestSchema.givenSchema
+
+    given requestCodec : Codec[ Request ] = DataSchema.requestSchema.as[ Codec ]
 
 }
 

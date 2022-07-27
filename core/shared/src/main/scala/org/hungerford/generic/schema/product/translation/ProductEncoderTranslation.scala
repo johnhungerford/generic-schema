@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.{Field, LazyField}
-import org.hungerford.generic.schema.translation.{CI, RecursiveSchemaTranslator, SchemaCacheRetriever, SchemaTranslator}
+import org.hungerford.generic.schema.translation.{TypeCache, CI, RecursiveSchemaTranslator, TypeCacheRetriever, SchemaTranslator}
 
 import scala.collection.mutable
 import scala.compiletime.{erasedValue, error, summonInline}
@@ -18,21 +18,21 @@ trait ProductEncoderTranslation[ EncoderSch[ _ ], Sink ]
 
     def writeField[ T ]( value : T, encoder : EncoderSch[ T ] ) : Sink
 
-    inline given translateProductWriter[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Trans <: Tuple ] : RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, EncoderSch ] = {
-        type NextTrans = CI[ T, EncoderSch[ T ] ] *: Trans
-        val fieldWriter = writeFields[ T, R, NextTrans ]
+    inline given translateProductWriter[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Cache <: TypeCache ] : RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Cache, EncoderSch ] = {
+        type NextCache = TypeCache.Cached[Cache, T, EncoderSch[ T ]]
+        val fieldWriter = writeFields[ T, R, NextCache ]
         val afWriter = writeAdditionalFields[ T, AF, AFS, AFE ]
 
-        new RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Trans, EncoderSch ] { self =>
+        new RecursiveSchemaTranslator[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], Cache, EncoderSch ] { self =>
             override def translate(
                 schema: Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
-                translators: Trans,
+                cache: Cache,
             ): EncoderSch[ T ] =
                 // need to track insertion order bc mutable.ListMap doesn't work!
                 lazy val res : EncoderSch[ T ] = buildProductEncoder { ( value : T ) =>
-                    val cacheItem : CI[ T, EncoderSch[ T ] ] = CI.of[ T ]( res )
+                    val nextCache : NextCache = cache.add[ T ]( res ).asInstanceOf[NextCache]
                     val fields : mutable.Map[ String, (Int, Sink) ] = mutable.Map()
-                    fieldWriter( value, schema.shape.fieldDescriptions, fields, cacheItem *: translators )
+                    fieldWriter( value, schema.shape.fieldDescriptions, fields, nextCache )
                     afWriter( value, schema.shape.afExtractor, schema.shape.additionalFieldsSchema, fields, schema.shape.fieldNames )
                     mergeFields( fields.toList.sortBy( _._2._1 ).map( tp => tp._1 -> tp._2._2 ) )
                 }
@@ -63,45 +63,45 @@ trait ProductEncoderTranslation[ EncoderSch[ _ ], Sink ]
     }
 
     // source : T, fields : FS, target : mutable.Map[ String, Sink ] => Unit
-    inline def writeFields[ T, FS <: Tuple, Trans <: Tuple ] : (T, FS, mutable.Map[ String, (Int, Sink) ], Trans) => Unit = {
+    inline def writeFields[ T, FS <: Tuple, Cache <: TypeCache ] : (T, FS, mutable.Map[ String, (Int, Sink) ], Cache) => Unit = {
         inline erasedValue[FS] match {
-            case _ : EmptyTuple => (_: T, _: FS, _: mutable.Map[ String, (Int, Sink) ], _: Trans) => () // don't do anything
+            case _ : EmptyTuple => (_: T, _: FS, _: mutable.Map[ String, (Int, Sink) ], _: Cache) => () // don't do anything
             case _ : (headField *: next) =>
                 type HeadField = headField
                 type Next = next
-                val nextWriter = writeFields[ T, Next, Trans ]
+                val nextWriter = writeFields[ T, Next, Cache ]
                 inline erasedValue[ HeadField ] match {
                     case _ : Field[ T, f, n, s ] =>
                         type F = f
                         type N = n
                         type S = s
-                        val encTrans = summonInline[ RecursiveSchemaTranslator[ F, S, Trans, EncoderSch ] ]
-                        ( source : T, fields : FS, target : mutable.Map[ String, (Int, Sink) ], trans: Trans ) => {
+                        val encTrans = summonInline[ RecursiveSchemaTranslator[ F, S, Cache, EncoderSch ] ]
+                        ( source : T, fields : FS, target : mutable.Map[ String, (Int, Sink) ], cache: Cache ) => {
                             val fs = fields.asInstanceOf[ Field[ T, F, N, S ] *: Next ]
                             val fh = fs.head
                             val next = fs.tail
-                            val enc = encTrans.translate( fh.schema, trans )
+                            val enc = encTrans.translate( fh.schema, cache )
                             val fieldVal = fh.extractor( source )
                             val fieldSink = writeField[ F ]( fieldVal, enc )
                             target += ((fh.fieldName, (target.size, fieldSink)))
-                            nextWriter( source, next, target, trans )
+                            nextWriter( source, next, target, cache )
                         }
 
                     case _ : LazyField[ T, f, n ] =>
                         type F = f
                         type N = n
 
-                        val rt = summonInline[ SchemaCacheRetriever.Aux[ Trans, F, EncoderSch[ F ] ] ]
+                        val rt = summonInline[ TypeCacheRetriever.Aux[ Cache, F, EncoderSch[ F ] ] ]
 
-                        ( source : T, fields : FS, target : mutable.Map[ String, (Int, Sink) ], trans: Trans ) => {
+                        ( source : T, fields : FS, target : mutable.Map[ String, (Int, Sink) ], cache: Cache ) => {
                             val fs = fields.asInstanceOf[ LazyField[ T, F, N ] *: Next ]
                             val fh = fs.head
                             val next = fs.tail
-                            val enc = rt.getter( trans ).get()
+                            val enc = rt.get( cache ).get()
                             val fieldVal = fh.extractor( source )
                             val fieldSink = writeField[ F ]( fieldVal, enc )
                             target += ((fh.fieldName, (target.size, fieldSink)))
-                            nextWriter( source, next, target, trans )
+                            nextWriter( source, next, target, cache )
                         }
                 }
         }

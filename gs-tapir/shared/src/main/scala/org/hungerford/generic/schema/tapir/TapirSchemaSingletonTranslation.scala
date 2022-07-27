@@ -15,15 +15,13 @@ trait TapirSchemaSingletonTranslation {
         override def translate(
             schema: Aux[ T, SingletonShape[ T, N ] ]
         ) : TapirSchema[ T ] = TapirSchema(
-            SchemaType.SString(),
-            schema.name.map( n => TapirSchema.SName( n ) ),
-            false,
-            schema.genericDescription,
-            None,
-            None,
-            schema.genericExamples.headOption,
-            schema.deprecated,
-            TapirValidator.enumeration( List( schema.shape.value ), v => Some( schema.shape.name ) ),
+            schemaType = SchemaType.SString(),
+            name = schema.name.map( n => TapirSchema.SName( n ) ),
+            isOptional = false,
+            description = schema.genericDescription,
+            encodedExample = schema.genericExamples.headOption,
+            deprecated = schema.deprecated,
+            validator = TapirValidator.enumeration( List( schema.shape.value ), v => Some( schema.shape.name ) ),
         )
     }
 

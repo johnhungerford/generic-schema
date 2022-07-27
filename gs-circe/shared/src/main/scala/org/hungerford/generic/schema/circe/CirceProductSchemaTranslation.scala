@@ -8,11 +8,11 @@ import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.Schema.Aux
 import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.constructor.ProductConstructor
-import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, SchemaCacheRetriever}
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, TypeCache, TypeCacheRetriever}
 
 import scala.compiletime.{erasedValue, error, summonFrom, summonInline}
 import scala.collection.mutable
-import scala.util.Try
+import scala.util.{Try, Failure, Success}
 
 trait CirceProductSchemaTranslation
   extends BiMapProductTranslation[ Codec, Decoder, Encoder, Json, Json ] {
@@ -33,13 +33,13 @@ trait CirceProductSchemaTranslation
 
     def getField[ AF ](
         from: Json, fieldName: String, decoder: Decoder[ AF ]
-    ): Option[ AF ] = from.hcursor.downField( fieldName ).as[ AF ]( decoder ).toOption
+    ): Try[ AF ] = from.hcursor.downField( fieldName ).as[ AF ]( decoder ).toTry
 
     def buildProductDecoder[ T ](
-        decode: Json => Option[ T ]
+        decode: Json => Try[ T ]
     ): Decoder[ T ] = Decoder.instance( cursor => decode( cursor.value ) match {
-        case None => Left( DecodingFailure( "failed", Nil ) )
-        case Some( v ) => Right( v )
+        case Failure( e: DecodingFailure ) => Left( e )
+        case Success( v ) => Right( v )
     } )
 
     def buildProductEncoder[ T ]( decode: T => Json ): Encoder[ T ] =

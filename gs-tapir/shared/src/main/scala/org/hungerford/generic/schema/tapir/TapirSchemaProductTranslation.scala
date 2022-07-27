@@ -9,7 +9,7 @@ import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.product.field.FieldGetter.Aux
 import org.hungerford.generic.schema.product.field.{Field, FieldGetter, FieldName}
 import org.hungerford.generic.schema.product.translation.FieldBuildingProductSchemaTranslation
-import org.hungerford.generic.schema.translation.{CI, Cached, SchemaCacheRetriever}
+import org.hungerford.generic.schema.translation.{TypeCache, TypeCacheRetriever, CI, Cacher}
 import sttp.tapir.Schema as TapirSchema
 import sttp.tapir.SchemaType.{SProduct, SProductField}
 import sttp.tapir.FieldName as TapirFieldName
@@ -48,13 +48,13 @@ trait TapirSchemaProductTranslation
             }
         }
 
-    given lazyFieldAdder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Trans <: Tuple ](
+    given lazyFieldAdder[ T, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, Cache <: TypeCache ](
         using
         vt : TapirValidatorTranslation[ F ],
         ev : ProductDeconstructor.Aux[ T, R, RV ],
         fg : FieldGetter.Aux[ N, R, RV, F ],
-        rt : SchemaCacheRetriever.Aux[ Trans, F, (Option[ String ], String) ],
-    ) : LazyFieldAdder[ T, F, N, R, RV, AF, AFS, AFE, C, Trans, (Option[ String ], String) ] with {
+        rt : TypeCacheRetriever.Aux[ Cache, F, (Option[ String ], String) ],
+    ) : LazyFieldAdder[ T, F, N, R, RV, AF, AFS, AFE, C, Cache, (Option[ String ], String) ] with {
         override protected def addField(
             field: Field.OrLazy[ T, F, N ], to: TapirFields[ T ],
             informedBy: Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
@@ -68,33 +68,32 @@ trait TapirSchemaProductTranslation
     }
 
     // TODO: use type class for this
-    override def addAdditionalFields[ T, AF, AFS, AFE, R <: Tuple, RV <: Tuple, C ](
+    override def addAdditionalFields[ T : ClassTag, AF, AFS, AFE, R <: Tuple, RV <: Tuple, C ](
         additionalFields : Schema.Aux[ AF, AFS ],
         additionalFieldsTranslated : TapirSchema[ AF ],
         to : TapirFields[ T ],
         informedBy : Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
     ) : TapirFields[ T ] = to
 
-    override def build[ T ]( fields : TapirFields[ T ], schema : Schema[ T ] ) : TapirSchema[ T ] = {
+    override def build[ T : ClassTag ]( fields : TapirFields[ T ], schema : Schema[ T ] ) : TapirSchema[ T ] = {
+        val classTag = summon[ClassTag[T]]
         TapirSchema(
-            SProduct( fields ),
-            schema.name.map( n => TapirSchema.SName( n ) ),
-            false,
-            schema.genericDescription,
-            None,
-            None,
-            schema.genericExamples.headOption,
-            schema.deprecated,
-            TapirValidatorTranslation.translateValidators( schema.genericValidators )
+            schemaType = SProduct( fields ),
+            name = Some( TapirSchema.SName( schema.name.getOrElse( classTag.runtimeClass.getSimpleName ) ) ),
+            isOptional = false,
+            description = schema.genericDescription,
+            encodedExample = schema.genericExamples.headOption,
+            deprecated = schema.deprecated,
+            validator = TapirValidatorTranslation.translateValidators( schema.genericValidators )
         )
 
     }
 
-    given productCached[ Trans <: Tuple, T : ClassTag, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ] : Cached[ Trans, T ] with {
+    given productCacher[ Cache <: TypeCache, T : ClassTag, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ] : Cacher[ Cache, T ] with {
         type In = Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ]
         type Out = (Option[ String ], String)
 
-        override def cacheItem(
+        override def genCachedValue(
             value: Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ]
         ): (Option[ String ], String) = {
             (value.name, summon[ ClassTag[ T ] ].runtimeClass.getSimpleName)

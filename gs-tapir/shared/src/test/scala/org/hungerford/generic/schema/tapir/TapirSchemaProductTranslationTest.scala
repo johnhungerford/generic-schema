@@ -102,4 +102,11 @@ class TapirSchemaProductTranslationTest
         }
     }
 
+    it should "translate complex recursive schemas" in {
+        import org.hungerford.generic.schema.TestADTs.Recursive.*
+
+        val complexSch = Schema.derived[ Outer ]
+        val complexTapirSch = complexSch.as[ tapir.Schema ]
+    }
+
 }

@@ -128,6 +128,16 @@ object ProductTranslationTestSchemata {
         import org.hungerford.generic.schema.Default.dsl.*
         recursiveSchemaDerived(t[ RecursiveCoproduct ]).schema
     }
+
+    case class NestedProduct1( a: Int, b : Boolean, c : NestedProduct2 )
+    case class NestedProduct2( d : NestedProduct3, e : Double, f : String )
+    case class NestedProduct3( g : Char, h : NestedProduct4, i : Unit )
+    case class NestedProduct4( j : Double, k : Int )
+
+    val nestedProductSch = {
+        import org.hungerford.generic.schema.Default.dsl.{*, given}
+        Schema.derived[NestedProduct1]
+    }
 }
 
 import ProductTranslationTestSchemata.*
@@ -147,6 +157,7 @@ abstract class ProductJsonTranslationTest[ OtherSchema[ _ ] ](
     def osOutsideIns: OtherSchema[ Outside ]
     def osOutsideDer: OtherSchema[ Outside ]
     def osRecursiveSchemaDer: OtherSchema[ RecursiveProduct ]
+    def osNested : OtherSchema[ NestedProduct1 ]
 
     def writeJson[ T ]( value: T, schm: OtherSchema[ T ] ): String
     def readJson[ T ]( value : String, schm: OtherSchema[ T ] ): T
@@ -200,6 +211,13 @@ abstract class ProductJsonTranslationTest[ OtherSchema[ _ ] ](
         val value = RecursiveProduct( RecursiveProduct( RecursiveProduct( RecursiveProduct( Term, 2 ), 3 ), 4 ), 5 )
         readJson[ RecursiveProduct ]( correctJson, osRecursiveSchemaDer ) shouldBe value
         writeJson( value, osRecursiveSchemaDer ) shouldBe correctJson
+    }
+
+    it should "be able to translate highly nested product types" in {
+        val correctJson = """{"a":1,"b":true,"c":{"d":{"g":"i","h":{"j":0.23,"k":44},"i":{}},"e":23.04,"f":"hello"}}"""
+        val value = NestedProduct1(1, true, NestedProduct2(NestedProduct3('i', NestedProduct4(0.23, 44), ()), 23.04, "hello"))
+        readJson[ NestedProduct1 ]( correctJson, osNested ) shouldBe value
+        writeJson( value, osNested ) shouldBe correctJson
     }
 
 }

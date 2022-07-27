@@ -2,20 +2,20 @@ package org.hungerford.generic.schema.circe
 
 import io.circe.Decoder.Result
 import org.hungerford.generic.schema.singleton.SingletonShape
-import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator}
+import org.hungerford.generic.schema.translation.{TypeCache, RecursiveSchemaTranslator, SchemaTranslator}
 import org.hungerford.generic.schema.coproduct.subtype.TypeName
 import io.circe.{Codec, Decoder, DecodingFailure, Encoder, HCursor, Json}
 import org.hungerford.generic.schema.Schema.Aux
 
 trait CirceSingletonSchemaTranslation {
 
-    given singletonDecoderTrans[ T <: Singleton, N <: TypeName, Trans <: Tuple ](
+    given singletonDecoderTrans[ T <: Singleton, N <: TypeName, Cache <: TypeCache ](
         using
         strCodec : Decoder[ String ],
-    ) : RecursiveSchemaTranslator[ T, SingletonShape[ T, N ], Trans, Decoder ] with {
+    ) : RecursiveSchemaTranslator[ T, SingletonShape[ T, N ], Cache, Decoder ] with {
         override def translate(
             schema: Aux[ T, SingletonShape[ T, N ] ],
-            trans: Trans,
+            cache: Cache,
         ): Decoder[ T ] = new Decoder[ T ] {
             override def apply( c: HCursor ): Result[ T ] = c.as[ String ] match {
                 case Left( failure ) => Left( failure )
@@ -27,13 +27,13 @@ trait CirceSingletonSchemaTranslation {
         }
     }
 
-    given singletonEncoderTrans[ T <: Singleton, N <: TypeName, Trans <: Tuple ](
+    given singletonEncoderTrans[ T <: Singleton, N <: TypeName, Cache <: TypeCache ](
         using
         strCodec : Encoder[ String ],
-    ) : RecursiveSchemaTranslator[ T, SingletonShape[ T, N ], Trans, Encoder ] with {
+    ) : RecursiveSchemaTranslator[ T, SingletonShape[ T, N ], Cache, Encoder ] with {
         override def translate(
             schema: Aux[ T, SingletonShape[ T, N ] ],
-            trans: Trans,
+            cache: Cache,
         ): Encoder[ T ] = new Encoder[ T ] {
                 override def apply( a: T ): Json = strCodec( schema.shape.name )
             }

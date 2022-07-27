@@ -19,6 +19,8 @@ import scala.util.Try
 import scala.reflect.ClassTag
 import scala.util.NotGiven
 
+import ClassNameProvider.*
+
 trait TapirSchemaCoproductTranslation {
 
     trait TapirCoproductTranslator[ T, R, Cache <: TypeCache ] {
@@ -240,13 +242,13 @@ trait TapirSchemaCoproductTranslation {
             val classTag = summon[ClassTag[T]]
 
             lazy val res : TapirSchema[ T ] = {
-                val nextCache = cache.add[T]( schema.name, Try( summon[ ClassTag[ T ] ].runtimeClass.getSimpleName ).getOrElse( schema.name.getOrElse( "NAMELESS" ) ) ).asInstanceOf[NextCache]
+                val nextCache = cache.add[T]( schema.name, Try( className[T] ).getOrElse( schema.name.getOrElse( "NAMELESS" ) ) ).asInstanceOf[NextCache]
                 val (subtypes, fromSuper) = cpt.translate( schema.shape.subtypeDescriptions, nextCache )
                 val discr = dt.translate( schema.shape.subtypeDescriptions )
 
                 TapirSchema(
                     schemaType = SCoproduct( subtypes, discr )( (t : T) => fromSuper( t ).map( (s : TapirSchema[_]) => SchemaWithValue[ T ]( s.asInstanceOf[ TapirSchema[ T ] ], t ) ) ),
-                    name =  schema.name.orElse( Try( classTag.runtimeClass.getSimpleName ).toOption ).map( n => TapirSchema.SName( n ) ),
+                    name =  schema.name.orElse( Try( className[T] ).toOption ).map( n => TapirSchema.SName( n ) ),
                     isOptional = false,
                     description = schema.genericDescription,
                     encodedExample = schema.genericExamples.headOption,
@@ -267,7 +269,6 @@ trait TapirSchemaCoproductTranslation {
             schema: Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
             cache : Cache,
         ): TapirSchema[ T ] = {
-            val classTag = summon[ClassTag[T]]
             val stList : List[ (T, T => Option[ String ]) ] = schema.shape.subtypeDescriptions.toList map {
                 case Subtype( _, ComplexSchema( SingletonShape( caseName, caseValue ), _, _, _, _, _ ), _, matcher, _, _, _, _, _, _, _ ) =>
                     (caseValue.asInstanceOf[ T ], ( t : T ) => matcher.asInstanceOf[ Function1[ T, Option[ Any ] ] ]( t ).map( _ => caseName.asInstanceOf[ String ] ) )
@@ -280,7 +281,7 @@ trait TapirSchemaCoproductTranslation {
 
             TapirSchema(
                 schemaType = SString(),
-                name = schema.name.orElse( Try( classTag.runtimeClass.getSimpleName ).toOption ).map( n => TapirSchema.SName( n ) ),
+                name = schema.name.orElse( Try( className[T] ).toOption ).map( n => TapirSchema.SName( n ) ),
                 isOptional = false,
                 description = schema.genericDescription,
                 encodedExample = schema.genericExamples.headOption,
@@ -297,7 +298,7 @@ trait TapirSchemaCoproductTranslation {
         override def genCachedValue(
             value: Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ]
         ): (Option[ String ], String) = {
-            (value.name, Try( summon[ ClassTag[ T ] ].runtimeClass.getSimpleName ).getOrElse( value.name.getOrElse( "NAMELESS" ) ) )
+            (value.name, Try( className[T] ).getOrElse( value.name.getOrElse( "NAMELESS" ) ) )
         }
 
     }

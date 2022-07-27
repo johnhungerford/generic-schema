@@ -25,6 +25,7 @@ class UpickleProductTranslationTest
     def osOutsideIns: ReadWriter[ Outside ] = SchemaTranslator.translate( outsideSchUsingInside )
     def osOutsideDer: ReadWriter[ Outside ] = SchemaTranslator.translate( outsideSchemaDerived )
     def osRecursiveSchemaDer: ReadWriter[ RecursiveProduct ] = SchemaTranslator.translate( recursiveSchemaDerived )
+    def osNested: ReadWriter[ NestedProduct1 ] = SchemaTranslator.translate( nestedProductSch )
 
     def writeJson[ T ]( value : T, schm : ReadWriter[ T ] ) : String = write[ T ]( value )( schm )
     def readJson[ T ]( value : String, schm : ReadWriter[ T ] ) : T = read[ T ]( value )( schm )

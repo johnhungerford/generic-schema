@@ -33,14 +33,14 @@ trait UPickleProductTranslation
 
     def getField[ AF ](
         from: Value.Value, fieldName: String, decoder: Reader[ AF ]
-    ): Option[ AF ] =
-        Try( from( fieldName ) ).toOption flatMap { fieldValue =>
+    ): Try[ AF ] =
+        Try( from( fieldName ) ) flatMap { fieldValue =>
             given Reader[ AF ] = decoder
-            Try( read[ AF ]( fieldValue ) ).toOption
+            Try( read[ AF ]( fieldValue ) )
         }
 
     def buildProductDecoder[ T ](
-        decode: Value.Value => Option[ T ]
+        decode: Value.Value => Try[ T ]
     ): Reader[ T ] = reader[ Value.Value ].map( v => decode( v ).get )
 
     def buildProductEncoder[ T ]( decode: T => Value.Value ): Writer[ T ] =

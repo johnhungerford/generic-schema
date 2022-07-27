@@ -6,6 +6,7 @@ import org.hungerford.generic.schema.product.{ProductSchemaBuilder, ProductShape
 import org.hungerford.generic.schema.product.field.FieldReplacer
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.singleton.{SingletonSchemaBuilder, SingletonShape}
+import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.hungerford.generic.schema.validator.Validator
 
 sealed trait Schema[ T ] {
@@ -203,6 +204,11 @@ trait SchemaDsl {
         def extractSchema[ InnerT ](
             using extr: SchemaExtractor[ InnerT, Schema.Aux[ T, S ] ]
         ) : Schema.Aux[ InnerT, extr.Shape ] = extr.extract( schema )
+
+    extension [ T, S ]( schema : Schema.Aux[ T, S ] )
+        def as[ OtherSchema[ _ ] ](
+            using tr : SchemaTranslator[ T, S, OtherSchema ],
+        ) : OtherSchema[ T ] = tr.translate( schema )
 
     extension ( sch : Schema.type )
         def productBuilder[ T ] : ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ] =

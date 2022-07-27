@@ -25,6 +25,7 @@ class CirceProductSchemaTranslationTest
     def osOutsideIns: Codec[ Outside ] = SchemaTranslator.translate( outsideSchUsingInside )
     def osOutsideDer: Codec[ Outside ] = SchemaTranslator.translate( outsideSchemaDerived )
     def osRecursiveSchemaDer: Codec[ RecursiveProduct ] = SchemaTranslator.translate( recursiveSchemaDerived )
+    def osNested: Codec[ NestedProduct1 ] = SchemaTranslator.translate( nestedProductSch )
 
     def writeJson[ T ]( value : T, schm : Codec[ T ] ) : String = {
         schm( value ).noSpaces.toString

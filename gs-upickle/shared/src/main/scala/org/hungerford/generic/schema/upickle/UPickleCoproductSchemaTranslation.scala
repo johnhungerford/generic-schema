@@ -12,7 +12,8 @@ import scala.util.{Failure, Success, Try}
 import ujson.Value
 import upickle.default.{read as upkRead, write as upkWrite, *}
 
-trait UPickleCoproductSchemaTranslation extends BiMapCoproductTranslation[ ReadWriter, Reader, Writer, Value.Value, Value.Value ] {
+trait UPickleCoproductSchemaTranslation
+  extends BiMapCoproductTranslation[ ReadWriter, Reader, Writer, Value.Value, Value.Value ] {
 
     def buildCoproductSchema[ T ]( enc : Writer[ T ], dec : Reader[ T ] ) : ReadWriter[ T ] =
         ReadWriter.join( dec, enc )

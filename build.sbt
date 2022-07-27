@@ -177,7 +177,7 @@ lazy val exampleApp = ( crossProject( JSPlatform, JVMPlatform ) in file( "exampl
   )
   .jvmSettings(
       buildSettings,
-      libraryDependencies ++= tapir.value ++ tapirOpenApi ++ tapirCirce.value,
+      libraryDependencies ++= tapir.value ++ tapirCirce.value ++ tapirOpenApi ++ tapirZioHttp,
   )
   .jsSettings(
       scalaJSUseMainModuleInitializer := true,

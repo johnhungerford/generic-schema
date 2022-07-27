@@ -2,17 +2,17 @@ package org.hungerford.generic.schema.upickle
 
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.singleton.SingletonShape
-import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator}
+import org.hungerford.generic.schema.translation.{TypeCache, RecursiveSchemaTranslator, SchemaTranslator}
 import org.hungerford.generic.schema.coproduct.subtype.TypeName
-import org.hungerford.generic.schema.Schema.Aux
+import org.hungerford.generic.schema.Schema
 import ujson.Value
 import upickle.default.*
 
 trait UPickleSingletonSchemaTranslation {
 
-    given singletonDecoder[ T <: Singleton, N <: TypeName, Trans <: Tuple ] : RecursiveSchemaTranslator[ T, SingletonShape[ T, N ], Trans, Reader ] with {
+    given singletonDecoder[ T <: Singleton, N <: TypeName, Cache <: TypeCache ] : RecursiveSchemaTranslator[ T, SingletonShape[ T, N ], Cache, Reader ] with {
         override def translate(
-            schema: Schema.Aux[ T, SingletonShape[ T, N ] ], trans : Trans,
+            schema: Schema.Aux[ T, SingletonShape[ T, N ] ], cache : Cache,
         ): Reader[ T ] = {
             reader[ String ].map[ T ] { ( v : String ) =>
                 if ( v == schema.shape.name )
@@ -22,9 +22,9 @@ trait UPickleSingletonSchemaTranslation {
         }
     }
 
-    given singletonEncoder[ T <: Singleton, N <: TypeName, Trans <: Tuple ] : RecursiveSchemaTranslator[ T, SingletonShape[ T, N ], Trans, Writer ] with {
+    given singletonEncoder[ T <: Singleton, N <: TypeName, Cache <: TypeCache ] : RecursiveSchemaTranslator[ T, SingletonShape[ T, N ], Cache, Writer ] with {
         override def translate(
-            schema: Schema.Aux[ T, SingletonShape[ T, N ] ], trans : Trans,
+            schema: Schema.Aux[ T, SingletonShape[ T, N ] ], cache : Cache,
         ): Writer[ T ] = {
             readwriter[ String ].bimap[ T ](
                 ( t : T ) => schema.shape.name,

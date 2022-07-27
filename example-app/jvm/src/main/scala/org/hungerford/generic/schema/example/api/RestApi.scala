@@ -5,9 +5,9 @@ import sttp.tapir.*
 import sttp.tapir.EndpointOutput.StatusCode
 import sttp.tapir.json.circe.*
 
-import sttp.tapir.openapi.OpenAPI
+import sttp.apispec.openapi.circe.yaml._
+import sttp.apispec.openapi.OpenAPI
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
-import sttp.tapir.openapi.circe.yaml._
 
 
 object RestApi extends Serialization {

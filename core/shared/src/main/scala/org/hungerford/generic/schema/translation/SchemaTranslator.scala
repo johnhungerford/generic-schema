@@ -25,11 +25,11 @@ object SchemaTranslator {
 
     given fromRecursive[ T, S, OtherSchema[ _ ] ](
         using
-        tr : RecursiveSchemaTranslator[ T, S, EmptyTuple, OtherSchema ],
+        tr : RecursiveSchemaTranslator[ T, S, TypeCache.Empty, OtherSchema ],
     ): SchemaTranslator[ T, S, OtherSchema ] with {
         override def translate(
             schema: Aux[ T, S ]
-        ): OtherSchema[ T ] = tr.translate( schema, EmptyTuple )
+        ): OtherSchema[ T ] = tr.translate( schema, TypeCache.Empty )
     }
 
     def translate[ T, S,  OtherSchema[ _ ] ](
@@ -41,30 +41,30 @@ object SchemaTranslator {
 
 }
 
-trait RecursiveSchemaTranslator[ T, S, Trans <: Tuple, OtherSchema[ _ ] ] {
-    def translate( schema : Schema.Aux[ T, S ], translators: Trans ) : OtherSchema[ T ]
+trait RecursiveSchemaTranslator[ T, S, Cache <: TypeCache, OtherSchema[ _ ] ] {
+    def translate( schema : Schema.Aux[ T, S ], cache: Cache ) : OtherSchema[ T ]
 }
 
 object RecursiveSchemaTranslator {
-    def apply[ T, S, Trans <: Tuple, OtherSchema[ _ ] ](
-        implicit sch : RecursiveSchemaTranslator[ T, S, Trans, OtherSchema ],
-    ) : RecursiveSchemaTranslator[ T, S, Trans, OtherSchema ] = sch
+    def apply[ T, S, Cache <: TypeCache, OtherSchema[ _ ] ](
+        implicit sch : RecursiveSchemaTranslator[ T, S, Cache, OtherSchema ],
+    ) : RecursiveSchemaTranslator[ T, S, Cache, OtherSchema ] = sch
 
     /**
      * Resolves type class instances for primitive schemas
      */
-    implicit def primitiveTranslation[ T, Trans <: Tuple, OtherSchema[ _ ] ](
+    implicit def primitiveTranslation[ T, Cache <: TypeCache, OtherSchema[ _ ] ](
         using
         os : OtherSchema[ T ],
-    ) : RecursiveSchemaTranslator[ T, Unit, Trans, OtherSchema ] =
-        ( _ : Schema.Aux[ T, Unit ], _ : Trans ) => os
+    ) : RecursiveSchemaTranslator[ T, Unit, Cache, OtherSchema ] =
+        ( _ : Schema.Aux[ T, Unit ], _ : Cache ) => os
 
-    def translate[ T, S, Trans <: Tuple, OtherSchema[ _ ] ](
+    def translate[ T, S, Cache <: TypeCache, OtherSchema[ _ ] ](
         sch : Schema.Aux[ T, S ],
-        trans : Trans,
+        trans : Cache,
     )(
         using
-        recTrans : RecursiveSchemaTranslator[ T, S, Trans, OtherSchema ],
+        recTrans : RecursiveSchemaTranslator[ T, S, Cache, OtherSchema ],
     ) : OtherSchema[ T ] = recTrans.translate( sch, trans )
 
 }

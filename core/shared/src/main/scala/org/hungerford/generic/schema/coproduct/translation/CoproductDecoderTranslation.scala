@@ -5,7 +5,7 @@ import org.hungerford.generic.schema.coproduct.CoproductShape
 import org.hungerford.generic.schema.{Schema, SchemaProvider}
 import org.hungerford.generic.schema.coproduct.subtype.{LazySubtype, Subtype, TypeName}
 import org.hungerford.generic.schema.product.field.FieldName
-import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, SchemaCacheRetriever}
+import org.hungerford.generic.schema.translation.{RecursiveSchemaTranslator, SchemaTranslator, TypeCache, TypeCacheRetriever}
 
 trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
   extends WithSubtypeReader[ OtherSchema, Source ] {
@@ -14,22 +14,22 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
         decode : Source => Option[ T ],
     ) : OtherSchema[ T ]
 
-    trait CoproductReader[ T, R, D, DN, Trans <: Tuple ] {
-        def read( from : Source, subtypes : R, trans : Trans ) : Option[ T ]
+    trait CoproductReader[ T, R, D, DN, Cache <: TypeCache ] {
+        def read( from : Source, subtypes : R, cache : Cache ) : Option[ T ]
     }
 
     object CoproductReader {
-        given subtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S, Trans <: Tuple ](
+        given subtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, S, Cache <: TypeCache ](
             using
-            st : RecursiveSchemaTranslator[ ST, S, Trans, OtherSchema ],
+            st : RecursiveSchemaTranslator[ ST, S, Cache, OtherSchema ],
             str : SubtypeReader[ ST, N ],
-        ) : CoproductReader[ T, Subtype[ T, ST, Unit, Unit, Unit, N, S ], Unit, Unit, Trans ] with {
+        ) : CoproductReader[ T, Subtype[ T, ST, Unit, Unit, Unit, N, S ], Unit, Unit, Cache ] with {
             override def read(
                 from: Source,
                 subtypes: Subtype[ T, ST, Unit, Unit, Unit, N, S ],
-                trans: Trans,
+                cache: Cache,
             ) : Option[ T ] = {
-                val decoder = st.translate( subtypes.schema, trans )
+                val decoder = st.translate( subtypes.schema, cache )
                 str
                   .read( from, subtypes, decoder )
                   .flatMap { v =>
@@ -39,17 +39,17 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
             }
         }
 
-        given lazySubtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, Trans <: Tuple ](
+        given lazySubtypeReaderWithoutDiscriminator[ T, ST, N <: TypeName, Cache <: TypeCache ](
             using
-            tr: SchemaCacheRetriever.Aux[ Trans, ST, OtherSchema[ ST ] ],
+            tr: TypeCacheRetriever.Aux[ Cache, ST, OtherSchema[ ST ] ],
             str : SubtypeReader[ ST, N ],
-        ) : CoproductReader[ T, LazySubtype[ T, ST, Unit, Unit, Unit, N ], Unit, Unit, Trans ] with {
+        ) : CoproductReader[ T, LazySubtype[ T, ST, Unit, Unit, Unit, N ], Unit, Unit, Cache ] with {
             override def read(
                 from: Source,
                 subtypes: LazySubtype[ T, ST, Unit, Unit, Unit, N ],
-                trans: Trans,
+                cache: Cache,
             ) : Option[ T ] = {
-                val decoder = tr.getter( trans ).get()
+                val decoder = tr.get( cache ).get()
                 str
                   .read( from, subtypes, decoder )
                   .flatMap { v =>
@@ -59,22 +59,22 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
             }
         }
 
-        given subtypeReaderWithDiscriminator[ T, ST, N <: TypeName, S, D, DN <: FieldName, DV <: D & Singleton, DS, Trans <: Tuple ](
+        given subtypeReaderWithDiscriminator[ T, ST, N <: TypeName, S, D, DN <: FieldName, DV <: D & Singleton, DS, Cache <: TypeCache ](
             using
             dsp : SchemaProvider.Aux[ D, DS ],
             dst : SchemaTranslator[ D, DS, OtherSchema ],
-            st : RecursiveSchemaTranslator[ ST, S, Trans, OtherSchema ],
+            st : RecursiveSchemaTranslator[ ST, S, Cache, OtherSchema ],
             str : SubtypeReader[ ST, N ],
             vo : ValueOf[ DN ],
             dr : DiscrReader[ D ],
-        ) : CoproductReader[ T, Subtype[ T, ST, D, DN, DV, N, S ], D, DN, Trans ] = {
+        ) : CoproductReader[ T, Subtype[ T, ST, D, DN, DV, N, S ], D, DN, Cache ] = {
             val dSch = dst.translate( dsp.provide )
 
-            new CoproductReader[ T, Subtype[ T, ST, D, DN, DV, N, S ], D, DN, Trans ] {
+            new CoproductReader[ T, Subtype[ T, ST, D, DN, DV, N, S ], D, DN, Cache ] {
                 override def read(
                     from: Source,
                     subtypes: Subtype[ T, ST, D, DN, DV, N, S ],
-                    trans: Trans,
+                    cache: Cache,
                 ): Option[ T ] = {
                     val discrName : String = subtypes.discriminatorName
                     val discrValue : D = subtypes.discriminatorValue
@@ -82,7 +82,7 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
                     dr.read( from, discrName, dSch ) match {
                         case None => throw IllegalStateException( "" )
                         case Some( `discrValue` ) =>
-                            val decoder = st.translate( subtypes.schema, trans )
+                            val decoder = st.translate( subtypes.schema, cache )
                             str
                               .read( from, subtypes, decoder )
                               .flatMap { v =>
@@ -90,54 +90,46 @@ trait CoproductDecoderTranslation[ OtherSchema[ _ ], Source ]
                                       Some( subtypes.toSuper( v ) )
                                   else None
                               }
-                        //                            val stValue = decoder( from.hcursor ) match {
-                        //                                case Left( e ) =>
-                        //                                    None
-                        //                                case Right( v ) =>
-                        //                                    Some( v )
-                        //                            }
-                        //                            stValue.map( subtypes.toSuper )
                         case _ => None
                     }
                 }
             }
         }
 
-        given emptyReader[ T, D, DN, Trans <: Tuple ] : CoproductReader[ T, EmptyTuple, D, DN, Trans ] with {
+        given emptyReader[ T, D, DN, Cache <: TypeCache ] : CoproductReader[ T, EmptyTuple, D, DN, Cache ] with {
             override def read(
-                from: Source, subtypes: EmptyTuple, trans: Trans,
+                from: Source, subtypes: EmptyTuple, cache: Cache,
             ) : Option[ T ] = None
         }
 
-        given tupleReader[ T, D, DN, H, Tail <: Tuple, Trans <: Tuple ](
+        given tupleReader[ T, D, DN, H, Tail <: Tuple, Cache <: TypeCache ](
             using
-            h : CoproductReader[ T, H, D, DN, Trans ],
-            t : CoproductReader[ T, Tail, D, DN, Trans ],
-        ) : CoproductReader[ T, H *: Tail, D, DN, Trans ] with {
+            h : CoproductReader[ T, H, D, DN, Cache ],
+            t : CoproductReader[ T, Tail, D, DN, Cache ],
+        ) : CoproductReader[ T, H *: Tail, D, DN, Cache ] with {
             override def read(
-                from: Source, subtypes: H *: Tail, trans: Trans,
+                from: Source, subtypes: H *: Tail, cache: Cache,
             ) : Option[ T ] = {
-                h.read( from, subtypes.head, trans ) match {
+                h.read( from, subtypes.head, cache ) match {
                     case res@Some( v ) =>
                         res
                     case _ =>
-                        t.read( from, subtypes.tail, trans )
+                        t.read( from, subtypes.tail, cache )
                 }
             }
         }
     }
 
-    given decoderTranslator[ T, R <: Tuple, RV <: Tuple, D, DN, Trans <: Tuple ](
+    given decoderTranslator[ T, R <: Tuple, RV <: Tuple, D, DN, Cache <: TypeCache ](
         using
-        reader : CoproductReader[ T, R, D, DN, (() => OtherSchema[ T ]) *: Trans ],
-    ) : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Trans, OtherSchema ] with {
+        reader : CoproductReader[ T, R, D, DN, TypeCache.Cached[Cache, T, OtherSchema[T]] ],
+    ) : RecursiveSchemaTranslator[ T, CoproductShape[ T, R, RV, D, DN ], Cache, OtherSchema ] with {
         override def translate(
             schema: Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
-            trans : Trans,
+            cache : Cache,
         ): OtherSchema[ T ] = {
-            val selfCall = () => translate(schema, trans)
-            val nextTrans : (() => OtherSchema[ T ]) *: Trans = selfCall *: trans
-            buildCoproductDecoder[ T ]( source => reader.read( source, schema.shape.subtypeDescriptions, nextTrans ) )
+            val nextCache = cache.add[ T ]( translate(schema, cache ) ).asInstanceOf[ TypeCache.Cached[Cache, T, OtherSchema[T]] ]
+            buildCoproductDecoder[ T ]( source => reader.read( source, schema.shape.subtypeDescriptions, nextCache ) )
         }
     }
 

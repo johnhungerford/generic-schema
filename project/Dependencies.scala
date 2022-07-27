@@ -8,7 +8,7 @@ object Dependencies {
 
     val betterFilesVersion = "3.9.1"
 
-    val tapirVersion = "0.19.1"
+    val tapirVersion = "1.0.2"
     val circeVersion = "0.14.1"
 
     val upickleVersion = "1.4.2"
@@ -29,7 +29,11 @@ object Dependencies {
 
     val tapirOpenApi = Seq(
         "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
-        "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % tapirVersion,
+        "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1",
+    )
+
+    val tapirZioHttp = Seq(
+        "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % "1.0.2"
     )
 
     val circeCore = Def.setting( Seq(

@@ -18,7 +18,7 @@ class TapirValidatorTranslationTest extends AnyFlatSpecLike with org.scalatest.m
     translate( Validator.positiveOrZero[ Int ] ) shouldBe TapirValidator.positiveOrZero[ Int ]
     translate( Validator.negativeOrZero[ Int ] )( 0 ) shouldBe Nil
     translate( Validator.negativeOrZero[ Int ] )( -1 ) shouldBe Nil
-    translate( Validator.negativeOrZero[ Int ] )( 1 ) shouldBe List( ValidationError.Custom( 1, "value was not negative or zero", Nil ) )
+    translate( Validator.negativeOrZero[ Int ] )( 1 ).exists( _.customMessage.contains( "value was not negative or zero" ) ) shouldBe true
   }
 
   it should "translate string validators" in {
@@ -45,7 +45,7 @@ class TapirValidatorTranslationTest extends AnyFlatSpecLike with org.scalatest.m
     import TapirValidatorTranslation.translate
     translate( Validator.oneOf( "a", "b", "c" ) ) shouldBe TapirValidator.enumeration( List( "a", "b", "c" ) )
     translate( Validator.noneOf( "a", "b", "c" ) )( "d" ) shouldBe Nil
-    translate( Validator.noneOf( "a", "b", "c" ) )( "a" ) shouldBe List( ValidationError.Custom( "a", "value is excluded" ) )
+    translate( Validator.noneOf( "a", "b", "c" ) )( "a" ).exists( _.customMessage.contains( "value is excluded" ) ) shouldBe true
   }
 
   behavior of "TapirValidatorTranslation.translateValidators"

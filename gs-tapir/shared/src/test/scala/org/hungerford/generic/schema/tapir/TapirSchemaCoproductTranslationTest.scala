@@ -49,14 +49,14 @@ class TapirSchemaCoproductTranslationTest
                         fail( "second subtype had wrong schema" )
                 }
                 sc.subtypeSchema( SubT2( "hello" ) ) match {
-                    case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _ ) ) =>
+                    case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _, _, _ ) ) =>
                         fields.length shouldBe 1
                         fields.head.name.name shouldBe "str"
                     case Some( _ ) => fail( "not a product!" )
                     case None => fail( "couldn't find schema from value")
                 }
                 sc.subtypeSchema( SubT1( 234 ) ) match {
-                    case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _ ) ) =>
+                    case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _, _, _ ) ) =>
                         fields.length shouldBe 1
                         fields.head.name.name shouldBe "int"
                     case Some( _ ) => fail( "not a product!" )
@@ -143,14 +143,14 @@ class TapirSchemaCoproductTranslationTest
                         fail( "second subtype had wrong schema" )
                 }
                 sc.subtypeSchema( MC1( 234 ) ) match {
-                    case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _ ) ) =>
+                    case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _, _, _ ) ) =>
                         fields.length shouldBe 1
                         fields.head.name.name shouldBe "int"
                     case Some( _ ) => fail( "not a product!" )
                     case None => fail( "couldn't find schema from value")
                 }
                 sc.subtypeSchema( MC3( "hello" ) ) match {
-                    case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _ ) ) =>
+                    case Some( TapirSchema( SProduct( fields ), _, _, _, _, _, _, _, _, _, _ ) ) =>
                         fields.length shouldBe 1
                         fields.head.name.name shouldBe "str"
                     case Some( _ ) => fail( "not a product!" )

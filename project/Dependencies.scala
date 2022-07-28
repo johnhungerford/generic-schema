@@ -29,6 +29,7 @@ object Dependencies {
 
     val tapirOpenApi = Seq(
         "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
+        "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
         "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1",
     )
 

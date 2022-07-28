@@ -40,6 +40,7 @@ trait CirceProductSchemaTranslation
     ): Decoder[ T ] = Decoder.instance( cursor => decode( cursor.value ) match {
         case Failure( e: DecodingFailure ) => Left( e )
         case Success( v ) => Right( v )
+        case Failure( e ) => Left( DecodingFailure( e.getMessage, Nil ) )
     } )
 
     def buildProductEncoder[ T ]( decode: T => Json ): Encoder[ T ] =

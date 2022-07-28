@@ -1,10 +1,15 @@
-import org.hungerford.generic.schema.example.api.RestApi
+import org.hungerford.generic.schema.example.api.{RestApi, RestServer}
+import zhttp.service.Server
+
 import java.util.UUID
 
-object Main {
+import zio.*
+import zhttp.http._
+import zhttp.service.Server
 
-    def main( args : Array[ String ] ) : Unit = {
-        println( RestApi.docsString )
-    }
+object Main extends ZIOAppDefault {
+
+    override def run: ZIO[ Any, Any, Any ] =
+        Console.printLine(RestApi.docsString) *> Server.start(8090, RestServer.server)
 
 }

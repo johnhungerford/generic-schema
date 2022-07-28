@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.product
 
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
-import org.hungerford.generic.schema.product.field.{Field, FieldGetter, FieldName, UniqueFieldNames}
+import org.hungerford.generic.schema.product.field.{Field, FieldGetter, FieldName, LazyField, UniqueFieldNames}
 import org.hungerford.generic.schema.types.CtxWrapTuplesConstraint
 import org.hungerford.generic.schema.validator.Validator
 
@@ -52,7 +52,11 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
                 case EmptyTuple => fns
                 case Field( name, _, _, _, _, _, _, _ ) *: next =>
                     getFieldNames( next, fns + name )
-                case _ => ???
+                case LazyField(name, _, _, _, _, _, _) *: next =>
+                    getFieldNames( next, fns + name )
+                case other =>
+                    println( other )
+                    ???
             }
         }
         getFieldNames( fieldDescriptions, Set.empty )

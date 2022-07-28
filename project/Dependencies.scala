@@ -29,6 +29,7 @@ object Dependencies {
 
     val tapirOpenApi = Seq(
         "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
+        "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
         "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1",
     )
 
@@ -40,8 +41,12 @@ object Dependencies {
         "io.circe" %%% "circe-core" % circeVersion,
     ) )
 
-    val circeParser = Def.setting( Seq(
+    val circeParserTest = Def.setting( Seq(
         "io.circe" %%% "circe-parser" % circeVersion % "test",
+    ) )
+
+    val circeParser = Def.setting( Seq(
+        "io.circe" %%% "circe-parser" % circeVersion,
     ) )
 
     val upickle = Def.setting( Seq( "com.lihaoyi" %%% "upickle" % upickleVersion ) )

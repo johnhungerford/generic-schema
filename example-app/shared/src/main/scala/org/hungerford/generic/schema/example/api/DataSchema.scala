@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.example.api
 
 import org.hungerford.generic.schema.{Default, Schema}
-import org.hungerford.generic.schema.example.api.DataModel.{Date, Request}
+import org.hungerford.generic.schema.example.api.DataModel.{Date, Request, Response}
 import org.hungerford.generic.schema.tapir.TapirSchemaTranslation
 import org.hungerford.generic.schema.validator.Validator
 import org.hungerford.generic.schema.translation.SchemaTranslator
@@ -24,10 +24,22 @@ object DataSchema {
         Schema.derived[ Request ]
     } )
 
+    val responseSchema = Default.usingDsl( dsl => {
+        import dsl.{*, given}
+
+        Schema.derived[ Response ]
+    } )
+
     given TapirSchema[ Request ] = {
         import TapirSchemaTranslation.{*, given}
 
         SchemaTranslator.translate( requestSchema )
+    }
+
+    given TapirSchema[ Response ] = {
+        import TapirSchemaTranslation.{*, given}
+
+        SchemaTranslator.translate( responseSchema )
     }
 
 }

@@ -9,6 +9,11 @@ sealed trait TestCoprod
 case object Case1 extends TestCoprod
 case class Case2(value: Int) extends TestCoprod
 
+case class TestNestedProd(a: TestNestedCoprod)
+sealed trait TestNestedCoprod
+case object NestedCase1 extends TestNestedCoprod
+case class NestedCase2(b: Int) extends TestNestedCoprod
+
 class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
     import org.hungerford.generic.schema.Default.dsl.{*, given}
@@ -56,7 +61,7 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
         modifiedValue3 shouldBe TestProd( 2, "hello", true )
     }
 
-    behavior of "CoproductLens"
+    behavior of "Coproduct lens"
 
     val coprSch = Schema.derived[TestCoprod]
 
@@ -114,6 +119,45 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val modifiedValue2 = lens2.modify( Case1, coprSch, v => v.copy(value = v.value * 20) )
         modifiedValue2 shouldBe Case1
+    }
+
+    behavior of "Lens with nested selectors"
+
+    val nestSch = Schema.derived[TestNestedProd]
+
+    it should "successfully retrieve optional value across a Coproduct" in {
+        type TSC = nestSch.Shape
+
+        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple]]
+
+        val tnp = TestNestedProd(NestedCase2(2))
+
+        val retrievedValue = lens.retrieve(tnp, nestSch)
+        retrievedValue shouldBe Some(NestedCase2(2))
+
+        lens.retrieve(TestNestedProd(NestedCase1), nestSch) shouldBe None
+    }
+
+    it should "successfully modify a value across a Coproduct if the coproduct is the selected subtype" in {
+        type TSC = nestSch.Shape
+
+        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple]]
+
+        val tnp = TestNestedProd(NestedCase2(2))
+
+        val retrievedValue = lens.modify(tnp, nestSch, nc2 => nc2.copy(b = nc2.b * 50))
+        retrievedValue shouldBe TestNestedProd(NestedCase2(100))
+    }
+
+    it should "not modify a value across a Coproduct if the coproduct is the selected subtype" in {
+        type TSC = nestSch.Shape
+
+        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple]]
+
+        val tnp = TestNestedProd(NestedCase1)
+
+        val retrievedValue = lens.modify(tnp, nestSch, nc2 => nc2.copy(b = nc2.b * 50))
+        retrievedValue shouldBe tnp
     }
 
 }

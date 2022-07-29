@@ -120,9 +120,20 @@ lazy val root = ( project in file( "." ) )
       disableBuild,
   )
 
+lazy val coreMacros = ( crossProject( JSPlatform, JVMPlatform ) in file( "core-macros") )
+  .configs( IntegrationConfig, WipConfig )
+  .disablePlugins( sbtassembly.AssemblyPlugin )
+  .settings(
+      name := "core-macros",
+      commonSettings,
+      publishSettings,
+      disableBuild,
+  )
+
 lazy val core = ( crossProject( JSPlatform, JVMPlatform ) in file( "core" ) )
   .configs( IntegrationConfig, WipConfig )
   .disablePlugins( sbtassembly.AssemblyPlugin )
+  .dependsOn( coreMacros )
   .settings(
       name := "core",
       commonSettings,

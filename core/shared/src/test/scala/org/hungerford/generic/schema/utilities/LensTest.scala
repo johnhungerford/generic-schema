@@ -28,17 +28,17 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val lens = summon[Lens[TestProd, TCS, FieldSelector["a"]]]
 
-        val retrievedValue = lens.retrieve( TestProd( 2, "hello", false ), prodSch )
+        val retrievedValue = lens.retrieve( TestProd( 2, "hello", false ), prodSch.shape )
         retrievedValue shouldBe 2
 
         val lens2 = summon[Lens[TestProd, TCS, FieldSelector[1]]]
 
-        val retrievedValue2 = lens2.retrieve( TestProd( 2, "hello", false ), prodSch )
+        val retrievedValue2 = lens2.retrieve( TestProd( 2, "hello", false ), prodSch.shape )
         retrievedValue2 shouldBe "hello"
 
         val lens3 = summon[Lens[TestProd, TCS, FieldSelector["c"]]]
 
-        val retrievedValue3 = lens3.retrieve( TestProd( 2, "hello", false ), prodSch )
+        val retrievedValue3 = lens3.retrieve( TestProd( 2, "hello", false ), prodSch.shape )
         retrievedValue3 shouldBe false
     }
 
@@ -47,17 +47,17 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val lens = summon[Lens[TestProd, TCS, FieldSelector["a"]]]
 
-        val modifiedValue = lens.modify( TestProd( 2, "hello", false ), prodSch, _ + 5 )
+        val modifiedValue = lens.modify( TestProd( 2, "hello", false ), prodSch.shape, _ + 5 )
         modifiedValue shouldBe TestProd(7, "hello", false)
 
         val lens2 = summon[Lens[TestProd, TCS, FieldSelector["b"]]]
 
-        val modifiedValue2 = lens2.modify( TestProd( 2, "hello", false ), prodSch, _ + " world" )
+        val modifiedValue2 = lens2.modify( TestProd( 2, "hello", false ), prodSch.shape, _ + " world" )
         modifiedValue2 shouldBe TestProd(2, "hello world", false)
 
         val lens3 = summon[Lens[TestProd, TCS, FieldSelector["c"]]]
 
-        val modifiedValue3 = lens3.modify( TestProd( 2, "hello", false ), prodSch, !_ )
+        val modifiedValue3 = lens3.modify( TestProd( 2, "hello", false ), prodSch.shape, !_ )
         modifiedValue3 shouldBe TestProd( 2, "hello", true )
     }
 
@@ -70,12 +70,12 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case1"]]]
 
-        val retrievedValue = lens.retrieve( Case1, coprSch )
+        val retrievedValue = lens.retrieve( Case1, coprSch.shape )
         retrievedValue shouldBe Some(Case1)
 
         val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
 
-        val retrievedValue2 = lens2.retrieve( Case2(3), coprSch )
+        val retrievedValue2 = lens2.retrieve( Case2(3), coprSch.shape )
         retrievedValue2 shouldBe Some(Case2(3))
     }
 
@@ -84,12 +84,12 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case1"]]]
 
-        val retrievedValue = lens.retrieve( Case2(3), coprSch )
+        val retrievedValue = lens.retrieve( Case2(3), coprSch.shape )
         retrievedValue shouldBe None
 
         val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
 
-        val retrievedValue2 = lens2.retrieve( Case1, coprSch )
+        val retrievedValue2 = lens2.retrieve( Case1, coprSch.shape )
         retrievedValue2 shouldBe None
     }
 
@@ -98,12 +98,12 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
 
-        val modifiedValue = lens.modify( Case2(3), coprSch, _.copy(value = 10) )
+        val modifiedValue = lens.modify( Case2(3), coprSch.shape, _.copy(value = 10) )
         modifiedValue shouldBe Case2(10)
 
         val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
 
-        val modifiedValue2 = lens2.modify( Case2(3), coprSch, v => v.copy(value = v.value * 20) )
+        val modifiedValue2 = lens2.modify( Case2(3), coprSch.shape, v => v.copy(value = v.value * 20) )
         modifiedValue2 shouldBe Case2(60)
     }
 
@@ -112,12 +112,12 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
 
-        val modifiedValue = lens.modify( Case1, coprSch, _.copy(value = 10) )
+        val modifiedValue = lens.modify( Case1, coprSch.shape, _.copy(value = 10) )
         modifiedValue shouldBe Case1
 
         val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
 
-        val modifiedValue2 = lens2.modify( Case1, coprSch, v => v.copy(value = v.value * 20) )
+        val modifiedValue2 = lens2.modify( Case1, coprSch.shape, v => v.copy(value = v.value * 20) )
         modifiedValue2 shouldBe Case1
     }
 
@@ -132,10 +132,10 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val tnp = TestNestedProd(NestedCase2(2))
 
-        val retrievedValue = lens.retrieve(tnp, nestSch)
+        val retrievedValue = lens.retrieve(tnp, nestSch.shape)
         retrievedValue shouldBe Some(NestedCase2(2))
 
-        lens.retrieve(TestNestedProd(NestedCase1), nestSch) shouldBe None
+        lens.retrieve(TestNestedProd(NestedCase1), nestSch.shape) shouldBe None
     }
 
     it should "successfully modify a value across a Coproduct if the coproduct is the selected subtype" in {
@@ -145,7 +145,7 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val tnp = TestNestedProd(NestedCase2(2))
 
-        val retrievedValue = lens.modify(tnp, nestSch, nc2 => nc2.copy(b = nc2.b * 50))
+        val retrievedValue = lens.modify(tnp, nestSch.shape, nc2 => nc2.copy(b = nc2.b * 50))
         retrievedValue shouldBe TestNestedProd(NestedCase2(100))
     }
 
@@ -156,7 +156,7 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
 
         val tnp = TestNestedProd(NestedCase1)
 
-        val retrievedValue = lens.modify(tnp, nestSch, nc2 => nc2.copy(b = nc2.b * 50))
+        val retrievedValue = lens.modify(tnp, nestSch.shape, nc2 => nc2.copy(b = nc2.b * 50))
         retrievedValue shouldBe tnp
     }
 

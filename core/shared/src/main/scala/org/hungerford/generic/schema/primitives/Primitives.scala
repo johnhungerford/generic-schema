@@ -1,6 +1,10 @@
 package org.hungerford.generic.schema.primitives
 
-import org.hungerford.generic.schema.{Primitive, PrimitiveSchemaBuilder}
+import org.hungerford.generic.schema
+import org.hungerford.generic.schema.coproduct.CoproductSchemaBuilder
+import org.hungerford.generic.schema.product.ProductSchemaBuilder
+import org.hungerford.generic.schema.types.TypeName
+import org.hungerford.generic.schema.{Primitive, PrimitiveSchemaBuilder, Schema, SchemaProvider}
 
 object Primitives {
 
@@ -24,4 +28,25 @@ object Primitives {
     .description( s"Text" )
     .build
 
+  transparent inline given optionSchema[ T, TS ](
+      using
+      inner: Schema.Aux[ T, TS ],
+      tn: TypeName[ T ],
+  ) : Schema[ Option[ T ] ] = {
+      val sch = CoproductSchemaBuilder.empty[ Option[ T ] ]
+        .description( s"Optional value of ${ inner.name.getOrElse( "(unnamed inner type)" ) }" )
+        .buildSubtype[ None.type ](
+            _.typeName( "Empty" ).fromSuper( { case None => Some( None ); case _ => None } ).singleton.build
+        )
+        .buildSubtype[ T ](
+            _.typeName[ tn.Name ]( tn.name )
+              .fromSuper( { case Some( t ) => Some( t ); case _ => None } )
+              .toSuper( t => Some( t ) )
+              .fromSchema[ TS ]
+              .build
+        )
+        .build
+
+      sch
+  }
 }

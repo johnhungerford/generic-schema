@@ -406,8 +406,8 @@ val value2 = value1.convert[Coproduct2]
 
 #### Lens
 
-The utilities dsl provides an extension method `select` method that allows you to select a component from a value and 
-either retrieve the component or modify it.
+The utilities dsl provides an extension method `select` method on any value with a given schema in scope 
+that allows you to select a component from a value and either retrieve the component or modify it.
 
 ```scala
 import org.hungerford.generic.schema.Default.dsl.*

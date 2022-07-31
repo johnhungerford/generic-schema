@@ -371,3 +371,68 @@ val updatedHttpRequestSchema =
 // defined above, and extract its schema
 val updatedHttpMethodSchema = updatedHttpRequestSchema("method").schema
 ```
+
+### Utilities
+
+In addition to deriving third party codecs, generic schemas can be used for migrations and lenses.
+
+#### Migration
+
+The utilities dsl provides an extension method `convert[B]` that will convert a value into an instance of `B` as 
+long as `B` is isomorphic to it. There will need to be a given schema in scope for both types. The order of product 
+fields and coproduct subtypes must align for both schemas.
+
+```scala
+import org.hungerford.generic.schema.Default.dsl.*
+import org.hungerford.generic.schema.utilties.dsl.*
+
+sealed trait Coproduct1
+case object Subt1A
+case class Subt1B(a: Int, b: Boolean, c: String)
+
+// Isomorphic type
+enum Coproduct2:
+    case Subt2A
+    case Subt2B(int: Int, bool: Boolean, string: String)
+
+val sch1 = Schema.derived[Coproduct1]
+val sch2 = Schema.derived[Coproduct2]
+import sch1.givenSchema, sch2.givenSchema
+
+val value1: Coproduct1 = Subt1B(5, true, "hello")
+val value2 = value1.convert[Coproduct2]
+// value2: Coproduct2 = Subt2B(5, true, "hello")
+```
+
+#### Lens
+
+The utilities dsl provides an extension method `select` method that allows you to select a component from a value and 
+either retrieve the component or modify it.
+
+```scala
+import org.hungerford.generic.schema.Default.dsl.*
+import org.hungerford.generic.schema.utilties.dsl.*
+
+sealed trait Coprod
+case object Subt1 extends Coproduct
+case class Subt2(a: Int, b: Boolean, c: Prod) extends Coproduct
+case class Prod(dbl: Double, chr: Char)
+
+val sch1 = Schema.derived[Prod]
+import sch1.givenSchema
+val sch2 = Schema.derived[Coprod]
+import sch2.givenSchema
+
+val value1: Prod = Prod(0.234, 'X')
+println(value1.select("chr").retrieve)
+// 'X'
+println(value1.select("dbl").modify(_ + 10))
+// Prod(10.234, 'X')
+
+val value2 : Coprod = Subt2(25, true, Prod(0.234, 'X'))
+println(value2.select("Subt2" / "c" / "chr").retreive)
+// Some('X')
+// (returns an option because it's retrieved across a coproduct)
+println(value2.select("Subt2" / "c" / "dbl").modify(_ + 10))
+// Subt2(25, true, Prod(10.234, 'X'))
+```

@@ -299,7 +299,7 @@ entry in the above open api spec is missing an `additionalProperties` schema.
 
 ### Automatic derivation
 
-Schemas can be derived, or derived and then built
+Schemas can be derived, as can schema builders so that you can edit the derived schema:
 
 ```scala
 import org.hungerford.generic.schema.Default.dsl.*
@@ -322,7 +322,7 @@ Convert a derived product to an open product:
 // open product
 val userDataSchema = Schema.derivedBuilder[UserData]
   .removeField("userData")
-  .additionalFields[String].primitive
+  .additionalFields[String].primitive(_.userData)
   .construct(((id, name), af) => UserData(id, name, af))
   .build
 ```

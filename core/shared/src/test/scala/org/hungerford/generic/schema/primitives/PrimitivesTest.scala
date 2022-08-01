@@ -9,11 +9,13 @@ class PrimitivesTest extends AnyFlatSpecLike with org.scalatest.matchers.should.
     behavior of "Option"
 
     it should "resolve a schema for option" in {
+        import org.hungerford.generic.schema.Default.dsl.*
         import org.hungerford.generic.schema.primitives.Primitives.given
 
-        import scala.deriving.Mirror
-//        val intMirror = summon[Mirror { type MirroredMonoType = Int }]
-//        summon[ValueOf[intMirror.MirroredLabel]]
+        case class TestOpt(i: Option[Int])
+        val toSch = Schema.derived[TestOpt]
+        val optSch = toSch("i").schema
+        optSch.shape.subtypeDescriptions.tail.head.typeName shouldBe "Type"
     }
 
 }

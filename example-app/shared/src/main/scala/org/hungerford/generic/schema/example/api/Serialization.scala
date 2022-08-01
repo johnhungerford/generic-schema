@@ -18,29 +18,6 @@ trait Serialization {
 
     given responseCodec : Codec[ Response ] = DataSchema.responseSchema.as[ Codec ]
 
-    val requestExample = requestCodec.decodeJson( parse("""{
-                                                          |	"name": "John Hungerford",
-                                                          |	"id": "my-id",
-                                                          |	"amount": 23423,
-                                                          |	"payment": {
-                                                          |		"number": 123,
-                                                          |		"expDat": {
-                                                          |			"req": {
-                                                          |	"name": "John Hungerford",
-                                                          |	"id": "my-id",
-                                                          |	"amount": 23423,
-                                                          |	"payment": {
-                                                          |		"number": 123,
-                                                          |		"expDat": {
-                                                          |			"year": 2020,
-                                                          |			"month": 6
-                                                          |		}
-                                                          |	}
-                                                          |}
-                                                          |	}
-                                                          |}
-                                                          |}""".stripMargin).toTry.get )
-
 }
 
 object Serialization extends Serialization

@@ -6,6 +6,9 @@ import org.hungerford.generic.schema.product.ProductSchemaBuilder
 import org.hungerford.generic.schema.types.TypeName
 import org.hungerford.generic.schema.{Primitive, PrimitiveSchemaBuilder, Schema, SchemaProvider}
 
+import scala.compiletime.summonInline
+import scala.reflect.ClassTag
+
 object Primitives {
 
   given intSchema : Primitive[ Int ] = PrimitiveSchemaBuilder[ Int ]
@@ -28,25 +31,50 @@ object Primitives {
     .description( s"Text" )
     .build
 
-  transparent inline given optionSchema[ T, TS ](
+  transparent inline given someSchema[ T : ClassTag, TS ](
       using
       inner: Schema.Aux[ T, TS ],
-      tn: TypeName[ T ],
-  ) : Schema[ Option[ T ] ] = {
-      val sch = CoproductSchemaBuilder.empty[ Option[ T ] ]
-        .description( s"Optional value of ${ inner.name.getOrElse( "(unnamed inner type)" ) }" )
-        .buildSubtype[ None.type ](
-            _.typeName( "Empty" ).fromSuper( { case None => Some( None ); case _ => None } ).singleton.build
-        )
-        .buildSubtype[ T ](
-            _.typeName[ tn.Name ]( tn.name )
-              .fromSuper( { case Some( t ) => Some( t ); case _ => None } )
-              .toSuper( t => Some( t ) )
-              .fromSchema[ TS ]
+  ): Schema[ Some[ T ] ] = {
+      val ct = summon[ClassTag[T]]
+      val tName = ct.runtimeClass.getName.split("""\.""").lastOption.getOrElse( "T" )
+        .split("""\$""").lastOption.getOrElse( "T" )
+      ProductSchemaBuilder[ Some[ T ] ]
+        .name(s"Some[$tName]")
+        .description( s"Presence of optional value of type ${ inner.name.getOrElse( tName ) }" )
+        .buildField[ T ](
+            _.name( "value" )
+              .extractor( _.value )
+              .fromSchema( inner )
               .build
-        )
+         )
+        .construct( value => Some( value ) )
         .build
+  }
 
-      sch
+  transparent inline given optionSchema[ T : ClassTag, TS ](
+      using
+      inner: Schema.Aux[ T, TS ],
+  ) : Schema[ Option[ T ] ] = {
+      val ct = summon[ClassTag[T]]
+      val tName = ct.runtimeClass.getName.split("""\.""").lastOption.getOrElse( "T" )
+        .split("""\$""").lastOption.getOrElse( "T" )
+      inline summonInline[Schema[Some[T]]] match {
+          case someSch : Schema.Aux[Some[T], sts] =>
+              type STS = sts
+              CoproductSchemaBuilder.empty[ Option[ T ] ]
+                .name(s"Option[$tName]")
+                .description( s"Optional value of ${ inner.name.getOrElse( tName ) }" )
+                .buildSubtype[ None.type ](
+                    _.typeName( "Empty" ).fromSuper( { case None => Some( None ); case _ => None } ).singleton.build
+                 )
+                .buildSubtype[ Some[ T ] ](
+                    _.typeName( "NonEmpty" )
+                      .fromSuper( { case Some( t ) => Some( Some( t ) ); case _ => None } )
+                      .toSuper( t => t )
+                      .fromSchema[STS](using someSch)
+                      .build
+                    )
+                .build
+      }
   }
 }

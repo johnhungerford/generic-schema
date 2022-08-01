@@ -11,6 +11,7 @@ object DataSchema {
 
     val requestSchema = Default.usingDsl( dsl => {
         import dsl.{*, given}
+        import org.hungerford.generic.schema.primitives.Primitives.given
 
         val dateSch = Schema.derived[ Date ]
           .modifyComponent( "year" )(
@@ -26,6 +27,7 @@ object DataSchema {
 
     val responseSchema = Default.usingDsl( dsl => {
         import dsl.{*, given}
+        import org.hungerford.generic.schema.primitives.Primitives.given
 
         Schema.derived[ Response ]
     } )

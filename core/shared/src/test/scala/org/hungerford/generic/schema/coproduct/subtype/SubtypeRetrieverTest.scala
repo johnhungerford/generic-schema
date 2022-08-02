@@ -8,7 +8,7 @@ class SubtypeRetrieverTest extends AnyFlatSpecLike with org.scalatest.matchers.s
 
     behavior of "SubtypeRetriever"
 
-    import org.hungerford.generic.schema.Default.dsl.*
+    import generic.schema.exports.*
 
     sealed trait SuperT
     final case class SubT1() extends SuperT

@@ -5,7 +5,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.hungerford.generic.schema.Schema
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 import sttp.tapir
 import sttp.tapir.Schema as TapirSchema
 import sttp.tapir.Schema.SName

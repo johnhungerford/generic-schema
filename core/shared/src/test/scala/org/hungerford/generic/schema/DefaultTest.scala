@@ -14,7 +14,7 @@ class DefaultTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Mat
     case class Outer( inner : Inner )
 
     it should "do everything I want it to" in {
-        import Default.dsl.{given, *}
+        import generic.schema.exports.{given, *}
 
         val sch1 = Schema.derivedBuilder[ Outer ].build
         Schema.productBuilder[ Outer ]

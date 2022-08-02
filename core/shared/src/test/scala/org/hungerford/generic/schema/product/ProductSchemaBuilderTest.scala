@@ -7,7 +7,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.hungerford.generic.schema.selector.Selector
 
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 
 class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 

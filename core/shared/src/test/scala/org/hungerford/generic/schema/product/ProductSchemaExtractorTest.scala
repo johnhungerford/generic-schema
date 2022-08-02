@@ -7,7 +7,7 @@ class ProductSchemaExtractorTest extends AnyFlatSpecLike with org.scalatest.matc
 
     case class TC( int : Int, str : String )
 
-    import org.hungerford.generic.schema.Default.dsl.*
+    import generic.schema.exports.*
 
     it should "extract a schema from field descriptions" in {
         val tcSch = Schema.derived[ TC ]

@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.translation
 
 import org.hungerford.generic.schema.translation.SchemaTranslator
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{Default, Schema}
+import org.hungerford.generic.schema.{Schema}
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 import scala.util.Try
@@ -27,7 +27,7 @@ abstract class CoproductJsonTranslationTest[ OtherSchema[ _ ] ](
     boolSch: OtherSchema[ Boolean ],
 ) extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
-    import Default.dsl.*
+    import generic.schema.exports.*
 
     val subt1Sch = Schema.derived[ SubT1 ]
     import subt1Sch.givenSchema

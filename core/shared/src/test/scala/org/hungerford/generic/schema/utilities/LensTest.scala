@@ -16,7 +16,7 @@ case class NestedCase2(b: Int) extends TestNestedCoprod
 
 class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
-    import org.hungerford.generic.schema.Default.dsl.{*, given}
+    import generic.schema.exports.{*, given}
 
     behavior of "Product lens"
 
@@ -26,17 +26,17 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "retrieve a product field value successfully" in {
         type TCS = prodSch.Shape
 
-        val lens = summon[Lens[TestProd, TCS, FieldSelector["a"]]]
+        val lens = summon[Lens[TestProd, TCS, FieldSelector["a"], TestProd]]
 
         val retrievedValue = lens.retrieve( TestProd( 2, "hello", false ), prodSch.shape )
         retrievedValue shouldBe 2
 
-        val lens2 = summon[Lens[TestProd, TCS, FieldSelector[1]]]
+        val lens2 = summon[Lens[TestProd, TCS, FieldSelector[1], TestProd]]
 
         val retrievedValue2 = lens2.retrieve( TestProd( 2, "hello", false ), prodSch.shape )
         retrievedValue2 shouldBe "hello"
 
-        val lens3 = summon[Lens[TestProd, TCS, FieldSelector["c"]]]
+        val lens3 = summon[Lens[TestProd, TCS, FieldSelector["c"], TestProd]]
 
         val retrievedValue3 = lens3.retrieve( TestProd( 2, "hello", false ), prodSch.shape )
         retrievedValue3 shouldBe false
@@ -45,17 +45,17 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "modify a product field value successfully" in {
         type TCS = prodSch.Shape
 
-        val lens = summon[Lens[TestProd, TCS, FieldSelector["a"]]]
+        val lens = summon[Lens[TestProd, TCS, FieldSelector["a"], TestProd]]
 
         val modifiedValue = lens.modify( TestProd( 2, "hello", false ), prodSch.shape, _ + 5 )
         modifiedValue shouldBe TestProd(7, "hello", false)
 
-        val lens2 = summon[Lens[TestProd, TCS, FieldSelector["b"]]]
+        val lens2 = summon[Lens[TestProd, TCS, FieldSelector["b"], TestProd]]
 
         val modifiedValue2 = lens2.modify( TestProd( 2, "hello", false ), prodSch.shape, _ + " world" )
         modifiedValue2 shouldBe TestProd(2, "hello world", false)
 
-        val lens3 = summon[Lens[TestProd, TCS, FieldSelector["c"]]]
+        val lens3 = summon[Lens[TestProd, TCS, FieldSelector["c"], TestProd]]
 
         val modifiedValue3 = lens3.modify( TestProd( 2, "hello", false ), prodSch.shape, !_ )
         modifiedValue3 shouldBe TestProd( 2, "hello", true )
@@ -68,12 +68,12 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "retrieve a coproduct subtype value as Some[T] when the coproduct is that subtype" in {
         type TCS = coprSch.Shape
 
-        val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case1"]]]
+        val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case1"], TestCoprod]]
 
         val retrievedValue = lens.retrieve( Case1, coprSch.shape )
         retrievedValue shouldBe Some(Case1)
 
-        val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
+        val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"], TestCoprod]]
 
         val retrievedValue2 = lens2.retrieve( Case2(3), coprSch.shape )
         retrievedValue2 shouldBe Some(Case2(3))
@@ -82,12 +82,12 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "retrieve a coproduct subtype value as None when the coproduct is not that subtype" in {
         type TCS = coprSch.Shape
 
-        val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case1"]]]
+        val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case1"], TestCoprod]]
 
         val retrievedValue = lens.retrieve( Case2(3), coprSch.shape )
         retrievedValue shouldBe None
 
-        val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
+        val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"], TestCoprod]]
 
         val retrievedValue2 = lens2.retrieve( Case1, coprSch.shape )
         retrievedValue2 shouldBe None
@@ -96,12 +96,12 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "modify a coproduct when the coproduct is the selected subtype" in {
         type TCS = coprSch.Shape
 
-        val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
+        val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"], TestCoprod]]
 
         val modifiedValue = lens.modify( Case2(3), coprSch.shape, _.copy(value = 10) )
         modifiedValue shouldBe Case2(10)
 
-        val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
+        val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"], TestCoprod]]
 
         val modifiedValue2 = lens2.modify( Case2(3), coprSch.shape, v => v.copy(value = v.value * 20) )
         modifiedValue2 shouldBe Case2(60)
@@ -110,12 +110,12 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "not modify a coproduct when the coproduct is not the selected subtype" in {
         type TCS = coprSch.Shape
 
-        val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
+        val lens = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"], TestCoprod]]
 
         val modifiedValue = lens.modify( Case1, coprSch.shape, _.copy(value = 10) )
         modifiedValue shouldBe Case1
 
-        val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"]]]
+        val lens2 = summon[Lens[TestCoprod, TCS, SubTypeSelector["Case2"], TestCoprod]]
 
         val modifiedValue2 = lens2.modify( Case1, coprSch.shape, v => v.copy(value = v.value * 20) )
         modifiedValue2 shouldBe Case1
@@ -128,7 +128,7 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "successfully retrieve optional value across a Coproduct" in {
         type TSC = nestSch.Shape
 
-        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple]]
+        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple, TestNestedProd]]
 
         val tnp = TestNestedProd(NestedCase2(2))
 
@@ -141,7 +141,7 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "successfully modify a value across a Coproduct if the coproduct is the selected subtype" in {
         type TSC = nestSch.Shape
 
-        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple]]
+        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple, TestNestedProd]]
 
         val tnp = TestNestedProd(NestedCase2(2))
 
@@ -152,12 +152,43 @@ class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matche
     it should "not modify a value across a Coproduct if the coproduct is the selected subtype" in {
         type TSC = nestSch.Shape
 
-        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple]]
+        val lens = summon[Lens[TestNestedProd, TSC, FieldSelector["a"] *: SubTypeSelector["NestedCase2"] *: EmptyTuple, TestNestedProd]]
 
         val tnp = TestNestedProd(NestedCase1)
 
         val retrievedValue = lens.modify(tnp, nestSch.shape, nc2 => nc2.copy(b = nc2.b * 50))
         retrievedValue shouldBe tnp
+    }
+
+    behavior of "Lens for recursive data types"
+
+    val recSch = Schema.derived[RecCoprA]
+
+    it should "successfully retrieve a nested recursive value" in {
+        import generic.schema.utilities.*
+
+        import recSch.givenSchema
+
+        val recVal : RecCoprA = InnerA(25, RecProdA(InnerA(30, ExtTermA)))
+        recVal.select(subtype("InnerA") /- "b" /~ "RecProdA" /- "inner" /- "b").retrieve shouldBe Some(Some(ExtTermA))
+    }
+
+    it should "successfully modify a nested recursive value" in {
+        import generic.schema.utilities.*
+
+        import recSch.givenSchema
+
+        val recVal : RecCoprA = InnerA(25, RecProdA(InnerA(30, ExtTermA)))
+        recVal.select(subtype("InnerA") /- "b" /~ "RecProdA" /- "inner" /- "a").modify(_ * 100) shouldBe InnerA(25, RecProdA(InnerA(3000, ExtTermA)))
+    }
+
+    it should "not modify a nested recursive value across a coproduct if the coproduct is not the selected subtype" in {
+        import generic.schema.utilities.*
+
+        import recSch.givenSchema
+
+        val recVal : RecCoprA = RecCoprTermA
+        recVal.select(subtype("InnerA") /- "b" /~ "RecProdA" /- "inner" /- "a").modify(_ * 100) shouldBe RecCoprTermA
     }
 
 }

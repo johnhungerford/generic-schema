@@ -5,7 +5,7 @@ import org.hungerford.generic.schema.product.field.{Field, FieldBuilder, LazyFie
 import org.hungerford.generic.schema.types.Contains
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 import org.hungerford.generic.schema.coproduct.subtype.LazySubtype
 import org.hungerford.generic.schema.test.tags.WipTest
 

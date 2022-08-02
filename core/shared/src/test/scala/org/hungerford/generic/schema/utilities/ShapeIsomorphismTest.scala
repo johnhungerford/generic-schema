@@ -13,6 +13,20 @@ case object SubtB1 extends CoprB
 case object SubtB2 extends CoprB
 case class SubtB3(e: Int, f: Double) extends CoprB
 
+sealed trait RecCoprA
+case object RecCoprTermA extends RecCoprA
+case class InnerA(a: Int, b: ExternalA) extends RecCoprA
+sealed trait ExternalA
+case object ExtTermA extends ExternalA
+case class RecProdA(inner: InnerA) extends ExternalA
+
+sealed trait RecCoprB
+case object RecCoprTermB extends RecCoprB
+case class InnerB(a: Int, b: ExternalB) extends RecCoprB
+sealed trait ExternalB
+case object ExtTermB extends ExternalB
+case class RecProdB(inner: InnerB) extends ExternalB
+
 class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
     behavior of "Product Isomorphism"
@@ -20,14 +34,14 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     case class Prod1(a: Int, b: Boolean, c: Double)
     case class Prod2(d: Int, e: Boolean, f: Double)
 
-    val p1Sch = org.hungerford.generic.schema.Default.usingDsl(dsl => {
-        import dsl.{*, given}
+    val p1Sch = {
+        import generic.schema.exports.{*, given}
         Schema.derived[Prod1]
-    })
-    val p2Sch = org.hungerford.generic.schema.Default.usingDsl(dsl => {
-        import dsl.{*, given}
+    }
+    val p2Sch = {
+        import generic.schema.exports.{*, given}
         Schema.derived[Prod2]
-    })
+    }
 
     it should "convert a primitive to itself" in {
        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
@@ -38,7 +52,7 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     }
 
     it should "use a field to convert a type" in {
-        import org.hungerford.generic.schema.Default.dsl.{*, given}
+        import generic.schema.exports.{*, given}
 
         case object T1
         case object T2
@@ -52,7 +66,7 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         type F1S = f1Sch.Shape
         type F2S = f2Sch.Shape
 
-        val iso = summon[ShapeIsomorphism.Aux[T1.type, F1S, T2.type, F2S]]
+        val iso = summon[ShapeIsomorphism.Aux[T1.type, F1S, T1.type, T2.type, F2S, T2.type ]]
         iso.convertForward(T1, f1Sch.shape, f2Sch.shape) shouldBe T2
         iso.convertBackward(T2, f1Sch.shape, f2Sch.shape) shouldBe T1
     }
@@ -70,8 +84,8 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     case class AFPr2(d: String, e: Boolean, f: Map[String, Int])
 
     it should "convert a case class instance to another case class of the same shape using product shape with additional fields, even if additional fields are in different places" in {
-        val (afSch1, afSch2) = org.hungerford.generic.schema.Default.usingDsl(dsl => {
-            import dsl.{*, given}
+        val (afSch1, afSch2) = {
+            import generic.schema.exports.{*, given}
             val afs1 = Schema.productBuilder[AFPr1]
               .additionalFields[Int].primitive(_.a)
               .buildField[String](_.name("b").extractor(_.b).primitive.build)
@@ -87,7 +101,7 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
               .build
 
             (afs1, afs2)
-        })
+        }
 
         import afSch1.givenSchema
         import afSch2.givenSchema
@@ -100,12 +114,12 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     behavior of "Coproduct Isomorphism"
 
     it should "convert a coproduct" in {
-        val (cprASch, cprBSch) = org.hungerford.generic.schema.Default.usingDsl(dsl => {
-            import dsl.{*, given}
+        val (cprASch, cprBSch) = {
+            import generic.schema.exports.*
             val schA = Schema.derived[CoprA]
             val schB = Schema.derived[CoprB]
             (schA, schB)
-        })
+        }
 
         import cprASch.givenSchema
         import cprBSch.givenSchema
@@ -116,6 +130,21 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         iso.convertBackward(SubtB2) shouldBe SubtA2
         iso.convertForward(SubtA3(5, 0.232)) shouldBe SubtB3(5, 0.232)
         iso.convertBackward(SubtB3(5, 0.232)) shouldBe SubtA3(5, 0.232)
+    }
+
+    behavior of "Recursive Isomorphism"
+
+    it should "be able to convert to and from recursive, isomorphic data types" in {
+        val (recSchA, recSchB) = {
+            import generic.schema.exports.*
+            (Schema.derived[RecCoprA], Schema.derived[RecCoprB])
+        }
+
+        import recSchA.givenSchema, recSchB.givenSchema
+
+        import generic.schema.utilities.*
+        val coprA : RecCoprA = InnerA(23, ExtTermA)
+        coprA.convert[RecCoprB] shouldBe InnerB(23, ExtTermB)
     }
 
 }

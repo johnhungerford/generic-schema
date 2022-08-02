@@ -4,7 +4,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 
 class FieldDescriptionTest extends AnyFlatSpecLike with Matchers {
 

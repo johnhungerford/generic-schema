@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema.example.api
 
 import org.hungerford.generic.schema.validator.Validator
-import org.hungerford.generic.schema.{Default, Schema}
+import org.hungerford.generic.schema.{Schema}
 
 object DataModel {
 

@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers
 
 import org.hungerford.generic.schema.Schema
 
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 
 class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
 

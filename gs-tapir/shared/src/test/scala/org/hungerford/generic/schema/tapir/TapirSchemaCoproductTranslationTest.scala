@@ -23,7 +23,7 @@ class TapirSchemaCoproductTranslationTest
     final case class SubT2( str : String ) extends SuperT
 
     it should "translate a coproduct schema into an SCoproduct schema type with the correct subtype schemas and correct subtype schema function" in {
-        import org.hungerford.generic.schema.Default.dsl.*
+        import generic.schema.exports.*
 
         val sch = Schema.derived[ SuperT ]
 
@@ -73,7 +73,7 @@ class TapirSchemaCoproductTranslationTest
     case object Val3 extends StringEnum
 
     it should "translate a sealed trait of case objects as a single string enum" in {
-        import org.hungerford.generic.schema.Default.dsl.*
+        import generic.schema.exports.*
 
         val sch = Schema.derived[ StringEnum ]
 
@@ -106,7 +106,7 @@ class TapirSchemaCoproductTranslationTest
     case object MC4 extends MixedCoproduct
 
     it should "translate a with singleton and non-singleton subtypes to an SCoproduct schema type with a single string enum for all singleton subtypes and subsequently the other types in order" in {
-        import org.hungerford.generic.schema.Default.dsl.*
+        import generic.schema.exports.*
 
         val sch = Schema.derived[ MixedCoproduct ]
 
@@ -167,7 +167,7 @@ class TapirSchemaCoproductTranslationTest
     final case class RecurOnce( a : Int, b : Recur ) extends Recur
 
     it should "be able to translate a recursive schema" in {
-        import org.hungerford.generic.schema.Default.dsl.*
+        import generic.schema.exports.*
 
         val sch = Schema.derived[ Recur ]
 

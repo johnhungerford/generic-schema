@@ -10,7 +10,7 @@ import CirceSchemaTranslation.given
 class CirceSingletonSchemaTranslationTest
   extends SingletonJsonTranslationTest[ Codec ] {
     import SingletonJsonTranslationTest.*
-    import org.hungerford.generic.schema.Default.dsl.*
+    import generic.schema.exports.*
 
     val tsOSchema: Codec[ TestSingleton.type ] = SchemaTranslator.translate( tsSchema )
 

@@ -2,7 +2,7 @@ package org.hungerford.generic.schema.coproduct.subtype
 
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 
 class SubtypeReplacerTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 

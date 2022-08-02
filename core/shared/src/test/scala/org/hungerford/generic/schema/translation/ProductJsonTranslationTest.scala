@@ -19,7 +19,7 @@ case object Term extends RecursiveCoproduct
 final case class RecursiveProduct( b: RecursiveCoproduct, a: Int ) extends RecursiveCoproduct
 
 object ProductTranslationTestSchemata {
-    import org.hungerford.generic.schema.Default.dsl.*
+    import generic.schema.exports.*
 
     case class NoAF( intField: Int, strField: String )
 
@@ -119,13 +119,13 @@ object ProductTranslationTestSchemata {
     }
 
     val recursiveSchemaDerived = {
-        import org.hungerford.generic.schema.Default.dsl.*
+        import generic.schema.exports.*
         import org.hungerford.generic.schema.defaults.DefaultSchemas.given
         SchemaProvider.schema[ RecursiveProduct ]
     }
 
     val recursiveCoproductSch = {
-        import org.hungerford.generic.schema.Default.dsl.*
+        import generic.schema.exports.*
         recursiveSchemaDerived(t[ RecursiveCoproduct ]).schema
     }
 
@@ -135,7 +135,7 @@ object ProductTranslationTestSchemata {
     case class NestedProduct4( j : Double, k : Int )
 
     val nestedProductSch = {
-        import org.hungerford.generic.schema.Default.dsl.{*, given}
+        import generic.schema.exports.{*, given}
         Schema.derived[NestedProduct1]
     }
 }

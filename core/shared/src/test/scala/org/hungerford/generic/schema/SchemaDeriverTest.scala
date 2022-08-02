@@ -16,7 +16,7 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
     it should "derive a product schema equivalent to one built with implicit primitives and no additional fields" in {
         case class Test( int: Int, str: String )
 
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         val testSchema = Schema.productBuilder[ Test ]
           .addField( FieldBuilder[ Test, Int ].name( "int" ).extractor( _.int ).fromSchema.build )
@@ -40,7 +40,7 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
     it should "derive a product schema for a large case class" in {
         case class Test( int: Int, str: String, dbl: Double, bool: Boolean, newInt: Int )
 
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         val newTestRes = SchemaDeriver.schema[ Test ]
 

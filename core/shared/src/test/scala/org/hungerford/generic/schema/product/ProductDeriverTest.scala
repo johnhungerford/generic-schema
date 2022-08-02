@@ -13,7 +13,7 @@ class ProductDeriverTest extends AnyFlatSpecLike with Matchers {
 
     it should "derive a ProductShape from a case class type using implicit primitives" in {
 
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         val product = ProductDeriver[ Test ].derive
 

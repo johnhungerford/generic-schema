@@ -8,7 +8,7 @@ class SchemaProviderTest extends AnyFlatSpecLike with Matchers {
     behavior of "SchemaProvider"
 
     it should "provide a schema from an implicit if one exists" in {
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
         val intSch = SchemaProvider.schema[ Int ]
         intSch.genericDescription.nonEmpty shouldBe true
     }

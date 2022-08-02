@@ -1,4 +1,4 @@
-package org.hungerford.generic.schema.primitives
+package org.hungerford.generic.schema.defaults
 
 import org.hungerford.generic.schema
 import org.hungerford.generic.schema.coproduct.CoproductSchemaBuilder
@@ -9,7 +9,7 @@ import org.hungerford.generic.schema.{Primitive, PrimitiveSchemaBuilder, Schema,
 import scala.compiletime.summonInline
 import scala.reflect.ClassTag
 
-object Primitives {
+trait DefaultSchemas {
 
   given intSchema : Primitive[ Int ] = PrimitiveSchemaBuilder[ Int ]
     .description( s"Integer number between ${Int.MinValue} and ${Int.MaxValue}" )
@@ -78,3 +78,5 @@ object Primitives {
       }
   }
 }
+
+object DefaultSchemas extends DefaultSchemas

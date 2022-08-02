@@ -1,5 +1,6 @@
 package org.hungerford.generic.schema.utilities
 
+import org.hungerford.generic.schema
 import org.hungerford.generic.schema.selector.{AmbigSelector, ComponentRetriever, FieldSelector, Selector, SelectorDsl, SubTypeSelector}
 import org.hungerford.generic.schema.coproduct.subtype.{LazySubtype, Subtype, SubtypeReplacer, SubtypeRetriever, TypeName}
 import org.hungerford.generic.schema.{Schema, SchemaExtractor}
@@ -8,9 +9,9 @@ import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.product.field.{Field, FieldName, FieldRetriever, LazyField}
 
-import scala.util.Try
+import scala.util.{NotGiven, Try}
 
-trait Lens[T, Component, Selector] {
+trait Lens[T, Component, Selector, OuterT] {
     type Inner
     type Modifier = Inner => Inner
     type Out
@@ -20,12 +21,12 @@ trait Lens[T, Component, Selector] {
 }
 
 object Lens {
-    type Aux[ T, S, Selector, I, O ] = Lens[ T, S, Selector ] { type Inner = I; type Out = O }
+    type Aux[ T, S, Selector, I, O, OT ] = Lens[ T, S, Selector, OT ] { type Inner = I; type Out = O }
 
-    given ambigSubtypeSelLens[ T, Component, Sel, I, O ](
+    given ambigSubtypeSelLens[ T, Component, Sel, I, O, OT ](
         using
-        stl : Lens.Aux[ T, Component, SubTypeSelector[ Sel ], I, O ],
-    ) : Lens[T, Component, AmbigSelector[ Sel ]] with {
+        stl : Lens.Aux[ T, Component, SubTypeSelector[ Sel ], I, O, OT ],
+    ) : Lens[T, Component, AmbigSelector[ Sel ], OT] with {
         type Inner = I
         type Out = O
 
@@ -33,10 +34,10 @@ object Lens {
         def modify(value: T, component: Component, modifier : I => I): T = stl.modify(value, component, modifier)
     }
 
-    given ambigFieldSelLens[ T, Component, Sel, I, O ](
+    given ambigFieldSelLens[ T, Component, Sel, I, O, OT ](
         using
-        stl : Lens.Aux[ T, Component, FieldSelector[ Sel ], I, O ],
-    ) : Lens[T, Component, AmbigSelector[ Sel ]] with {
+        stl : Lens.Aux[ T, Component, FieldSelector[ Sel ], I, O, OT ],
+    ) : Lens[T, Component, AmbigSelector[ Sel ], OT] with {
         type Inner = I
         type Out = O
 
@@ -44,10 +45,10 @@ object Lens {
         def modify(value: T, component: Component, modifier : I => I): T = stl.modify(value, component, modifier)
     }
 
-    given subtypeLens[T, Sel <: Singleton, N <: TypeName, R <: Tuple, STT, DV,  ST <: Subtype.OrLazy[ T, STT, D, DN, DV, N ], RV <: Tuple, D, DN](
+    given subtypeLens[T, Sel <: Singleton, N <: TypeName, R <: Tuple, STT, DV,  ST <: Subtype.OrLazy[ T, STT, D, DN, DV, N ], RV <: Tuple, D, DN, OT](
         using
         strt : SubtypeRetriever.Aux[Sel, R, ST],
-    ): Lens[T, CoproductShape[T, R, RV, D, DN], SubTypeSelector[Sel]] with {
+    ): Lens[T, CoproductShape[T, R, RV, D, DN], SubTypeSelector[Sel], OT] with {
         type Inner = STT
         type Out = Option[STT]
 
@@ -62,18 +63,18 @@ object Lens {
                 case None => value
     }
 
-    given fieldLensNoaf[T, Sel <: Singleton, F, N <: FieldName, S, R <: Tuple, RV <: Tuple, C](
+    given fieldLensNoAf[T, Sel <: Singleton, F, Fld <: Field.Extr[T, F], R <: Tuple, RV <: Tuple, C, OT](
         using
-        frt : FieldRetriever.Aux[Sel, R, Field[T, F, N, S]],
+        frt : FieldRetriever.Aux[Sel, R, Fld],
         pdc : ProductDeconstructor.Aux[ T, R, RV ],
         fvr : FieldValueReplacer.Aux[Sel, R, RV, F],
         pcn : ProductConstructor[ C, RV, Nothing, T ],
-    ) : Lens[T, ProductShape[T, R, RV, Nothing, Unit, Unit, C], FieldSelector[Sel]] with {
+    ) : Lens[T, ProductShape[T, R, RV, Nothing, Unit, Unit, C], FieldSelector[Sel], OT] with {
         type Inner = F
         type Out = F
 
         def retrieve(value: T, component: ProductShape[T, R, RV, Nothing, Unit, Unit, C]): F =
-            val field : Field[T, F, N, S] = frt.retrieve(component.fieldDescriptions)
+            val field : Field.Extr[T, F] = frt.retrieve(component.fieldDescriptions)
             field.extractor(value)
 
         def modify(value: T, component: ProductShape[T, R, RV, Nothing, Unit, Unit, C], modifier: F => F): T =
@@ -84,13 +85,14 @@ object Lens {
             pcn.construct(component.construct)(newRV)
     }
 
-    given fieldLensAf[T, Sel <: Singleton, N <: FieldName, R <: Tuple, F, Fld <: Field.OrLazy[T, F, N], RV <: Tuple, AF, AFS, AFE, C](
+    given fieldLensAf[T, Sel <: Singleton, R <: Tuple, F, Fld <: Field.Extr[T, F], RV <: Tuple, AF, AFS, AFE, C, OT](
         using
+        ev : NotGiven[AF =:= Nothing],
         frt : FieldRetriever.Aux[Sel, R, Fld],
         pdc : ProductDeconstructor.Aux[ T, (AFE, R), (Map[String, AF], RV) ],
         fvr : FieldValueReplacer.Aux[Sel, R, RV, F],
         pcn : ProductConstructor[ C, RV, AF, T ],
-    ) : Lens[T, ProductShape[T, R, RV, AF, AFS, AFE, C], FieldSelector[Sel]] with {
+    ) : Lens[T, ProductShape[T, R, RV, AF, AFS, AFE, C], FieldSelector[Sel], OT] with {
         type Inner = F
         type Out = F
 
@@ -106,7 +108,7 @@ object Lens {
             pcn.construct(component.construct)(newRV, af)
     }
 
-    given lastSelLense[ T, Component ] : Lens[ T, Component, EmptyTuple ] with {
+    given lastSelLense[ T, Component, OT ] : Lens[ T, Component, EmptyTuple, OT ] with {
         type Inner = T
         type Out = T
 
@@ -114,12 +116,12 @@ object Lens {
         def modify( value: T, component: Component, modifier: T => T ): T = modifier(value)
     }
 
-    given productTupleSelector[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, SelHead, SelTail <: Tuple, HI, N <: TypeName, HIS, I, O ](
+    given productTupleSelector[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, SelHead, SelTail <: Tuple, HI, N <: TypeName, HIS, I, O, OT ](
         using
         crt : ComponentRetriever.Aux[ ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead, Field[ T, HI, N, HIS ] ],
-        hLens : Lens.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead, HI, HI ],
-        tLens : Lens.Aux[ HI, HIS, SelTail, I, O ],
-    ) : Lens[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead *: SelTail ] with {
+        hLens : Lens.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead, HI, HI, OT ],
+        tLens : => Lens.Aux[ HI, HIS, SelTail, I, O, OT ],
+    ) : Lens[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead *: SelTail, OT ] with {
         type Inner = I
         type Out = O
 
@@ -135,15 +137,18 @@ object Lens {
             })
     }
 
-    given productTupleSelectorLazy[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, SelHead, SelTail <: Tuple, HI, N <: TypeName, HIS, I, O ](
+    given productTupleSelectorLazy[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, SelHead, SelTail <: Tuple, HI, N <: TypeName, HIS, I, O, OT, OTS ](
         using
         crt : ComponentRetriever.Aux[ ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead, LazyField[ T, HI, N ] ],
-        hiSch : Schema.Aux[ HI, HIS ],
-        hLens : Lens.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead, HI, HI ],
-        tLens : Lens.Aux[ HI, HIS, SelTail, I, O ],
-    ) : Lens[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead *: SelTail ] with {
+        otSch : Schema.Aux[ OT, OTS ],
+        hiSchExtr : SchemaExtractor.Aux[ HI, Schema.Aux[OT, OTS], HIS ],
+        hLens : Lens.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead, HI, HI, OT ],
+        tLens : => Lens.Aux[ HI, HIS, SelTail, I, O, OT ],
+    ) : Lens[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C], SelHead *: SelTail, OT ] with {
         type Inner = I
         type Out = O
+
+        val hiSch = hiSchExtr.extract(otSch)
 
         def retrieve( value: T, component: ProductShape[ T, R, RV, AF, AFS, AFE, C] ): O =
             val hi = hLens.retrieve(value, component)
@@ -155,12 +160,12 @@ object Lens {
             })
     }
 
-    given coproductTuple[ T, R <: Tuple, RV <: Tuple, D, DN, SelHead, SelTail <: Tuple, HI, DV, N <: TypeName, HIS, I, O ](
+    given coproductTuple[ T, R <: Tuple, RV <: Tuple, D, DN, SelHead, SelTail <: Tuple, HI, DV, N <: TypeName, HIS, I, O, OT ](
         using
         crt : ComponentRetriever.Aux[ CoproductShape[ T, R, RV, D, DN], SelHead, Subtype[ T, HI, D, DN, DV, N, HIS] ],
-        hLens : Lens.Aux[ T, CoproductShape[ T, R, RV, D, DN], SelHead, HI, Option[ HI ] ],
-        tLens : Lens.Aux[ HI, HIS, SelTail, I, O ],
-    ) : Lens[ T, CoproductShape[ T, R, RV, D, DN], SelHead *: SelTail ] with {
+        hLens : Lens.Aux[ T, CoproductShape[ T, R, RV, D, DN], SelHead, HI, Option[ HI ], OT ],
+        tLens : => Lens.Aux[ HI, HIS, SelTail, I, O, OT ],
+    ) : Lens[ T, CoproductShape[ T, R, RV, D, DN], SelHead *: SelTail, OT ] with {
         type Inner = I
         type Out = Option[ O ]
 
@@ -176,13 +181,13 @@ object Lens {
             })
     }
 
-    given coproductTupleLazy[ T, R <: Tuple, RV <: Tuple, D, DN, SelHead, SelTail <: Tuple, HI, DV, N <: TypeName, HIS, I, O ](
+    given coproductTupleLazy[ T, R <: Tuple, RV <: Tuple, D, DN, SelHead, SelTail <: Tuple, HI, DV, N <: TypeName, HIS, I, O, OT ](
         using
         crt : ComponentRetriever.Aux[ CoproductShape[ T, R, RV, D, DN], SelHead, LazySubtype[ T, HI, D, DN, DV, N] ],
         hiSch : Schema.Aux[ HI, HIS ],
-        hLens : Lens.Aux[ T, CoproductShape[ T, R, RV, D, DN], SelHead, HI, Option[ HI ] ],
-        tLens : Lens.Aux[ HI, HIS, SelTail, I, O ],
-    ) : Lens[ T, CoproductShape[ T, R, RV, D, DN], SelHead *: SelTail ] with {
+        hLens : Lens.Aux[ T, CoproductShape[ T, R, RV, D, DN], SelHead, HI, Option[ HI ], OT ],
+        tLens : => Lens.Aux[ HI, HIS, SelTail, I, O, OT ],
+    ) : Lens[ T, CoproductShape[ T, R, RV, D, DN], SelHead *: SelTail, OT ] with {
         type Inner = I
         type Out = Option[ O ]
 
@@ -203,14 +208,14 @@ trait LensDsl extends SelectorDsl {
     class SelectUtility[T, S, Sel <: Tuple, Inner, Out](
         value : T,
         sch: Schema.Aux[T, S],
-        lens: Lens.Aux[T, S, Sel, Inner, Out],
+        lens: Lens.Aux[T, S, Sel, Inner, Out, T],
     ) {
         def modify(modifier: Inner => Inner): T = lens.modify(value, sch.shape, modifier)
         def retrieve : Out = lens.retrieve(value, sch.shape)
     }
 
     extension [T, S](value : T)(using sch : Schema.Aux[T, S])
-        def select[Sel <: Tuple, Inner, Out](sel: Selector[Sel])(using lens: Lens.Aux[T, S, Sel, Inner, Out]): SelectUtility[T, S, Sel, Inner, Out] =
+        def select[Sel <: Tuple, Inner, Out](sel: Selector[Sel])(using lens: Lens.Aux[T, S, Sel, Inner, Out, T]): SelectUtility[T, S, Sel, Inner, Out] =
             new SelectUtility[T, S, Sel, Inner, Out](value, sch, lens)
 
 }

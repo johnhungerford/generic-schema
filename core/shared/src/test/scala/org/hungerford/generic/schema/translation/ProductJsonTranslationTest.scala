@@ -48,7 +48,7 @@ object ProductTranslationTestSchemata {
       .build
 
     val hasAfPrimitiveSch = {
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         Schema.productBuilder[ HasAF ]
           .addField( FieldBuilder[ HasAF, String ].fromSchema.name( "str_field" ).extractor( _.str ).build )
@@ -67,7 +67,7 @@ object ProductTranslationTestSchemata {
     case class Outside( inside: Inside )
 
     val outsideSch = {
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         Schema.productBuilder[ Outside ]
           .addField(
@@ -88,7 +88,7 @@ object ProductTranslationTestSchemata {
     }
 
     val insideSchema = {
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         Schema.productBuilder[ Inside ]
           .addField( FieldBuilder[ Inside, String ].extractor( _.str ).fromSchema.name( "str_field" ).build )
@@ -101,7 +101,7 @@ object ProductTranslationTestSchemata {
     }
 
     val outsideSchUsingInside = {
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         Schema.productBuilder[ Outside ]
           .addField( FieldBuilder[ Outside, Inside ].extractor( _.inside ).fromSchema( insideSchema ).name( "inside_field" ).build )
@@ -114,13 +114,13 @@ object ProductTranslationTestSchemata {
     }
 
     val outsideSchemaDerived = {
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
         SchemaProvider.schema[ Outside ]
     }
 
     val recursiveSchemaDerived = {
         import org.hungerford.generic.schema.Default.dsl.*
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
         SchemaProvider.schema[ RecursiveProduct ]
     }
 

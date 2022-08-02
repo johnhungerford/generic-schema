@@ -176,7 +176,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
         assertCompiles( """builder.build""" )
 
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         val newBuilder = builder
           .additionalFields[ String ].fromSchema( _.fields )
@@ -185,7 +185,7 @@ class ProductSchemaBuilderTest extends AnyFlatSpecLike with Matchers {
 
         val lastBuilder = builder
           .additionalFields[ Double ].fromSchema( v => v.fields.mapValues( _.toDouble ).toMap )
-        
+
         assertDoesNotCompile( """lastBuilder.build""")
 
         lastBuilder

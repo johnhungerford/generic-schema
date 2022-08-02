@@ -26,7 +26,7 @@ class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
     }
 
     it should "be able to build a field description using given schemas" in {
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         val field = FieldBuilder[ String, Int ]
           .name( "name" )
@@ -75,7 +75,7 @@ class FieldBuilderTest extends AnyFlatSpecLike with Matchers {
           .description( "old-description" )
           .build
 
-        import org.hungerford.generic.schema.primitives.Primitives.given
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         val newField = FieldBuilder.from( originalField )
           .name( "new_name" )

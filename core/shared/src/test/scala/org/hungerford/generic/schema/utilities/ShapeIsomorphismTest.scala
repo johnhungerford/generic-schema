@@ -30,7 +30,7 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     })
 
     it should "convert a primitive to itself" in {
-       import org.hungerford.generic.schema.primitives.Primitives.given
+       import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
         val iso = summon[Isomorphism[Int, Int]]
         iso.convertForward(23) shouldBe 23

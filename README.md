@@ -9,7 +9,7 @@ Scala 3.
 
 #### Coproduct type
 ```scala
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 
 sealed trait HttpMethod
 case object Get extends HttpMethod
@@ -117,13 +117,12 @@ uses to describe input and output values in its endpoint definitions.
 
 #### Circe
 ```scala
-import org.hungerford.generic.schema.translation.SchemaTranslator
-import org.hungerford.generic.schema.circe.CirceSchemaTranslation.given
+import generic.schema.exports.*
+import generic.schema.given
 import io.circe.*
 import io.circe.parser.*
 
-given httpRequestCodec : Codec[HttpRequest] =
-    SchemaTranslator.translate(httpRequestSchema)
+given httpRequestCodec : Codec[HttpRequest] = httpRequestSchema.as[Codec]
 
 val req = HttpRequest("http://example.url", Get, None)
 
@@ -136,8 +135,7 @@ parse("""{"url":"http://another.url","method":"Post","string_body":["hello world
 // result:
 // HttpRequest("http://another.url", Post, Some("hello world"))
 
-val userDataCodec : Codec[UserData] =
-    SchemaTranslator.translate(userDataSchema)
+val userDataCodec : Codec[UserData] = userDataSchema.as[Codec]
 
 val ud = UserData(
     UUID.randomUUID(),
@@ -158,8 +156,8 @@ parse("""{"pets":"cat, dog, hamster", "name":"jane_doe", "phone_number":"444-444
 
 #### Upickle
 ```scala
-import org.hungerford.generic.schema.translation.SchemaTranslator
-import org.hungerford.generic.schema.upickle.UPickleSchemaTranslation.given
+import generic.schema.exports.*
+import generic.schema.upickle.given
 import upickle.default.*
 
 given httpRequestRW : ReadWriter[HttpRequest] =
@@ -200,9 +198,9 @@ json codec and a tapir schema, making it easy to establish consistency
 between your REST API definition and your implementation.
 
 ```scala
-import org.hungerford.generic.schema.translation.SchemaTranslator
-import org.hungerford.generic.schema.tapir.TapirSchemaTranslation.given
-import org.hungerford.generic.schema.circe.CirceSchemaTranslation.given
+import generic.schema.exports.*
+import generic.schema.tapir.given
+import generic.schema.circe.given
 
 import io.circe.*
 
@@ -213,12 +211,10 @@ import sttp.tapir.openapi.OpenAPI
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import sttp.tapir.openapi.circe.yaml._
 
-given httpRequestTapir : TapirSchema[HttpRequest] =
-    SchemaTranslator.translate(httpRequestSchema)
+given httpRequestTapir : TapirSchema[HttpRequest] = httpRequestSchema.as[TapirSchema]
 
 // Needed for tapir's jsonBody input
-given httpRequestCodec : Codec[HttpRequest] =
-    SchemaTranslator.translate(httpRequestSchema)
+given httpRequestCodec : Codec[HttpRequest] = httpRequestSchema.as[Codec]
 
 // An imagined REST endpoint to remotely execute an http request
 val remoteHttpEndpoint = endpoint
@@ -260,11 +256,9 @@ println(remoteHttpSpec)
 //      description: Simple REST request model
 // ...
 
-given userDataTapir : TapirSchema[UserData] =
-    SchemaTranslator.translate(userDataSchema)
+given userDataTapir : TapirSchema[UserData] = userDataSchema.as[TapirSchema]
 
-given userDataCodec : Codec[UserData] =
-    SchemaTranslator.translate(userDataSchema)
+given userDataCodec : Codec[UserData] = userDataSchema.as[Codec]
 
 // REST endpoint to get user data by id
 val userDataEndpoint = endpoint
@@ -299,10 +293,10 @@ entry in the above open api spec is missing an `additionalProperties` schema.
 
 ### Automatic derivation
 
-Schemas can be derived, or derived and then built
+Schemas can be derived, as can schema builders so that you can edit the derived schema:
 
 ```scala
-import org.hungerford.generic.schema.Default.dsl.*
+import .generic.schema.exports.*
 
 val httpRequestSchema = Schema.derived[HttpRequest]
 
@@ -322,7 +316,7 @@ Convert a derived product to an open product:
 // open product
 val userDataSchema = Schema.derivedBuilder[UserData]
   .removeField("userData")
-  .additionalFields[String].primitive
+  .additionalFields[String].primitive(_.userData)
   .construct(((id, name), af) => UserData(id, name, af))
   .build
 ```
@@ -338,7 +332,7 @@ Using type safe component selectors, we can easily retrieve and update fields
 and subtypes, however deeply these may be nested:
 
 ```scala
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 
 // Update the description and the singleton identifier of the Put
 // subtype of HttpMethod (this will have the effect of serializing
@@ -383,8 +377,8 @@ long as `B` is isomorphic to it. There will need to be a given schema in scope f
 fields and coproduct subtypes must align for both schemas.
 
 ```scala
-import org.hungerford.generic.schema.Default.dsl.*
-import org.hungerford.generic.schema.utilties.dsl.*
+import generic.schema.exports.*
+import generic.schema.utilties.*
 
 sealed trait Coproduct1
 case object Subt1A
@@ -410,8 +404,8 @@ The utilities dsl provides an extension method `select` method on any value with
 that allows you to select a component from a value and either retrieve the component or modify it.
 
 ```scala
-import org.hungerford.generic.schema.Default.dsl.*
-import org.hungerford.generic.schema.utilties.dsl.*
+import generic.schema.exports.*
+import generic.schema.utilties.*
 
 sealed trait Coprod
 case object Subt1 extends Coproduct

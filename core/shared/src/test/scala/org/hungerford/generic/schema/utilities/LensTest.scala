@@ -16,7 +16,7 @@ case class NestedCase2(b: Int) extends TestNestedCoprod
 
 class LensTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
-    import org.hungerford.generic.schema.Default.dsl.{*, given}
+    import generic.schema.exports.{*, given}
 
     behavior of "Product lens"
 

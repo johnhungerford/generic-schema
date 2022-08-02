@@ -16,7 +16,7 @@ class IsSingletonSubtypeTest extends AnyFlatSpecLike with org.scalatest.matchers
     }
 
     it should "be summonable for a lazy subtype when the given schema is a singleton subtype" in {
-        import org.hungerford.generic.schema.Default.dsl.*
+        import generic.schema.exports.*
 
         given singletonSchema : Schema.Aux[ 1, SingletonShape[ 1, "singleton-name" ] ] =
             ComplexSchema( SingletonShape[ 1, "singleton-name" ]( "singleton-name", 1 ) )

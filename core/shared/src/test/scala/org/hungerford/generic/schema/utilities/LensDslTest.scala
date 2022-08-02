@@ -5,17 +5,17 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 
 class LensDslTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
-    val sch = org.hungerford.generic.schema.Default.usingDsl( dsl => {
-        import dsl.{*, given}
+    val sch = {
+        import generic.schema.exports.{*, given}
 
         Schema.derived[TestNestedProd]
-    })
+    }
 
-    val nc2Sch = org.hungerford.generic.schema.Default.usingDsl( dsl => {
-        import dsl.{*, given}
+    val nc2Sch = {
+        import generic.schema.exports.{*, given}
 
         Schema.derived[NestedCase2]
-    })
+    }
 
     behavior of "LensDsl"
 

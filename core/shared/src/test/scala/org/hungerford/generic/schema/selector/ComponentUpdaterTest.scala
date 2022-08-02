@@ -3,7 +3,7 @@ package org.hungerford.generic.schema.selector
 import org.hungerford.generic.schema.product.field.FieldBuilder
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 import org.hungerford.generic.schema.coproduct.subtype.SubtypeBuilder
 
 class ComponentUpdaterTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {

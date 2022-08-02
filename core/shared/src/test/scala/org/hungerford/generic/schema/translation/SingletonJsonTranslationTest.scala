@@ -15,7 +15,7 @@ abstract class SingletonJsonTranslationTest[ OtherSchema[ _ ] ]
   extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
     import SingletonJsonTranslationTest.*
-    import org.hungerford.generic.schema.Default.dsl.*
+    import generic.schema.exports.*
 
     val tsSchema = Schema.derived[ TestSingleton.type ]
     val stSchema = Schema.derived[ SuperT ]

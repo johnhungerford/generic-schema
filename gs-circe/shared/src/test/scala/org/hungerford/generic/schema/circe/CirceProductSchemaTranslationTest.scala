@@ -54,7 +54,7 @@ class CirceProductSchemaTranslationTest
 //    case class RecProd(field: RecProd)
 //
 //    val schema = {
-//        import org.hungerford.generic.schema.Default.dsl.{*, given}
+//        import generic.schema.exports.{*, given}
 //
 //        Schema.derived[ RecProd ]
 //    }

@@ -8,7 +8,7 @@ import io.circe.parser._
 
 trait Serialization {
 
-    import org.hungerford.generic.schema.Default.dsl.{*, given}
+    import generic.schema.exports.{*, given}
 
     import CirceSchemaTranslation.given
 

@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.{Schema, Primitive}
 import org.hungerford.generic.schema.coproduct.subtype.{Subtype, SubtypeBuilder}
 import org.scalatest.flatspec.AnyFlatSpecLike
 
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 
 class CoproductSchemaBuilderTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 

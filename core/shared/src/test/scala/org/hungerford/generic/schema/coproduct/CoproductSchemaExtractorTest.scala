@@ -3,7 +3,7 @@ package org.hungerford.generic.schema.coproduct
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class CoproductSchemaExtractorTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
-    import org.hungerford.generic.schema.Default.dsl.*
+    import generic.schema.exports.*
 
     behavior of "CoproductSchemaExtractor"
 

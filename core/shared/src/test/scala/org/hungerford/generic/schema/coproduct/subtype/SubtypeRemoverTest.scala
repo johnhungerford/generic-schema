@@ -4,7 +4,7 @@ import org.hungerford.generic.schema.Schema
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 import org.hungerford.generic.schema.Schema
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 
 class SubtypeRemoverTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 

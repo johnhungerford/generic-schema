@@ -1,7 +1,7 @@
 package org.hungerford.generic.schema
 
 import org.scalatest.flatspec.AnyFlatSpecLike
-import org.hungerford.generic.schema.Default.dsl.*
+import generic.schema.exports.*
 import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.validator.Validator
 

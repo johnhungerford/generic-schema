@@ -27,7 +27,7 @@ class SchemaProviderTest extends AnyFlatSpecLike with Matchers {
     case class Outer( middle : Middle )
 
     it should "provide a schema from extraction from a given schema" in {
-        import org.hungerford.generic.schema.Default.dsl.*
+        import generic.schema.exports.*
         val outerSch = Schema.derived[ Outer ]
         import outerSch.given
 

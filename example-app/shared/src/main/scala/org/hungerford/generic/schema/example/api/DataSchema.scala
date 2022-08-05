@@ -11,10 +11,10 @@ object DataSchema {
 
         val dateSch = Schema.derived[ Date ]
           .modifyComponent( "year" )(
-              _.withValidators( Validator.min( 2000 ), Validator.max( 3000 ) )
+              _.withValidation( Validator.min( 2000 ), Validator.max( 3000 ) )
           )
           .modifyComponent( "month" )(
-              _.withValidators( Validator.min( 1 ), Validator.max( 12 ) )
+              _.withValidation( Validator.min( 1 ), Validator.max( 12 ) )
           )
         import dateSch.givenSchema
 

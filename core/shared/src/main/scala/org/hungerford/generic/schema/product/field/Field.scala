@@ -132,7 +132,7 @@ trait FieldDsl {
             field.copy[ T, F, N, S ]( description = Some( desc ) )
         def withoutDescription : Field[ T, F, N, S ] =
             field.copy[ T, F, N, S ]( description = None )
-        def withValidators( vals : Validator[ F ]* ) : Field[ T, F, N, S ] =
+        def withValidation( vals : Validator[ F ]* ) : Field[ T, F, N, S ] =
             field.copy[ T, F, N, S ]( validators = vals.toSet )
         def addValidators( vals : Validator[ F ]* ) : Field[ T, F, N, S ] =
             field.copy[ T, F, N, S ]( validators = field.validators ++ vals.toSet )

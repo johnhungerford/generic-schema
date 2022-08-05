@@ -7,6 +7,7 @@ import org.hungerford.generic.schema.product.field.FieldReplacer
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.singleton.{SingletonSchemaBuilder, SingletonShape}
 import org.hungerford.generic.schema.translation.SchemaTranslator
+import org.hungerford.generic.schema.types.Validation
 import org.hungerford.generic.schema.validator.Validator
 
 sealed trait Schema[ T ] {
@@ -209,6 +210,13 @@ trait SchemaDsl {
         def as[ OtherSchema[ _ ] ](
             using tr : SchemaTranslator[ T, S, OtherSchema ],
         ) : OtherSchema[ T ] = tr.translate( schema )
+
+    extension [ T, S ]( schema : Schema.Aux[ T, S ] )
+        def validate(
+            value: T,
+        )(
+            using valid : Validation[ T, Schema.Aux[T, S] ],
+        ) : Boolean = valid.isValid( value, schema )
 
     extension ( sch : Schema.type )
         def productBuilder[ T ] : ProductSchemaBuilder[ T, EmptyTuple, EmptyTuple, Nothing, Unit, Unit, Unit ] =

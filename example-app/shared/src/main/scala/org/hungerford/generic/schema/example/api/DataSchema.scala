@@ -23,19 +23,16 @@ object DataSchema {
 
     val responseSchema = {
         import generic.schema.defaults.given
-
         Schema.derived[ Response ]
     }
 
     given TapirSchema[ Request ] = {
         import generic.schema.tapir.given
-
         requestSchema.as[TapirSchema]
     }
 
     given TapirSchema[ Response ] = {
         import generic.schema.tapir.given
-
         responseSchema.as[TapirSchema]
     }
 

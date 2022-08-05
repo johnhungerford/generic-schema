@@ -11,10 +11,10 @@ object DataSchema {
 
         val dateSch = Schema.derived[ Date ]
           .modifyComponent( "year" )(
-              _.withValidators( Validator.min( 2000 ), Validator.max( 3000 ) )
+              _.withValidation( Validator.min( 2000 ), Validator.max( 3000 ) )
           )
           .modifyComponent( "month" )(
-              _.withValidators( Validator.min( 1 ), Validator.max( 12 ) )
+              _.withValidation( Validator.min( 1 ), Validator.max( 12 ) )
           )
         import dateSch.givenSchema
 
@@ -23,19 +23,16 @@ object DataSchema {
 
     val responseSchema = {
         import generic.schema.defaults.given
-
         Schema.derived[ Response ]
     }
 
     given TapirSchema[ Request ] = {
         import generic.schema.tapir.given
-
         requestSchema.as[TapirSchema]
     }
 
     given TapirSchema[ Response ] = {
         import generic.schema.tapir.given
-
         responseSchema.as[TapirSchema]
     }
 

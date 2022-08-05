@@ -368,7 +368,8 @@ val updatedHttpMethodSchema = updatedHttpRequestSchema("method").schema
 
 ### Utilities
 
-In addition to deriving third party codecs, generic schemas can be used for migrations and lenses.
+In addition to deriving third party codecs, generic schemas provide utilties for working with values of the 
+type they describe. These utilities include migrations, lenses, and validation.
 
 #### Migration
 
@@ -429,4 +430,29 @@ println(value2.select("Subt2" / "c" / "chr").retreive)
 // (returns an option because it's retrieved across a coproduct)
 println(value2.select("Subt2" / "c" / "dbl").modify(_ + 10))
 // Subt2(25, true, Prod(10.234, 'X'))
+```
+
+#### Validation
+
+The utilities dsl also provides an extension method `isValid` that return the boolean validation result provided 
+by a given schema that is in scope. It will validate using the schema's `genericValidators` as well as validators 
+attached to `Field` or `Subtype` definitions and will then recursively check their schemas' validators.
+
+```scala
+import generic.schema.exports.{*, given}
+import generic.schema.utilties.*
+
+sealed trait Coprod
+case object Subt1 extends Coproduct
+case class Subt2(a: Int, b: Boolean, c: Prod) extends Coproduct
+case class Prod(dbl: Double, chr: Char)
+
+val sch = Schema.derived[Coprod]
+  .modifyComponent("Subt2" / "a")(_.withValidation(Validator.max(25)))
+  .modifyComponent("Subt2" / "c" / "dbl")(_.withValidation(Validator.min(-0.234)))
+import sch.givenSchema
+
+assert((Subt2(20, false, Prod(2.53, 'x')): Coprod).isValid) // passes
+assert((Subt2(26, false, Prod(2.53, 'x')): Coprod).isValid) // throws exception (26 > 25)
+assert((Subt2(20, false, Prod(-1.35, 'x')): Coprod).isValid) // throws exception (-1.35 < -0.234)
 ```

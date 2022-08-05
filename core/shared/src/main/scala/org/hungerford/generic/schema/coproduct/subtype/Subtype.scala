@@ -100,9 +100,9 @@ object Subtype {
       extends Subtype.SubOf[ T, ST ]
         with Subtype.Discr[ D, DN, DV ]
         with Subtype.Named[ N ]
-    
+
     sealed trait IsLazy
-    
+
     sealed trait NotLazy
 }
 
@@ -171,7 +171,7 @@ trait SubtypeDsl {
 
         def withoutDescription : Subtype[ T, ST, D, DN, DV, N, S ] = subtype.copy( description = None )
 
-        def withValidators(
+        def withValidation(
             validator: Validator[ ST ],
             otherValidators : Validator[ ST ]*,
         ) : Subtype[ T, ST, D, DN, DV, N, S ] = subtype.copy( validators = ( validator +: otherValidators ).toSet )

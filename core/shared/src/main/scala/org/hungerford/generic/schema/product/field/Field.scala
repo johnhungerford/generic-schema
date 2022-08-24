@@ -6,6 +6,7 @@ import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.field.Field
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.validator.Validator
+import org.hungerford.generic.schema.Component
 
 import scala.collection.mutable
 import scala.language.higherKinds
@@ -24,7 +25,7 @@ sealed case class Field[ T, F, N <: FieldName, S ] private[ schema ] (
     override val default : Option[ F ] = None,
     override val examples : Seq[ F ] = Nil,
     override val deprecated : Boolean = false,
-) extends Field.Shaped[ F, S ] with Field.OrLazy[ T, F, N ] {
+) extends Field.Shaped[ F, S ] with Field.OrLazy[ T, F, N ] with Field.NonLazy {
     type Self = Field[ T, F, N, S ]
 }
 
@@ -36,12 +37,9 @@ sealed case class LazyField[ T, F, N <: FieldName ] private[ schema ] (
     override val default : Option[ F ] = None,
     override val examples : Seq[ F ] = Nil,
     override val deprecated : Boolean = false,
-) extends Field.OrLazy[ T, F, N ] {
-    def schema[ S ](
-        using
-        sch : Schema.Aux[ F, S ]
-    ) : Schema.Aux[ F, S ] = sch
-
+) extends Field.OrLazy[ T, F, N ]
+  with Field.IsLazy
+  with Component.Lazy[F] {
     def resolveSchema[ S ]( implicit sch : Schema.Aux[ F, S ] ) : Field[ T, F, N, S ] = {
         Field[ T, F, N, S ](
             fieldName,
@@ -64,22 +62,31 @@ object Field {
         def description : Option[ String ]
         def deprecated : Boolean
     }
-    sealed trait For[ T ] extends Field.Field
-    sealed trait Of[ F ] extends Field.Field {
+    sealed trait Of[ T ] extends Field.Field with Component.Of[T]
+    sealed trait Tpe[ F ] extends Field.Field with Component.Tpe[F] {
         def validators : Set[ Validator[ F ] ]
         def default : Option[ F ]
         def examples : Seq[ F ]
     }
-    sealed trait Named[ N <: FieldName ] extends Field.Field {
+    sealed trait Named[ N <: FieldName ]
+      extends Field.Field
+        with Component.Named[N] {
         def fieldName : N
+        def name: N = fieldName
     }
-    sealed trait Shaped[ F, S ] extends Of[ F ] {
+    sealed trait Shaped[ F, S ]
+      extends Tpe[ F ]
+        with Component.Shaped[F, S] {
         def schema : Schema.Aux[ F, S ]
     }
-    sealed trait Extr[ T, F ] extends For[ T ] with Of[ F ] {
+    sealed trait Extr[ T, F ]
+      extends Of[ T ]
+        with Tpe[ F ] {
         def extractor : T => F
     }
     sealed trait OrLazy[ T, F, N <: FieldName ] extends Extr[ T, F ] with Named[ N ]
+    sealed trait NonLazy extends Component.NonLazy
+    sealed trait IsLazy extends Component.IsLazy
 }
 
 trait FieldDsl {

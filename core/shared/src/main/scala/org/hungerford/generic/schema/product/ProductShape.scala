@@ -22,11 +22,11 @@ case class ProductShape[ T, Rt <: Tuple, RVt <: Tuple, AFt, AFSt, AFEt, C ](
     private[ schema ] val afExtractor : AFEt,
     private[ schema ] val constructor : C,
 )(
-    using
-    fieldsConstraint : CtxWrapTuplesConstraint[ Field.Of, Rt, RVt ],
-    uniqueFields : UniqueFieldNames[ Rt ],
-    prodConst : ProductConstructor[ C, RVt, AFt, T ],
-    afExtrEv : ValidAfExtr[ T, AFt, AFEt ],
+	using
+	fieldsConstraint : CtxWrapTuplesConstraint[ Field.Tpe, Rt, RVt ],
+	uniqueFields : UniqueFieldNames[ Rt ],
+	prodConst : ProductConstructor[ C, RVt, AFt, T ],
+	afExtrEv : ValidAfExtr[ T, AFt, AFEt ],
 ) {
 
     // Field descriptions

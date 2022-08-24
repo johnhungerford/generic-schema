@@ -4,6 +4,7 @@ import org.hungerford.generic.schema.{Schema, SchemaRebuilder}
 import org.hungerford.generic.schema.product.field.FieldName
 import org.hungerford.generic.schema.selector.{ComponentRetriever, ComponentUpdater, Selector}
 import org.hungerford.generic.schema.validator.Validator
+import org.hungerford.generic.schema.Component
 
 import scala.util.NotGiven
 
@@ -36,13 +37,8 @@ sealed case class LazySubtype[ T, ST, D, DN, DV, N <: TypeName ] private[ schema
     override val default: Option[ ST ] = None,
     override val examples: Seq[ ST ] = Seq.empty[ ST ],
     override val deprecated: Boolean = false,
-) extends Subtype.OrLazy[ T, ST, D, DN, DV, N ] with Subtype.IsLazy {
+) extends Subtype.OrLazy[ T, ST, D, DN, DV, N ] with Subtype.IsLazy with Component.Lazy[ST] {
     type Self = LazySubtype[ T, ST, D, DN, DV, N ]
-
-    def schema[ S ](
-        using
-        sch : Schema.Aux[ ST, S ]
-    ) : Schema.Aux[ ST, S ] = sch
 
     def resolveSchema[ S ]( implicit sch : Schema.Aux[ ST, S ] ) : Subtype[ T, ST, D, DN, DV, N, S ] = {
         Subtype[ T, ST, D, DN, DV, N, S ](
@@ -67,16 +63,21 @@ object Subtype {
         def deprecated: Boolean
     }
 
-    sealed trait Of[ T ] extends Subtype.Subtype
+    sealed trait Of[ T ]
+      extends Subtype.Subtype
+        with Component.Of[T]
 
-    sealed trait Tpe[ ST ] extends Subtype.Subtype {
+    sealed trait Tpe[ ST ]
+      extends Subtype.Subtype
+        with Component.Tpe[ST] {
         def validators: Set[ Validator[ ST ] ]
         def default: Option[ ST ]
         def examples: Seq[ ST ]
     }
 
-    sealed trait Named[ N <: TypeName ] extends Subtype.Subtype {
+    sealed trait Named[ N <: TypeName ] extends Subtype.Subtype with Component.Named[N] {
         def typeName : N
+        def name: N = typeName
     }
 
     sealed trait Discr[ D, DN, DV ] extends Subtype.Subtype {
@@ -87,11 +88,17 @@ object Subtype {
     type NoDiscr = Discr[ Nothing, Nothing, Unit ]
     type WithDiscr[ D, DN <: TypeName, DV <: D & Singleton ] = Discr[ D, DN, DV ]
 
-    sealed trait Shaped[ ST, Shape ] extends Subtype.Tpe[ ST ] with Subtype.NotLazy {
+    sealed trait Shaped[ ST, Shape ]
+      extends Subtype.Tpe[ ST ]
+        with Subtype.NonLazy
+        with Component.Shaped[ST, Shape] {
         def schema : Schema.Aux[ ST, Shape ]
     }
 
-    sealed trait SubOf[ T, ST ] extends Subtype.Of[ T ] with Subtype.Tpe[ ST ] {
+    sealed trait SubOf[ T, ST ]
+      extends Subtype.Of[ T ]
+        with Component.TypeOf[T, ST]
+        with Subtype.Tpe[ ST ] {
         def toSuper : ST => T
         def fromSuper : T => Option[ ST ]
     }
@@ -101,9 +108,9 @@ object Subtype {
         with Subtype.Discr[ D, DN, DV ]
         with Subtype.Named[ N ]
 
-    sealed trait IsLazy
+    sealed trait IsLazy extends Component.IsLazy
 
-    sealed trait NotLazy
+    sealed trait NonLazy extends Component.NonLazy
 }
 
 

@@ -27,9 +27,9 @@ sealed trait ExternalB
 case object ExtTermB extends ExternalB
 case class RecProdB(inner: InnerB) extends ExternalB
 
-class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
+class ShapeMigrationTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
-    behavior of "Product Isomorphism"
+    behavior of "Product Migration"
 
     case class Prod1(a: Int, b: Boolean, c: Double)
     case class Prod2(d: Int, e: Boolean, f: Double)
@@ -46,9 +46,8 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
     it should "convert a primitive to itself" in {
        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
 
-        val iso = summon[Isomorphism[Int, Int]]
-        iso.convertForward(23) shouldBe 23
-        iso.convertBackward(23) shouldBe 23
+        val iso = summon[Migration[Int, Int]]
+        iso.migrate(23) shouldBe 23
     }
 
     it should "use a field to convert a type" in {
@@ -66,18 +65,16 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         type F1S = f1Sch.Shape
         type F2S = f2Sch.Shape
 
-        val iso = summon[ShapeIsomorphism.Aux[T1.type, F1S, T1.type, T2.type, F2S, T2.type ]]
-        iso.convertForward(T1, f1Sch.shape, f2Sch.shape) shouldBe T2
-        iso.convertBackward(T2, f1Sch.shape, f2Sch.shape) shouldBe T1
+        val iso = summon[ShapeMigration.Aux[T1.type, F1S, T1.type, T2.type, F2S, T2.type ]]
+        iso.migrate(T1, f1Sch.shape, f2Sch.shape) shouldBe T2
     }
 
     it should "convert a case class instance to another case class of the same shape using product shape with no additional fields" in {
         import p1Sch.givenSchema
         import p2Sch.givenSchema
 
-        val iso = summon[Isomorphism[Prod1, Prod2]]
-        iso.convertForward(Prod1(23, false, 0.23423)) shouldBe Prod2(23, false, 0.23423)
-        iso.convertBackward(Prod2(23, false, 0.23423)) shouldBe Prod1(23, false, 0.23423)
+        val iso = summon[Migration[Prod1, Prod2]]
+        iso.migrate(Prod1(23, false, 0.23423)) shouldBe Prod2(23, false, 0.23423)
     }
 
     case class AFPr1(a: Map[String, Int], b: String, c: Boolean)
@@ -106,12 +103,11 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
         import afSch1.givenSchema
         import afSch2.givenSchema
 
-        val iso = summon[Isomorphism[AFPr1, AFPr2]]
-        iso.convertForward(AFPr1(Map("hi" -> 23), "what", false)) shouldBe AFPr2("what", false, Map("hi" -> 23))
-        iso.convertBackward(AFPr2("what", false, Map("hi" -> 23))) shouldBe AFPr1(Map("hi" -> 23), "what", false)
+        val iso = summon[Migration[AFPr1, AFPr2]]
+        iso.migrate(AFPr1(Map("hi" -> 23), "what", false)) shouldBe AFPr2("what", false, Map("hi" -> 23))
     }
 
-    behavior of "Coproduct Isomorphism"
+    behavior of "Coproduct Migration"
 
     it should "convert a coproduct" in {
         val (cprASch, cprBSch) = {
@@ -123,16 +119,13 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
 
         import cprASch.givenSchema
         import cprBSch.givenSchema
-        val iso = summon[Isomorphism[CoprA, CoprB]]
-        iso.convertForward(SubtA1) shouldBe SubtB1
-        iso.convertForward(SubtA2) shouldBe SubtB2
-        iso.convertBackward(SubtB1) shouldBe SubtA1
-        iso.convertBackward(SubtB2) shouldBe SubtA2
-        iso.convertForward(SubtA3(5, 0.232)) shouldBe SubtB3(5, 0.232)
-        iso.convertBackward(SubtB3(5, 0.232)) shouldBe SubtA3(5, 0.232)
+        val iso = summon[Migration[CoprA, CoprB]]
+        iso.migrate(SubtA1) shouldBe SubtB1
+        iso.migrate(SubtA2) shouldBe SubtB2
+        iso.migrate(SubtA3(5, 0.232)) shouldBe SubtB3(5, 0.232)
     }
 
-    behavior of "Recursive Isomorphism"
+    behavior of "Recursive Migration"
 
     it should "be able to convert to and from recursive, isomorphic data types" in {
         val (recSchA, recSchB) = {
@@ -144,7 +137,7 @@ class ShapeIsomorphismTest extends AnyFlatSpecLike with org.scalatest.matchers.s
 
         import generic.schema.utilities.*
         val coprA : RecCoprA = InnerA(23, ExtTermA)
-        coprA.convert[RecCoprB] shouldBe InnerB(23, ExtTermB)
+        coprA.migrateTo[RecCoprB] shouldBe InnerB(23, ExtTermB)
     }
 
 }

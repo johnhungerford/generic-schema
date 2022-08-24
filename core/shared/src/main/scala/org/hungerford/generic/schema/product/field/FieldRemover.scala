@@ -74,13 +74,13 @@ object FieldTypeRemover extends LowPriorityFieldTypeRemovers {
     type Aux[ T, N <: Nat, R <: Tuple, O <: Tuple ] =
         FieldTypeRemover[ T, N, R ] { type Out = O }
 
-    given fieldRemoverByTypeZero[ T, Fld <: Field.Of[ T ], Tail <: Tuple ] : FieldTypeRemover[ T, Nat._0, Fld *: Tail ] with {
+    given fieldRemoverByTypeZero[ T, Fld <: Field.Tpe[ T ], Tail <: Tuple ] : FieldTypeRemover[ T, Nat._0, Fld *: Tail ] with {
         type Out = Tail
 
         def remove( fields : Fld *: Tail ) : Tail = fields.tail
     }
 
-    given fieldRemoverByTypeNonZero[ T, N <: Nat, DecN <: Nat, Fld <: Field.Of[ T ], Tail <: Tuple, Res <: Tuple ](
+    given fieldRemoverByTypeNonZero[ T, N <: Nat, DecN <: Nat, Fld <: Field.Tpe[ T ], Tail <: Tuple, Res <: Tuple ](
         using
         ev :  Nat.DecA[ N, DecN ],
         next : FieldTypeRemover.Aux[ T, DecN, Tail, Res ],

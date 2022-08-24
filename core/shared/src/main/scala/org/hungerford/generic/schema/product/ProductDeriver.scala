@@ -36,14 +36,14 @@ object ProductDeriver {
     }
 
     given [ T <: Product, TsTail <: Tuple, L <: Tuple, RVt <: Tuple, LRV <: Tuple, Rt <: Tuple ](
-        using
-        mirror : MirrorProduct[ T, RVt, L ],
-        mirEv : NotGiven[ mirror.type <:< Mirror.Singleton ],
-        zip : Zipper.Aux[ L, RVt, LRV ],
-        fieldsDeriver : FieldTupDeriver.Aux[ T, TsTail, LRV, RVt, Rt ],
-        valEv : CtxWrapTuplesConstraint[ Field.Of, Rt, RVt ],
-        uniq : UniqueFieldNames[ Rt ],
-        cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
+		using
+		mirror : MirrorProduct[ T, RVt, L ],
+		mirEv : NotGiven[ mirror.type <:< Mirror.Singleton ],
+		zip : Zipper.Aux[ L, RVt, LRV ],
+		fieldsDeriver : FieldTupDeriver.Aux[ T, TsTail, LRV, RVt, Rt ],
+		valEv : CtxWrapTuplesConstraint[ Field.Tpe, Rt, RVt ],
+		uniq : UniqueFieldNames[ Rt ],
+		cType : ProductConstructor[ RVt => T, RVt, Nothing, T ],
     ) : ProductDeriver[ T, TsTail ] with {
             override type Out = DerivedPShape[ T, Rt, RVt ]
 

@@ -87,7 +87,7 @@ object FieldTypeReplacer extends LowPriorityFieldTypeReplacers {
     type Aux[ F, N <: Nat, R <: Tuple, NewT, NewF, NewN <: FieldName, NewS, O <: Tuple ] =
         FieldTypeReplacer[ F, N, R, NewT, NewF, NewN, NewS ] { type Out = O }
 
-    given [ F, Fld <: Field.Of[ F ], NewT, NewF, NewN <: FieldName, NewS, Tail <: Tuple ] : FieldTypeReplacer.Aux[ F, Nat._0, Fld *: Tail, NewT, NewF, NewN, NewS, Field[ NewT, NewF, NewN, NewS ] *: Tail ] = {
+    given [ F, Fld <: Field.Tpe[ F ], NewT, NewF, NewN <: FieldName, NewS, Tail <: Tuple ] : FieldTypeReplacer.Aux[ F, Nat._0, Fld *: Tail, NewT, NewF, NewN, NewS, Field[ NewT, NewF, NewN, NewS ] *: Tail ] = {
         new FieldTypeReplacer[ F, Nat._0, Fld *: Tail, NewT, NewF, NewN, NewS ] {
             type Out = Field[ NewT, NewF, NewN, NewS ] *: Tail
 
@@ -98,7 +98,7 @@ object FieldTypeReplacer extends LowPriorityFieldTypeReplacers {
         }
     }
 
-    given [ F, N <: Nat, DecN <: Nat, Fld <: Field.Of[ F ], NewT, NewF, NewN <: FieldName, NewS, Tail <: Tuple, Next <: Tuple ](
+    given [ F, N <: Nat, DecN <: Nat, Fld <: Field.Tpe[ F ], NewT, NewF, NewN <: FieldName, NewS, Tail <: Tuple, Next <: Tuple ](
         using
         ev : Nat.DecA[ N, DecN ],
         next : FieldTypeReplacer.Aux[ F, DecN, Tail, NewT, NewF, NewN, NewS, Next ],

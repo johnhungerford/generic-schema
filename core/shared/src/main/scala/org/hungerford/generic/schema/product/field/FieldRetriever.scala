@@ -91,14 +91,14 @@ object FieldTypeRetriever extends LowPriorityFieldTypeRetrievers {
     type Aux[ T, N <: Nat, R <: Tuple, F ] =
         FieldTypeRetriever[ T, N, R ] { type Fld = F }
 
-    given [ T, Fl <: Field.Of[ T ], Tail <: Tuple ] : FieldTypeRetriever[ T, Nat._0, Fl *: Tail] with {
+    given [ T, Fl <: Field.Tpe[ T ], Tail <: Tuple ] : FieldTypeRetriever[ T, Nat._0, Fl *: Tail] with {
         type Fld = Fl
 
         override def retrieve( from : Fl *: Tail ) : Fl =
             from.head
     }
 
-    given [ T, N <: Nat, DecN <: Nat, Fl <: Field.Of[ T ], Tail <: Tuple, Res ](
+    given [ T, N <: Nat, DecN <: Nat, Fl <: Field.Tpe[ T ], Tail <: Tuple, Res ](
         using
         ev : Nat.DecA[ N, DecN ],
         next : FieldTypeRetriever.Aux[ T, DecN, Tail, Res ]

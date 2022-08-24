@@ -178,9 +178,9 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
         case class Recur( coprod : Coprod ) extends Coprod
 
         val outerSch = Schema.derived[ Outer ]
-        val coprodSch = outerSch( "coprod" ).schema
-        import coprodSch.givenSchema
+        import outerSch.givenSchema
 
+        val coprodSch = outerSch( "coprod" ).schema
         val innerCoprodSch = outerSch( "coprod" / "Recur" / "coprod" ).schema
 
         coprodSch shouldBe innerCoprodSch
@@ -197,15 +197,11 @@ class SchemaDeriverTest extends AnyFlatSpecLike with Matchers {
         case class Inner4( field1 : Inner3 )
 
         val outerSch = Schema.derived[ Outer ]
+        import outerSch.givenSchema
 
         val inner1Sch = outerSch( "field2" ).schema
-        import inner1Sch.givenSchema
-
         val inner2Sch = inner1Sch( "field1" ).schema
-        import inner2Sch.givenSchema
-
         val inner3Sch = inner2Sch( "field3" ).schema
-        import inner3Sch.givenSchema
 
         outerSch( "field2" / "field1" / "field2" ).schema shouldBe outerSch( "field2" ).schema
         inner3Sch( "Inner3Sub3" / "field1" ).schema shouldBe inner2Sch

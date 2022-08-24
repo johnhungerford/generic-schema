@@ -54,8 +54,8 @@ object SchemaRebuilder {
     type Aux[ T, S, B ] = SchemaRebuilder[ T, S ] { type Builder = B }
 
     given productRebuilder[ T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C ](
-        using
-        ctx : CtxWrapTuplesConstraint[ Field.Of, R, RV ],
+		using
+		ctx : CtxWrapTuplesConstraint[ Field.Tpe, R, RV ],
     ) : SchemaRebuilder.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ], ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ] ] = {
         new SchemaRebuilder[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] {
             type Builder = ProductSchemaBuilder[ T, R, RV, AF, AFS, AFE, C ]

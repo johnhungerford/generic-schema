@@ -3,11 +3,13 @@ package org.hungerford.generic.schema.defaults
 import org.hungerford.generic.schema
 import org.hungerford.generic.schema.coproduct.CoproductSchemaBuilder
 import org.hungerford.generic.schema.product.ProductSchemaBuilder
+import org.hungerford.generic.schema.singleton.SingletonSchemaBuilder
 import org.hungerford.generic.schema.types.TypeName
 import org.hungerford.generic.schema.{Primitive, PrimitiveSchemaBuilder, Schema, SchemaProvider}
 
 import scala.compiletime.summonInline
 import scala.reflect.ClassTag
+import scala.runtime.RichBoolean
 
 trait DefaultSchemas {
 
@@ -23,12 +25,32 @@ trait DefaultSchemas {
     .description( s"Floating point number between ${Float.MinValue} and ${Float.MaxValue} with maximum precision of ${Float.MinPositiveValue}" )
     .build
 
+  given longSchema : Primitive[Long] = PrimitiveSchemaBuilder[Long]
+    .description(s"Integer number between ${Long.MinValue} and ${Long.MaxValue}")
+    .build
+
+  given shortSchema: Primitive[Short] = PrimitiveSchemaBuilder[Short]
+    .description(s"Integer number between ${Short.MinValue} and ${Short.MaxValue}")
+    .build
+
+  given byteSchema: Primitive[Byte] = PrimitiveSchemaBuilder[Byte]
+    .description(s"Binary number consisting of eight bits, between ${Byte.MinValue.toInt} and ${Byte.MaxValue.toInt}")
+    .build
+
+  given unitSchema: Primitive[Unit] = PrimitiveSchemaBuilder[Unit]
+    .description(s"Empty value type")
+    .build
+
   given boolSchema : Primitive[ Boolean ] = PrimitiveSchemaBuilder[ Boolean ]
-    .description( s"A type with two possible values: ${true} or ${false}" )
+    .description( s"One of two possible values: ${true} or ${false}" )
     .build
 
   given stringSchema : Primitive[ String ] = PrimitiveSchemaBuilder[ String ]
     .description( s"Text" )
+    .build
+
+  given charSchema: Primitive[Char] = PrimitiveSchemaBuilder[Char]
+    .description("Single character")
     .build
 
   transparent inline given someSchema[ T : ClassTag, TS ](
@@ -77,6 +99,21 @@ trait DefaultSchemas {
                 .build
       }
   }
+
+  transparent inline given stringMapSchema[T]: Schema[Map[String, T]] = {
+      inline summonInline[Schema[T]] match {
+          case tSch: Schema.Aux[T, s] =>
+              type S = s
+              val tName = org.hungerford.generic.schema.macros.TypeName.showType[T]
+              ProductSchemaBuilder[Map[String, T]]
+                .description(s"Map from text to $tName, as an open product")
+                .additionalFields[T]
+                .fromSchema[S](v => v)(tSch)
+                .construct(af => af)
+                .build
+      }
+  }
+
 }
 
 object DefaultSchemas extends DefaultSchemas

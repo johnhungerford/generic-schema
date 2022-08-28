@@ -7,7 +7,7 @@ import org.hungerford.generic.schema.product.ProductShape
 import org.hungerford.generic.schema.product.constructor.{ProductConstructor, ProductDeconstructor}
 import org.hungerford.generic.schema.singleton.SingletonShape
 import org.hungerford.generic.schema.product.field.{Field, FieldName, LazyField}
-import org.hungerford.generic.schema.types.{Filter, Of, OfShape}
+import org.hungerford.generic.schema.types.{Of, OfShape}
 import org.hungerford.generic.schema.Component
 import org.hungerford.generic.schema.Component.WithSchema
 
@@ -67,9 +67,10 @@ object ShapeMigration {
 			sm.migrate(a, s1, s2)
 	}
 
-	given productMigration[A, OA, ARV <: Tuple, AR <: Tuple, AAF, AAFS, AAFE, AC, B, OB, BR <: Tuple, BRV <: Tuple, BAF, BAFS, BAFE, BC] (
+	given productMigration[A, OA, ARV <: Tuple, AR <: Tuple, AAF, AAFS, AAFE, AC, ARVFixed <: Tuple, ARFixed <: Tuple, B, OB, BR <: Tuple, BRV <: Tuple, BAF, BAFS, BAFE, BC] (
 		using
-		fieldsIso: ShapeMigration.Aux[ARV, AR, OA, BRV, BR, OB],
+		fieldsAlignFilter: AlignFilter.Aux[Forward, ARV, AR, OA, BRV, BR, OB, ARVFixed, ARFixed],
+		fieldsIso: ShapeMigration.Aux[ARVFixed, ARFixed, OA, BRV, BR, OB],
 		ad: ProductDeconstructor.Aux[A, (AAFE, AR), (Map[String, AAF], ARV)],
 		bc: ProductConstructor[BC, BRV, BAF, B],
 		afIso: ShapeMigration.Aux[AAF, AAFS, OA, BAF, BAFS, OB],
@@ -79,8 +80,10 @@ object ShapeMigration {
 
 		def migrate(a: A, aShape: AShape, bShape: BShape): B =
 			val (aaf, arv) = ad.deconstruct(a, (aShape.afExtractor, aShape.fieldDescriptions))
+			val arvFixed = fieldsAlignFilter.alignValues(arv)
+			val arFixed = fieldsAlignFilter.alignComponents(aShape.fieldDescriptions)
 			val brv = fieldsIso
-			  .migrate(arv, aShape.fieldDescriptions, bShape.fieldDescriptions)
+			  .migrate(arvFixed, arFixed, bShape.fieldDescriptions)
 			val baf = aaf.map {
 				case (key, aafValue) => key -> (afIso
 				  .migrate(
@@ -92,9 +95,10 @@ object ShapeMigration {
 			bc.construct(bShape.constructor)(brv, baf)
 	}
 
-	given productMigrationNoAF[A, OA, AR <: Tuple, ARV <: Tuple, AC, B, OB, BR <: Tuple, BRV <: Tuple, BC] (
+	given productMigrationNoAF[A, OA, AR <: Tuple, ARV <: Tuple, AC, ARVFixed <: Tuple, ARFixed <: Tuple, B, OB, BR <: Tuple, BRV <: Tuple, BC] (
 		using
-		fieldsIso: ShapeMigration.Aux[ARV, AR, OA, BRV, BR, OB],
+		fieldsAlignFilter: AlignFilter.Aux[Forward, ARV, AR, OA, BRV, BR, OB, ARVFixed, ARFixed],
+		fieldsIso: ShapeMigration.Aux[ARVFixed, ARFixed, OA, BRV, BR, OB],
 		ad: ProductDeconstructor.Aux[A, (Unit, AR), ARV],
 		bc: ProductConstructor[BC, BRV, Nothing, B],
 	): ShapeMigration[A, OA, B, OB] with {
@@ -103,8 +107,10 @@ object ShapeMigration {
 
 		def migrate(a: A, aShape: AShape, bShape: BShape): B =
 			val arv = ad.deconstruct(a, (aShape.afExtractor, aShape.fieldDescriptions))
+			val arvFixed = fieldsAlignFilter.alignValues(arv)
+			val arFixed = fieldsAlignFilter.alignComponents(aShape.fieldDescriptions)
 			val brv = fieldsIso
-			  .migrate(arv, aShape.fieldDescriptions, bShape.fieldDescriptions)
+			  .migrate(arvFixed, arFixed, bShape.fieldDescriptions)
 			bc.construct(bShape.constructor)(brv, Map.empty)
 	}
 
@@ -151,15 +157,17 @@ object ShapeMigration {
 			bHead *: bTail
 	}
 
-	given coproductMigration[A, OA, AR <: Tuple, ARV <: Tuple, AD, ADN, B, OB, BR <: Tuple, BRV <: Tuple, BD, BDN] (
+	given coproductMigration[A, OA, AR <: Tuple, ARV <: Tuple, AD, ADN, B, OB, BR <: Tuple, BRV <: Tuple, BD, BDN, BRVFixed <: Tuple, BRFixed <: Tuple] (
 		using
-		subtypesIso: CoproductShapeMigration.Aux[A, AR, OA, B, BR, OB],
+		stAlignFilter: AlignFilter.Aux[Backward, BRV, BR, OB, ARV, AR, OA, BRVFixed, BRFixed],
+		subtypesIso: CoproductShapeMigration.Aux[A, AR, OA, B, BRFixed, OB],
 	): ShapeMigration[A, OA, B, OB] with {
 		type AShape = CoproductShape[A, AR, ARV, AD, ADN]
 		type BShape = CoproductShape[B, BR, BRV, BD, BDN]
 
 		def migrate(a: A, aShape: AShape, bShape: BShape): B =
-			subtypesIso.migrate(a, aShape.subtypeDescriptions, bShape.subtypeDescriptions)
+			val brFixed = stAlignFilter.alignComponents(bShape.subtypeDescriptions)
+			subtypesIso.migrate(a, aShape.subtypeDescriptions, brFixed)
 	}
 
 }
@@ -182,10 +190,11 @@ object CoproductShapeMigration {
 		type BShape = BC *: BTail
 
 		def migrate(a: A, aShape: AShape, bShape: BShape): B =
-			aShape
-			  .head
+			val ac: AC = aShape.head
+			val bc: BC = bShape.head
+			ac
 			  .fromSuper(a)
-			  .map(as => bShape.head.toSuper(stIso.migrate(as, aShape.head, bShape.head)))
+			  .map((ast: AST) => bc.toSuper(stIso.migrate(ast, ac, bc)))
 			  .getOrElse(tailIso.migrate(a, aShape.tail, bShape.tail))
 	}
 

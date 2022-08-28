@@ -35,7 +35,9 @@ object FieldReplacer extends LowPriorityFieldReplacers {
             def replace(
                 fields : Field[ OldT, OldF, OldN, OldS ] *: Tail,
                 withField : Field[ NewT, NewF, NewN, NewS ],
-            ) : Field[ NewT, NewF, NewN, NewS ] *: Tail = withField *: fields.tail
+            ) : Field[ NewT, NewF, NewN, NewS ] *: Tail =
+                val tail : Tail = fields.tail
+                withField *: tail
         }
     }
 
@@ -94,7 +96,9 @@ object FieldTypeReplacer extends LowPriorityFieldTypeReplacers {
             def replace(
                 fields : Fld *: Tail,
                 withField : Field[ NewT, NewF, NewN, NewS ],
-            ) : Field[ NewT, NewF, NewN, NewS ] *: Tail = withField *: fields.tail
+            ) : Field[ NewT, NewF, NewN, NewS ] *: Tail =
+                val tail: Tail = fields.tail
+                withField *: tail
         }
     }
 

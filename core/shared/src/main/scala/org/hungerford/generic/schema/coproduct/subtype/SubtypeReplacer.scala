@@ -31,7 +31,9 @@ object SubtypeReplacer extends LowPrioritySubtypeReplacer {
         override def replace(
             subtypes: Subtype[ OldT, OldST, OldD, OldDN, OldDV, N, OldS ] *: Tail,
             withSubtype: NewSubT
-        ) : Out = withSubtype *: subtypes.tail
+        ) : Out =
+            val tail: Tail = subtypes.tail
+            withSubtype *: tail
     }
 
     given subtypeReplacer[ I <: Int & Singleton, N <: Nat, NewSubT, R <: Tuple, Res ](
@@ -83,7 +85,9 @@ object SubtypeTypeReplacer extends LowPrioritySubtypeTypeReplacer {
         override def replace(
             subtypes: SubT *: Tail,
             withSubtype: NewSubT
-        ) : Out = withSubtype *: subtypes.tail
+        ) : Out =
+            val tail : Tail = subtypes.tail
+            withSubtype *: tail
     }
 
     given foundNext[ ST, N <: Nat, DecN <: Nat, NewSubT, T, D, DN, DV, TN <: TypeName, SubT <: Subtype.OrLazy[ T, ST, D, DN, DV, TN ], Tail <: Tuple, Next <: Tuple ](

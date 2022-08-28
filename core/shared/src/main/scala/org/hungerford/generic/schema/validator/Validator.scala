@@ -31,18 +31,18 @@ object Validator {
     def nonEmptyString : Validator[ String ] = StringLength( min[ Int ]( 1 ) )
 
     // Collections validators
-    def minSize[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
-        CollSize[ T, Col ]( min[ Int ]( length ) )
-    def minSizeExclusive[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
-        CollSize[ T, Col ]( minExclusive[ Int ]( length ) )
-    def maxSize[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
-        CollSize[ T, Col]( max[ Int ]( length ) )
-    def maxSizeExclusive[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
-        CollSize[ T, Col ]( maxExclusive[ Int ]( length ) )
-    def fixedSize[ T, Col[ _ ] <: Iterable[ _ ] ]( length : Int ) : Validator[ Col[ T ] ] =
-        CollSize[ T, Col ]( EqValidator( length ) )
-    def nonEmptyCollection[ T, Col[ _ ] <: Iterable[ _ ] ] : Validator[ Col[ T ] ] =
-        CollSize[ T, Col ]( min[ Int ]( 1 ) )
+    def minSize[ Col : Collection ]( length : Int ) : Validator[ Col ] =
+        CollSize[ Col ]( min[ Int ]( length ) )
+    def minSizeExclusive[ Col : Collection ]( length : Int ) : Validator[ Col ] =
+        CollSize[ Col ]( minExclusive[ Int ]( length ) )
+    def maxSize[ Col : Collection ]( length : Int ) : Validator[ Col ] =
+        CollSize[ Col]( max[ Int ]( length ) )
+    def maxSizeExclusive[ Col : Collection ]( length : Int ) : Validator[ Col ] =
+        CollSize[ Col ]( maxExclusive[ Int ]( length ) )
+    def fixedSize[ Col : Collection ]( length : Int ) : Validator[ Col ] =
+        CollSize[ Col ]( EqValidator( length ) )
+    def nonEmptyCollection[ Col : Collection ] : Validator[ Col ] =
+        CollSize[ Col ]( min[ Int ]( 1 ) )
 
     // Enum validators
     def oneOf[ T ]( possibleValues : Iterable[ T ] ) : Validator[ T ] = new OneOf[ T ]( possibleValues.toSet )
@@ -89,8 +89,8 @@ case class NoneOf[ T ]( excludedValues : Set[ T ] ) extends Validator[ T ] {
     override def isValid( instance: T ): Boolean = !excludedValues.contains( instance )
 }
 
-case class CollSize[ T, Col[ _ ] <: Iterable[ _ ] ]( sizeValidator : Validator[ Int ] ) extends Validator[ Col[ T ] ] {
-    override def isValid( instance: Col[ T ] ): Boolean = sizeValidator.isValid( instance.size )
+case class CollSize[ Col : Collection ]( sizeValidator : Validator[ Int ] ) extends Validator[ Col ] {
+    override def isValid( instance: Col ): Boolean = sizeValidator.isValid( Collection[Col].iterable(instance).size )
 }
 
 case class NonZero[ T : Numeric ]() extends Validator[ T ] {

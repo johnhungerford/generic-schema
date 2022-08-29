@@ -25,14 +25,14 @@ trait AlignFilter[D <: Dir, RV1, R1, Outer1, RV2, R2, Outer2] {
 
 object AlignFilter {
 	type Aux[D <: Dir, RV1, R1, Outer1, RV2, R2, Outer2, RVO, RO] = AlignFilter[D, RV1, R1, Outer1, RV2, R2, Outer2] { type ROut = RO; type RVOut = RVO }
-	given nameTypeAlign[D <: Dir, RV1 <: Tuple, R1 <: Tuple, ZI1 <: Tuple, Outer1, RV2 <: Tuple, R2 <: Tuple, Z2 <: Tuple, Outer2, Mone <: Tuple, Mtwo <: Tuple, Mthree <: Tuple, Mfour <: Tuple, RVO <: Tuple, RO <: Tuple](
+	given nameTypeAlign[D <: Dir, RV1 <: Tuple, R1 <: Tuple, ZI1 <: Tuple, Outer1, RV2 <: Tuple, R2 <: Tuple, Z2 <: Tuple, Outer2, Mone <: Tuple, ZI1one <: Tuple, Mtwo <: Tuple, ZI1two <: Tuple, Mthree <: Tuple, ZI1three <: Tuple, Mfour <: Tuple, ZI1four <: Tuple, RVO <: Tuple, RO <: Tuple](
 		using
 		zi1: ZipRsWithIndex.Aux[Nat._0, RV1, R1, ZI1],
 		z2: ZipRs.Aux[RV2, R2, Z2],
-		one: MapAlign.Aux[D, NameTypeEquiv, ZI1, Outer1, Z2, Outer2, Nothing, Mone],
-		two: MapAlign.Aux[D, NameEquivCanMigrate, ZI1, Outer1, Z2, Outer2, Mone, Mtwo],
-		three: MapAlign.Aux[D, TypeEquiv, ZI1, Outer1, Z2, Outer2, Mtwo, Mthree],
-		four: MapAlign.Aux[D, CanMigrate, ZI1, Outer1, Z2, Outer2, Mthree, Mfour],
+		one: MapAlign.Aux[D, NameTypeEquiv, ZI1, Outer1, Z2, Outer2, Nothing, Mone, ZI1one],
+		two: MapAlign.Aux[D, NameEquivCanMigrate, ZI1one, Outer1, Z2, Outer2, Mone, Mtwo, ZI1two],
+		three: MapAlign.Aux[D, TypeEquiv, ZI1two, Outer1, Z2, Outer2, Mtwo, Mthree, ZI1three],
+		four: MapAlign.Aux[D, CanMigrate, ZI1three, Outer1, Z2, Outer2, Mthree, Mfour, ZI1four],
 		afm: AlignFromMap.Aux[Mfour, RV1, R1, RVO, RO]
 	): AlignFilter[D, RV1, R1, Outer1, RV2, R2, Outer2] with {
 		type RVOut = RVO
@@ -83,41 +83,59 @@ object ZipRsWithIndex {
 	}
 }
 
-trait MapAlign[D <: Dir, P <: Pred, Z1 <: Tuple, O1, ZI2 <: Tuple, O2, MapIn] {
+trait MapAlign[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, Z2 <: Tuple, O2, MapIn] {
 	type MapOut <: Tuple
+	type NewZI1 <: Tuple
 }
 
 trait MapAligns1 {
-	given skip[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, HZ2, TZ2 <: Tuple, O2, HMI <: Nat, TMI <: Tuple, FoundI <: Nat | Nothing, NewZI1 <: Tuple, NextMO <: Tuple] (
+	given skip[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, HZ2, TZ2 <: Tuple, O2, HMI <: Nat, TMI <: Tuple, FoundI <: Nat | Nothing, NextMO <: Tuple, NextZI1 <: Tuple] (
 		using
-		nextMa: MapAlign.Aux[D, P, ZI1, O1, TZ2, O2, TMI, NextMO]
+		nextMa: MapAlign.Aux[D, P, ZI1, O1, TZ2, O2, TMI, NextMO, NextZI1]
 	): MapAlign[D, P, ZI1, O1, HZ2 *: TZ2, O2, HMI *: TMI] with {
 		type MapOut = HMI *: NextMO
+		type NewZI1 = NextZI1
+	}
+
+	given noZI1MITup[D <: Dir, P <: Pred, O1, Z2 <: Tuple, O2, MI <: Tuple]: MapAlign[D, P, EmptyTuple, O1, Z2, O2, MI] with {
+		type MapOut = MI
+		type NewZI1 = EmptyTuple
+	}
+
+	given noZI1MINothing[D <: Dir, P <: Pred, O1, HZ2, TZ2 <: Tuple, O2, NextMO <: Tuple](
+		using
+		next: MapAlign.Aux[D, P, EmptyTuple, O1, TZ2, O2, Nothing, NextMO, EmptyTuple]
+	): MapAlign[D, P, EmptyTuple, O1, HZ2 *: TZ2, O2, Nothing] with {
+		type MapOut = Nothing *: NextMO
+		type NewZI1 = EmptyTuple
 	}
 }
 
 object MapAlign extends MapAligns1 {
-	type Aux[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, Z2 <: Tuple, O2, MI, MO <: Tuple] =
-		MapAlign[D, P, ZI1, O1, Z2, O2, MI] { type MapOut = MO }
+	type Aux[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, Z2 <: Tuple, O2, MI, MO <: Tuple, NZI1 <: Tuple] =
+		MapAlign[D, P, ZI1, O1, Z2, O2, MI] { type MapOut = MO; type NewZI1 = NZI1 }
 
-	given empty[D <: Dir, P <: Pred, Z1 <: Tuple, O1, O2, MI]: MapAlign[D, P, Z1, O1, EmptyTuple, O2, MI] with {
+	given emptyZ2[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, O2, MI]: MapAlign[D, P, ZI1, O1, EmptyTuple, O2, MI] with {
 		type MapOut = EmptyTuple
+		type NewZI1 = ZI1
 	}
 
-	given nextMI[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, HZ2V, HZ2S, TZ2 <: Tuple, O2, HMI <: Nat | Nothing, TMI <: Tuple, FoundI <: Nat | Nothing, NewZI1 <: Tuple, NextMO <: Tuple](
+	given nextMI[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, HZ2V, HZ2S, TZ2 <: Tuple, O2, HMI <: Nat | Nothing, TMI <: Tuple, FoundI <: Nat | Nothing, UpdatedZI1 <: Tuple, NextMO <: Tuple, NextZI1 <: Tuple](
 		using
-		find: FindAndRemove.Aux[D, P, HZ2V, HZ2S, O1, ZI1, O2, FoundI, NewZI1],
-		nextMa: MapAlign.Aux[D, P, NewZI1, O1, TZ2, O2, TMI, NextMO]
+		find: FindAndRemove.Aux[D, P, HZ2V, HZ2S, O1, ZI1, O2, FoundI, UpdatedZI1],
+		nextMa: MapAlign.Aux[D, P, UpdatedZI1, O1, TZ2, O2, TMI, NextMO, NextZI1]
 	): MapAlign[D, P, ZI1, O1, (HZ2V, HZ2S) *: TZ2, O2, Nothing *: TMI] with {
 		type MapOut = FoundI *: NextMO
+		type NewZI1 = NextZI1
 	}
 
-	given next[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, HZ2V, HZ2S, TZ2 <: Tuple, O2, HMI <: Nat | Nothing, FoundI <: Nat | Nothing, NewZI1 <: Tuple, NextMO <: Tuple] (
+	given next[D <: Dir, P <: Pred, ZI1 <: Tuple, O1, HZ2V, HZ2S, TZ2 <: Tuple, O2, FoundI <: Nat | Nothing, UpdatedZI1 <: Tuple, NextMO <: Tuple, NextZI1 <: Tuple] (
 		using
-		find: FindAndRemove.Aux[D, P, HZ2V, HZ2S, O1, ZI1, O2, FoundI, NewZI1],
-		nextMa: MapAlign.Aux[D, P, NewZI1, O1, TZ2, O2, Nothing, NextMO]
+		find: FindAndRemove.Aux[D, P, HZ2V, HZ2S, O1, ZI1, O2, FoundI, UpdatedZI1],
+		nextMa: MapAlign.Aux[D, P, UpdatedZI1, O1, TZ2, O2, Nothing, NextMO, NextZI1]
 	): MapAlign[D, P, ZI1, O1, (HZ2V, HZ2S) *: TZ2, O2, Nothing] with {
 		type MapOut = FoundI *: NextMO
+		type NewZI1 = NextZI1
 	}
 }
 
@@ -147,7 +165,7 @@ object FindAndRemove extends FindAndRemoves1 {
 
 	given foundForward[P <: Pred, V, S, O1, V2, S2, I2 <: Nat, TZI <: Tuple, O2](
 		using
-		ap: AlignPredicate[P, V, S, O1, V2, S2, O2],
+		ap: AlignPredicate[P, V2, S2, O2, V, S, O1],
 	): FindAndRemove[Forward, P, V, S, O1, (V2, S2, I2) *: TZI, O2] with {
 		type Index = I2
 		type NewZI = TZI
@@ -155,7 +173,7 @@ object FindAndRemove extends FindAndRemoves1 {
 
 	given foundBackward[ P <: Pred, V, S, O1, V2, S2, I2 <: Nat, TZI <: Tuple, O2] (
 		using
-		sm: AlignPredicate[P, V2, S2, O2, V, S, O1],
+		sm: AlignPredicate[P, V, S, O1, V2, S2, O2],
 	): FindAndRemove[Backward, P, V, S, O1, (V2, S2, I2) *: TZI, O2] with {
 		type Index = I2
 		type NewZI = TZI

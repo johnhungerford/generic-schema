@@ -29,6 +29,25 @@ case class RecProdB(inner: InnerB) extends ExternalB
 
 class MigrationTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Matchers {
 
+    behavior of "Primitive Migration"
+
+    it should "convert a primitive to itself" in {
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
+
+        val iso = summon[Migration[Int, Int]]
+        iso.migrate(23) shouldBe 23
+    }
+
+    it should "convert using given conversions" in {
+        import org.hungerford.generic.schema.defaults.DefaultSchemas.given
+
+        val iso = summon[Migration[Int, Long]]
+        iso.migrate(234323) shouldBe 234323L
+
+        assertDoesNotCompile("""summon[Migration[Long, Int]]""")
+    }
+
+
     behavior of "Product Migration"
 
     case class Prod1(a: Int, b: Boolean, c: Double)
@@ -41,13 +60,6 @@ class MigrationTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
     val p2Sch = {
         import generic.schema.exports.{*, given}
         Schema.derived[Prod2]
-    }
-
-    it should "convert a primitive to itself" in {
-       import org.hungerford.generic.schema.defaults.DefaultSchemas.given
-
-        val iso = summon[Migration[Int, Int]]
-        iso.migrate(23) shouldBe 23
     }
 
     it should "use a field to convert a type" in {
@@ -208,6 +220,38 @@ class MigrationTest extends AnyFlatSpecLike with org.scalatest.matchers.should.M
         val unaliged = UnalignedProd4("hello", 1, "world", "hi", 2)
         val aligned = unaliged.migrateTo[AlignedProd4]
         aligned shouldBe AlignedProd4(1, "hi", 2, "world", "hello")
+    }
+
+    case class UnalignedProd5(f1: Int, f2: Long)
+    case class AlignedProd5(field1: Long, field2: Double)
+
+    it should "prefer to align fields by identical types than by migrations across types" in {
+        val (prodA, prodB) = {
+            import generic.schema.exports.*
+            (Schema.derived[UnalignedProd5], Schema.derived[AlignedProd5])
+        }
+        import prodA.givenSchema, prodB.givenSchema
+
+        import generic.schema.utilities.*
+        val unaliged = UnalignedProd5(1, 2)
+        val aligned = unaliged.migrateTo[AlignedProd5]
+        aligned shouldBe AlignedProd5(2, 1)
+    }
+
+    case class UnalignedProd6(label: Int, f2: Int)
+    case class AlignedProd6(label: Int, field2: Int)
+
+    it should "not align the same index more than once" in {
+        val (prodA, prodB) = {
+            import generic.schema.exports.*
+            (Schema.derived[UnalignedProd6], Schema.derived[AlignedProd6])
+        }
+        import prodA.givenSchema, prodB.givenSchema
+
+        import generic.schema.utilities.*
+        val unaliged = UnalignedProd6(1, 2)
+        val aligned = unaliged.migrateTo[AlignedProd6]
+        aligned shouldBe AlignedProd6(1, 2)
     }
 
     enum UnalignedCopr:

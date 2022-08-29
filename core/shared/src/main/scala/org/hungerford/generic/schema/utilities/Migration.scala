@@ -33,8 +33,30 @@ trait ShapeMigration[A, OuterA, B, OuterB] {
 	def migrate(a: A, aShape: AShape, bShape: BShape): B
 }
 
+case class PrimitiveMigration[A, B](conv: A => B) {
+	def apply(a: A): B = conv(a)
+}
+
+object PrimitiveMigration {
+	given numeric[A: Numeric]: PrimitiveMigration[A, Double] =
+		PrimitiveMigration((a: A) => Numeric[A].toDouble(a))
+
+	given intToLong: PrimitiveMigration[Int, Long] = PrimitiveMigration(_.toLong)
+	given intToFloat: PrimitiveMigration[Int, Float] = PrimitiveMigration(_.toFloat)
+	given charToString: PrimitiveMigration[Char, String] = PrimitiveMigration(_.toString)
+}
+
 object ShapeMigration {
 	type Aux[A, AS, OuterA, B, BS, OuterB] = ShapeMigration[A, OuterA, B, OuterB] {type AShape = AS; type BShape = BS}
+
+	given primitiveConversionMigration[A, OuterA, B, OuterB](
+		using
+		conv: PrimitiveMigration[A, B],
+	): ShapeMigration[A, OuterA, B, OuterB] with {
+		type AShape = Unit
+		type BShape = Unit
+		def migrate(a: A, as: Unit, bs: Unit): B = conv(a)
+	}
 
 	given identityMigration[A, AS, OuterA, OuterB]: ShapeMigration[A, OuterA, A, OuterB] with {
 		type AShape = AS
@@ -198,53 +220,11 @@ object CoproductShapeMigration {
 			  .getOrElse(tailIso.migrate(a, aShape.tail, bShape.tail))
 	}
 
-//	given coproductNonEmptyLazySubtypesTupleIso[A, OA, AS, AD, ADN, ADV, AN <: TypeName, ASS, ATail <: Tuple, B, OB, BS, BD, BDN, BDV, BN <: TypeName, BSS, BTail <: Tuple] (
-//		using
-//		stIso: ShapeMigration.Aux[AS, Subtype[A, AS, AD, ADN, ADV, AN, ASS], OA, BS, Subtype[B, BS, BD, BDN, BDV, BN, BSS], OB],
-//		tailIso: => CoproductShapeMigration.Aux[A, ATail, OA, B, BTail, OB],
-//	): CoproductShapeMigration[A, OA, B, OB] with {
-//		type AShape = Subtype[A, AS, AD, ADN, ADV, AN, ASS] *: ATail
-//		type BShape = Subtype[B, BS, BD, BDN, BDV, BN, BSS] *: BTail
-//
-//		def migrate(a: A, aShape: AShape, bShape: BShape): B =
-//			aShape
-//			  .head
-//			  .fromSuper(a)
-//			  .map(as => bShape.head.toSuper(stIso.migrate(as, aShape.head, bShape.head)))
-//			  .getOrElse(tailIso.migrate(a, aShape.tail, bShape.tail))
-//	}
-//
-//	given coproductNonEmptySubtypesTupleIsoLazy[A, OA, OAS, AS, AD, ADN, ADV, AN <: TypeName, ASS, ATail <: Tuple, B, OB, OBS, BS, BD, BDN, BDV, BN <: TypeName, BSS, BTail <: Tuple] (
-//		using
-//		oaSch: Schema.Aux[OA, OAS],
-//		asSchExtr: SchemaExtractor.Aux[AS, Schema.Aux[OA, OAS], ASS],
-//		stIso: ShapeMigration.Aux[AS, ASS, OA, BS, BSS, OB],
-//		obSch: Schema.Aux[OB, OBS],
-//		bsSchExtr: SchemaExtractor.Aux[BS, Schema.Aux[OB, OBS], BSS],
-//		tailIso: => CoproductShapeMigration.Aux[A, ATail, OA, B, BTail, OB],
-//	): CoproductShapeMigration[A, OA, B, OB] with {
-//		type AShape = LazySubtype[A, AS, AD, ADN, ADV, AN] *: ATail
-//		type BShape = LazySubtype[B, BS, BD, BDN, BDV, BN] *: BTail
-//
-//		lazy val asSchShape = asSchExtr.extract(oaSch).shape
-//		lazy val bsSchShape = bsSchExtr.extract(obSch).shape
-//
-//		def migrate(a: A, aShape: AShape, bShape: BShape): B = {
-//			aShape.head.fromSuper(a).map { as =>
-//				  val bs = stIso.migrate(as, asSchShape, bsSchShape)
-//				  bShape.head.toSuper(bs)
-//			}
-//			  .getOrElse(tailIso.migrate(a, aShape.tail, bShape.tail))
-//		}
-//	}
-
 	given emptyCoproductIso[A, OA, B, OB]: CoproductShapeMigration[A, OA, B, OB] with {
 		type AShape = EmptyTuple
 		type BShape = EmptyTuple
 
 		def migrate(a: A, aShape: AShape, bShape: BShape): B = throw new Exception("No subtypes found")
-
-		def convertBackward(b: B, aShape: AShape, bShape: BShape): A = throw new Exception("No subtypes found")
 	}
 }
 

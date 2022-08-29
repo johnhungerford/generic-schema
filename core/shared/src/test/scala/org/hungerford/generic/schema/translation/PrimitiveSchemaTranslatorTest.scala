@@ -7,7 +7,7 @@ import org.scalatest.matchers.should.Matchers
 import scala.language.higherKinds
 
 abstract class PrimitiveSchemaTranslatorTest[ OtherSchema[ _ ] ](
-   implicit
+   using
    intSchema : OtherSchema[ Int ],
 ) extends AnyFlatSpecLike with Matchers {
 

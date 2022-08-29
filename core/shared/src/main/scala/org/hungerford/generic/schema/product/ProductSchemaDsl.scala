@@ -13,11 +13,11 @@ trait ProductSchemaDsl {
         def modifyAdditionalFieldsSchema[ NewAFS ](
             modifier : Schema.Aux[ AF, AFS ] => Schema.Aux[ AF, NewAFS ],
         )(
-            using
-            ctx : CtxWrapTuplesConstraint[ Field.Of, R, RV ],
-            consChoice : ConstrUpdateChoice.Aux[ RV, RV, AF, AF, C, C ],
-            uniq : => UniqueFieldNames[ R ],
-            pc : ProductConstructor[ C, RV, AF, T ],
+			using
+			ctx : CtxWrapTuplesConstraint[ Field.Tpe, R, RV ],
+			consChoice : ConstrUpdateChoice.Aux[ RV, RV, AF, AF, C, C ],
+			uniq : => UniqueFieldNames[ R ],
+			pc : ProductConstructor[ C, RV, AF, T ],
         ) : Schema.Aux[ T, ProductShape[ T, R, RV, AF, NewAFS, T => Map[ String, AF ], C ] ] = {
             ProductSchemaBuilder.from( schema )
               .additionalFields[ AF ]

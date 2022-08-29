@@ -7,4 +7,5 @@ object TypeName {
         val s = Type.show[T]
         Expr[s.type](s)
 
+    transparent inline def showType[T] = ${showTypeImpl[T]}
 }

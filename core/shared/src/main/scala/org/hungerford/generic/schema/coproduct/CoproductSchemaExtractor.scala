@@ -56,7 +56,9 @@ object CoproductSchemaExtractor extends CoproductSchemaExtractorPriority1 {
 
         override def extract(
             from: SubT *: Tail,
-        ): Schema.Aux[ ST, S ] = from.head.schema
+        ): Schema.Aux[ ST, S ] =
+            val subt: SubT = from.head
+            subt.schema
     }
 
     class Extr[ T ] {

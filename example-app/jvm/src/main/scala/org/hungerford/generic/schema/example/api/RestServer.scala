@@ -18,7 +18,6 @@ object RestServer {
                 case DataModel.Cash => Some( "Cash" )
                 case Check( checkNumber, memo, date ) => Some( s"Check: ${checkNumber}, ${dateString(date)}, (${memo})")
                 case DataModel.Other => None
-                case ExRequest( _ ) => None
             }))
         })
 

@@ -44,7 +44,9 @@ trait ProductSchemaExtractorPriority1 extends ProductSchemaExtractorPriority2 {
 
         override def extract(
             from: Fld *: Tail
-        ) : Aux[ T, S ] = from.head.schema
+        ) : Aux[ T, S ] =
+            val fld: Fld = from.head
+            fld.schema
     }
 
     given nestedExtractor[ F, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, S ](

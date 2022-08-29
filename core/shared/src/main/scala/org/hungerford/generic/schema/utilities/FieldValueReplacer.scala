@@ -34,6 +34,7 @@ object FieldValueReplacer extends FieldValueReplacers1 {
     ) : FieldValueReplacer[Sel, Fld *: RTail, I *: RVTail] with {
         type Inner = I
         def replace(fields : Fld *: RTail, values : I *: RVTail, newValue : I): I *: RVTail =
-            newValue *: values.tail
+            val tail: RVTail = values.tail
+            newValue *: tail
     }
 }

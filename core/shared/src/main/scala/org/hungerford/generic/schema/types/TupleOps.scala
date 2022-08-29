@@ -80,7 +80,8 @@ object Replacer extends LowPriorityReplacers {
         type Out = New *: Tail
 
         override def replace( elems: Head *: Tail, withElement: New ) : Out =
-            withElement *: elems.tail
+            val tail = elems.tail
+            withElement *: tail
     }
 
     given equiv[ I <: Int, N <: Nat, R <: Tuple, New, Res <: Tuple ](

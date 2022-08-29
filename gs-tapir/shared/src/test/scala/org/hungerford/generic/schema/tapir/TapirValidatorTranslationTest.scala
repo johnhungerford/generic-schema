@@ -34,11 +34,11 @@ class TapirValidatorTranslationTest extends AnyFlatSpecLike with org.scalatest.m
 
   it should "translate collections validators" in {
     import TapirValidatorTranslation.translate
-    translate( Validator.minSize[ Int, List ]( 5 ) ) shouldBe TapirValidator.minSize[ Int, List ]( 5 )
-    translate( Validator.minSizeExclusive[ Int, LazyList ]( 5 ) ) shouldBe TapirValidator.minSize[ Int, LazyList ]( 6 )
-    translate( Validator.maxSize[ Int, Iterable ]( 5 ) ) shouldBe TapirValidator.maxSize[ Int, Iterable ]( 5 )
-    translate( Validator.maxSizeExclusive[ Int, Seq ]( 5 ) ) shouldBe TapirValidator.maxSize[ Int, Seq ]( 4 )
-    translate( Validator.fixedSize[ Int, Set ]( 5 ) ) shouldBe TapirValidator.fixedSize[ Int, Set ]( 5 )
+    translate( Validator.minSize[ List[Int] ]( 5 ) ) shouldBe TapirValidator.minSize[ Int, List ]( 5 )
+    translate( Validator.minSizeExclusive[ LazyList[Int] ]( 5 ) ) shouldBe TapirValidator.minSize[ Int, LazyList ]( 6 )
+    translate( Validator.maxSize[ Iterable[Int] ]( 5 ) ) shouldBe TapirValidator.maxSize[ Int, Iterable ]( 5 )
+    translate( Validator.maxSizeExclusive[ Seq[Int] ]( 5 ) ) shouldBe TapirValidator.maxSize[ Int, Seq ]( 4 )
+    translate( Validator.fixedSize[ Set[Int] ]( 5 ) ) shouldBe TapirValidator.fixedSize[ Int, Set ]( 5 )
   }
 
   it should "translate enum validators" in {

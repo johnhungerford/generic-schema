@@ -16,16 +16,23 @@ trait TypeName[ T ] {
 object TypeName {
     type Aux[ T, N <: String & Singleton ] = TypeName[ T ] { type Name = N }
 
-    transparent inline def getTypeName[T] = ${org.hungerford.generic.schema.macros.TypeName.showTypeImpl[T]}
+//    inline given fromMirror[ T ](
+//        using
+//        mir : Mirror { type MirroredType = T; type MirroredLabel <: String & Singleton },
+//    ) : TypeName[T] = {
+//        val nameVal : mir.MirroredLabel = constValue[ mir.MirroredLabel ]
+//
+//        new TypeName[ T ]:
+//            type Name = mir.MirroredLabel
+//            def name : mir.MirroredLabel = nameVal
+//    }
 
-    inline given fromMirror[ T ](
-        using
-        mir : Mirror { type MirroredType = T; type MirroredLabel <: String & Singleton },
-    ) : TypeName[T] = {
-        val nameVal : mir.MirroredLabel = constValue[ mir.MirroredLabel ]
+    transparent inline given [T]: TypeName[T] = {
+        val nameValue = org.hungerford.generic.schema.macros.TypeName.showType[T]
 
-        new TypeName[ T ]:
-            type Name = mir.MirroredLabel
-            def name : mir.MirroredLabel = nameVal
+        new TypeName[T]:
+            override type Name = nameValue.type
+
+            override def name: Name = nameValue
     }
 }

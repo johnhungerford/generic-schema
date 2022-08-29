@@ -26,7 +26,7 @@ lazy val commonSettings =
         licenses := List( "Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt" ) ),
         homepage := Some( url( "https://johnhungerford.github.io" ) ),
         startYear := Some( 2021 ),
-        scalaVersion := "3.1.0",
+        scalaVersion := "3.2.1-RC1-bin-20220823-3ad97df-NIGHTLY",
         resolvers ++= Seq( "Maven Central" at "https://repo1.maven.org/maven2/",
             "JCenter" at "https://jcenter.bintray.com",
             "Local Ivy Repository" at s"file://${System.getProperty( "user.home" )}/.ivy2/local/default" ),

@@ -17,53 +17,59 @@ trait SchemaExtractor[ T, From ] {
     def extract( from : From ) : Schema.Aux[ T, Shape ]
 }
 
-object SchemaExtractor {
-    type Aux[ T, From, S ] = SchemaExtractor[ T, From ] { type Shape = S }
-
-    given productSchemaExtractor[ F, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, S ](
+trait SchemaExtractors1 {
+    given productSchemaExtractor[F, T, R <: Tuple, RV <: Tuple, AF, AFS, AFE, C, S] (
         using
-        prExtr : ProductSchemaExtractor.Aux[ F, ProductShape[ T, R, RV, AF, AFS, AFE, C ], S ]
-    ) : SchemaExtractor[ F, Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ] ] with {
+        prExtr: ProductSchemaExtractor.Aux[F, ProductShape[T, R, RV, AF, AFS, AFE, C], S]
+    ): SchemaExtractor[F, Schema.Aux[T, ProductShape[T, R, RV, AF, AFS, AFE, C]]] with {
         type Shape = S
 
         override def extract(
-            from: Schema.Aux[ T, ProductShape[ T, R, RV, AF, AFS, AFE, C ] ],
-        ): Schema.Aux[ F, S ] = prExtr.extract( from.shape )
+            from: Schema.Aux[T, ProductShape[T, R, RV, AF, AFS, AFE, C]],
+        ): Schema.Aux[F, S] = prExtr.extract(from.shape)
     }
 
-    given coproductSchemaExtractor[ F, T, ST, R <: Tuple, RV <: Tuple, D, DN, S ](
+    given coproductSchemaExtractor[F, T, ST, R <: Tuple, RV <: Tuple, D, DN, S] (
         using
-        coprExtr : CoproductSchemaExtractor.Aux[ F, CoproductShape[ T, R, RV, D, DN ], S ],
-    ) : SchemaExtractor[ F, Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ] ] with {
+        coprExtr: CoproductSchemaExtractor.Aux[F, CoproductShape[T, R, RV, D, DN], S],
+    ): SchemaExtractor[F, Schema.Aux[T, CoproductShape[T, R, RV, D, DN]]] with {
         type Shape = S
 
         override def extract(
-            from: Schema.Aux[ T, CoproductShape[ T, R, RV, D, DN ] ],
-        ): Schema.Aux[ F, S ] = coprExtr.extract( from.shape )
+            from: Schema.Aux[T, CoproductShape[T, R, RV, D, DN]],
+        ): Schema.Aux[F, S] = coprExtr.extract(from.shape)
     }
 
-    given fieldSchemaExtractor[ T, F, FS, Fld <: Field.Shaped[ F, FS ], S ](
+    given fieldSchemaExtractor[T, F, FS, Fld <: Field.Shaped[F, FS], S] (
         using
-        extr : SchemaExtractor.Aux[ T, Schema.Aux[ F, FS ], S ],
-    ) : SchemaExtractor[ T, Fld ] with {
+        extr: SchemaExtractor.Aux[T, Schema.Aux[F, FS], S],
+    ): SchemaExtractor[T, Fld] with {
         type Shape = S
 
         override def extract(
             from: Fld
-        ): Schema.Aux[ T, S ] = extr.extract( from.schema )
+        ): Schema.Aux[T, S] = extr.extract(from.schema)
     }
 
-    given subtypeSchemaExtractor[ T, STT, ST, STS, STD, STDN, STDV, STN <: TypeName, S ](
+    given subtypeSchemaExtractor[T, STT, ST, STS, STD, STDN, STDV, STN <: TypeName, S] (
         using
-        extr : SchemaExtractor.Aux[ T, Schema.Aux[ ST, STS ], S ],
-    ) : SchemaExtractor[ T, Subtype[ STT, ST, STD, STDN, STDV, STN, STS ] ] with {
+        extr: SchemaExtractor.Aux[T, Schema.Aux[ST, STS], S],
+    ): SchemaExtractor[T, Subtype[STT, ST, STD, STDN, STDV, STN, STS]] with {
         type Shape = S
 
         override def extract(
-            from: Subtype[ STT, ST, STD, STDN, STDV, STN, STS ],
-        ): Schema.Aux[ T, S ] = extr.extract( from.schema )
+            from: Subtype[STT, ST, STD, STDN, STDV, STN, STS],
+        ): Schema.Aux[T, S] = extr.extract(from.schema)
     }
+}
 
+object SchemaExtractor extends SchemaExtractors1 {
+    type Aux[ T, From, S ] = SchemaExtractor[ T, From ] { type Shape = S }
+
+    given identicalSchemaExtractor[T, S]: SchemaExtractor[T, Schema.Aux[T, S]] with {
+        type Shape = S
+        def extract(from: Schema.Aux[T, S]): Schema.Aux[T, S] = from
+    }
 }
 
 trait SchemaProvider[ T ] {

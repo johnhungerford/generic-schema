@@ -8,8 +8,8 @@ import scala.collection.immutable.ListMap
 import scala.util.Try
 import UPickleSchemaTranslation.given
 
-class UPicklePrimitiveTranslationTest
-  extends PrimitiveSchemaTranslatorTest[ ReadWriter ]
+//class UPicklePrimitiveTranslationTest
+//  extends PrimitiveSchemaTranslatorTest[ ReadWriter ]
 
 class UpickleProductTranslationTest
   extends ProductJsonTranslationTest[ ReadWriter ] {

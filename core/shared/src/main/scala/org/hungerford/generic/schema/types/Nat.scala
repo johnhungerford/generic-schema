@@ -1,6 +1,6 @@
 package org.hungerford.generic.schema.types
 
-trait Nat
+sealed trait Nat
 
 object Nat {
     trait _0 extends Nat

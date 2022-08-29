@@ -8,7 +8,7 @@ class TypeNameTest extends AnyFlatSpecLike with org.scalatest.matchers.should.Ma
 
     it should "exist for option" in {
         val tnOptionInt = summon[TypeName[Option[Int]]]
-        tnOptionInt.name shouldBe "Option"
+        tnOptionInt.name shouldBe "scala.Option[scala.Int]"
     }
 
 }

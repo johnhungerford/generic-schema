@@ -20,7 +20,7 @@ object FieldInjector {
             type F = f
             inline fieldValues match {
                 case fvs : (F *: vts ) =>
-                    val thisRes = injector.inject( fds.head, fvs.head, into )
+                    val thisRes = injector.inject( fds.head[ Field[ t, f, n, s ] *: fs ], fvs.head[ F *: vts ], into )
                     inject( fds.tail, fvs.tail, thisRes )
                 
             }
